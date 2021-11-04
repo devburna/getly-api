@@ -1,0 +1,88 @@
+---
+kind: pipeline
+name: test
+type: docker
+
+trigger:
+  ref:
+    - refs/heads/dev
+    - refs/heads/GTL-*
+
+steps:
+  - name: install
+    image: composer
+    commands:
+      - composer install --ignore-platform-reqs
+
+  #- name: test
+  #  image: laradock/workspace:latest-7.4
+  #  environment:
+  #    DB_CONNECTION: mysql
+  #    DB_HOST: mysql
+  #    DB_USERNAME: root
+  #    DB_DATABASE: test
+  #    DB_PASSWORD: ""
+  #    REDIS_HOST: redis
+  #    MAIL_MAILER: log
+  #    MAIL_FROM_ADDRESS: hello@getly.com
+  #    MAIL_FROM_NAME: Getly
+  #  commands:
+  #    - ./vendor/bin/phpunit --configuration phpunit.xml
+
+  - name: deploy
+    image: appleboy/drone-scp
+    settings:
+      host:
+        from_secret: SSH_HOST
+      username:
+        from_secret: SSH_USER
+      key:
+        from_secret: SSH_KEY
+      port: 22
+      rm: true
+      target: /var/www/api.getly.com
+      source:
+        - ./*
+    when:
+      branch:
+        - dev
+
+  - name: ssh
+    image: appleboy/drone-ssh
+    settings:
+      host:
+        from_secret: SSH_HOST
+      username:
+        from_secret: SSH_USER
+      key:
+        from_secret: SSH_KEY
+      script:
+        - cp /var/www/envs/getly/.env.apistaging /var/www/api.getly.com/.env
+        - pushd /var/www/api.getly.com
+        - chown -R www-data:www-data ./storage/
+        - php artisan migrate --force
+        - php artisan key:generate
+        - php artisan queue:restart
+    when:
+      branch:
+        - dev
+
+  - name: slack
+    image: plugins/slack
+    settings:
+      webhook:
+        from_secret: SLACK_WEBHOOK
+      channel:
+        from_secret: SLACK_CHANNEL
+    when:
+    status: [success, failure]
+
+services:
+  - name: redis
+    image: redis
+
+  - name: mysql
+    image: mysql
+    environment:
+      MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
+      MYSQL_DATABASE: test
