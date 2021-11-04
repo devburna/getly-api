@@ -2,25 +2,74 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Validator;
 
 class AuthController extends Controller
 {
     // register
     public function register(Request $request)
     {
+        $validator = Validator::make($request->all(), [
+            'full_name' => 'required|string|max:50|unique:users,name',
+            'email' => 'required|email|unique:users,email',
+            'country_code' => 'required|integer',
+            'phone' => 'required|digits:10',
+            'birthday' => 'required|date|before:today',
+            'password' => 'required',
+            'device_name' => 'required',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'status' => false,
+                'message' => $validator->errors()->first(),
+            ], 422);
+        }
+
+        $user = User::create([
+            'name' => ucfirst($request->full_name),
+            'email' => strtolower($request->email),
+            'password' => Hash::make($request->password),
+        ]);
+
         $request['message'] = trans('auth.signup');
         $request['code'] = 201;
+
         return $this->login($request);
     }
 
     // login
     public function login(Request $request)
     {
+        $validator = Validator::make($request->all(), [
+            'email' => 'required|email',
+            'password' => 'required',
+            'device_name' => 'required',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'status' => false,
+                'message' => $validator->errors()->first(),
+            ], 422);
+        }
+
+        $user = User::where('email', $request->email)->first();
+
+        if (!$user || !Hash::check($request->password, $user->password)) {
+            return response()->json([
+                'status' => false,
+                'message' => trans('auth.failed'),
+            ], 404);
+        }
+
         return response()->json([
             'status' => true,
             'data' => [
-                'token' => null
+                'token' => $user->createToken($request->device_name)->plainTextToken,
             ],
             'message' => $request->message ?? trans('auth.signin'),
         ], $request->code ?? 200);
@@ -77,6 +126,8 @@ class AuthController extends Controller
     // logout
     public function logout(Request $request)
     {
+        $request->user()->currentAccessToken()->delete();
+
         return response()->json([
             'status' => true,
             'message' => 'Success',
