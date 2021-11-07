@@ -19,7 +19,7 @@
 
 <body class="antialiased">
     <pre>
-    {{$payment}}
+    {{print_r($payment)}}
     </pre>
 </body>
 

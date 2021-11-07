@@ -17,6 +17,7 @@ class Gift extends Model
     protected $fillable = [
         'user_id',
         'getlist_id',
+        'reference',
         'name',
         'price',
         'quantity',

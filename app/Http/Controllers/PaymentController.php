@@ -26,7 +26,6 @@ class PaymentController extends Controller
             'meta' => [
                 'consumer_id' => 23,
                 'consumer_mac' => '92a3-912ba-1192a',
-                'item' => $request->all()
             ],
             'customer' => [
                 'email' => strtolower($request->customer_email),

@@ -17,6 +17,7 @@ class CreateGiftsTable extends Migration
             $table->id();
             $table->unsignedBigInteger('user_id')->nullable();
             $table->unsignedBigInteger('getlist_id')->default(0);
+            $table->string('reference')->unique();
             $table->string('name');
             $table->unsignedDouble('price', null, 2);
             $table->unsignedBigInteger('quantity');

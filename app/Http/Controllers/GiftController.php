@@ -65,6 +65,14 @@ class GiftController extends Controller
 
         $request['user_id'] = $request->user()->id;
         $request['getlist_id'] = $getlist->id;
+        $request['image'] = $this->cloudinary->upload($request->image->path(), [
+            'folder' => 'getly/gifts/',
+            'public_id' => (new SlugNormalizer())->normalize(strtolower($request->name)),
+            'overwrite' => true,
+            // 'notification_url' => '',
+            'resource_type' => 'image'
+        ])['secure_url'];
+        $request['reference'] = (string) Str::uuid();
 
         return response()->json([
             'status' => true,
@@ -111,15 +119,21 @@ class GiftController extends Controller
             $request['user_id'] = $user->id;
         }
 
-        $request['redirect_url'] = route('verify-sent-gift');
+        $request['photo'] = $this->cloudinary->upload($request->image->path(), [
+            'folder' => 'getly/gifts/',
+            'public_id' => (new SlugNormalizer())->normalize(strtolower($request->name)),
+            'overwrite' => true,
+            // 'notification_url' => '',
+            'resource_type' => 'image'
+        ])['secure_url'];
+        $request['sender_id'] = $request->user()->id;
         $request['amount'] = $request->price;
         $request['customer_email'] = $request->user()->email;
         $request['customer_phone'] = $request->user()->profile->phone;
         $request['customer_name'] = $request->user()->name;
         $request['description'] = $request->name;
-        $request['reference'] = str_shuffle(Str::random(40));
-
-        session()->put($request->reference, $request->all());
+        $request['reference'] = (string) Str::uuid();
+        $request['redirect_url'] = route('verify-sent-gift', ['gift' => $request->all()]);
 
         return (new PaymentController())->generateFwPaymentLink($request);
     }
@@ -132,20 +146,15 @@ class GiftController extends Controller
      */
     public function store(Request $request)
     {
-        return Gift::create([
+        return Gift::updateOrCreate([
             'user_id' => $request->user_id ?? null,
             'getlist_id' => $request->getlist_id ?? 0,
+            'reference' => $request->reference,
             'name' => ucfirst($request->name),
             'price' => $request->price,
             'quantity' => $request->quantity,
             'short_message' => $request->short_message,
-            'image' =>  $this->cloudinary->upload($request->image->path(), [
-                'folder' => 'getly/gifts/',
-                'public_id' => (new SlugNormalizer())->normalize(strtolower($request->name)),
-                'overwrite' => true,
-                // 'notification_url' => '',
-                'resource_type' => 'image'
-            ])['secure_url'],
+            'image' =>  $request->image,
             'link' => $request->link,
             'receiver_name' => ucfirst($request->name),
             'receiver_email' => strtolower($request->receiver_email),
@@ -156,15 +165,24 @@ class GiftController extends Controller
     public function verifySentGift(Request $request)
     {
 
-        $payment = (new PaymentController())->verifyFwPaymentLink($request)['status'];
+        $payment = (new PaymentController())->verifyFwPaymentLink($request);
 
-        if ($payment = 'success') {
+        $gift = collect($request->gift);
 
-            $value = session()->get($request->tx_ref);
+        $request['sender'] = $gift['sender_id'];
+        $request['reference'] = $gift['reference'];
+        $request['name'] = $gift['name'];
+        $request['price'] = $gift['price'];
+        $request['quantity'] = $gift['quantity'];
+        $request['short_message'] = $gift['short_message'];
+        $request['image'] = $gift['photo'];
+        $request['link'] = $gift['link'];
+        $request['receiver_name'] = $gift['receiver_name'];
+        $request['receiver_email'] = $gift['receiver_email'];
+        $request['receiver_phone'] = $gift['receiver_phone'];
 
-            return view('welcome', [
-                'payment' =>  'Session is ' . $value,
-            ]);
+        if ($payment['data']['status'] === 'successful') {
+            $this->store($request);
         }
 
         return view('welcome', [
