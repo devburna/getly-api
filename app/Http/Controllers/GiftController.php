@@ -9,6 +9,7 @@ use Cloudinary\Api\Upload\UploadApi;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use League\CommonMark\Normalizer\SlugNormalizer;
+use Illuminate\Support\Str;
 
 class GiftController extends Controller
 {
@@ -116,6 +117,9 @@ class GiftController extends Controller
         $request['customer_phone'] = $request->user()->profile->phone;
         $request['customer_name'] = $request->user()->name;
         $request['description'] = $request->name;
+        $request['reference'] = str_shuffle(Str::random(40));
+
+        session()->put($request->reference, $request->all());
 
         return (new PaymentController())->generateFwPaymentLink($request);
     }
@@ -151,29 +155,20 @@ class GiftController extends Controller
 
     public function verifySentGift(Request $request)
     {
-        $curl = curl_init();
 
-        curl_setopt_array($curl, array(
-            CURLOPT_URL => "https://api.flutterwave.com/v3/transactions/" . $request->transaction_id . "/verify",
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_ENCODING => "",
-            CURLOPT_MAXREDIRS => 10,
-            CURLOPT_TIMEOUT => 0,
-            CURLOPT_FOLLOWLOCATION => true,
-            CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-            CURLOPT_CUSTOMREQUEST => "GET",
-            CURLOPT_HTTPHEADER => array(
-                "Content-Type: application/json",
-                "Authorization: Bearer " . (new PaymentController())->fw_sec_key
-            ),
-        ));
+        $payment = (new PaymentController())->verifyFwPaymentLink($request)['status'];
 
-        $response = curl_exec($curl);
+        if ($payment = 'success') {
 
-        curl_close($curl);
+            $value = session()->get($request->tx_ref);
+
+            return view('welcome', [
+                'payment' =>  'Session is ' . $value,
+            ]);
+        }
 
         return view('welcome', [
-            'payment' => $response
+            'payment' =>  $payment,
         ]);
     }
 }
