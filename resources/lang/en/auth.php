@@ -19,5 +19,6 @@ return [
     'signin' => 'Signin was successfull.',
     'signup' => 'Signup was successfull.',
     'email-verified' => 'Email verified successfully.',
+    'email-unverified' => 'Email not verified, kindly check your mail for instructions.',
 
 ];

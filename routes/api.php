@@ -37,7 +37,7 @@ Route::prefix('v1')->group(function () {
     Route::post('reset-password', [\App\Http\Controllers\AuthController::class, 'reset']);
 
     #authenticated
-    Route::middleware('auth:sanctum')->group(function () {
+    Route::middleware(['auth:sanctum', 'email_verified'])->group(function () {
 
         # set-pin
         Route::post('set-pin', [\App\Http\Controllers\AuthController::class, 'setPin']);

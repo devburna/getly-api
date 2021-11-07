@@ -12,12 +12,6 @@ use Illuminate\Support\Facades\Mail;
 class OTPController extends Controller
 {
 
-    /**
-     * Store a newly created resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
-     */
     public function send(Request $request)
     {
         $otp = OTP::create([
@@ -39,14 +33,32 @@ class OTPController extends Controller
             ]);
     }
 
-    /**
-     * Remove the specified resource from storage.
-     *
-     * @param  \App\Models\OTP  $oTP
-     * @return \Illuminate\Http\Response
-     */
-    public function destroy(OTP $oTP)
+
+    public function verify(Request $request)
     {
-        //
+        $otp = OTP::where(['email' => $request->email, 'type' => $request->type])->first();
+
+        if (!$otp || !Hash::check($request->token, $otp->token)) {
+            return response()->json([
+                'status' => false,
+                'message' => str_replace('_', ' ', ucfirst($request->type)) . ' token is invalid.',
+            ], 404);
+        }
+
+        if (Carbon::parse($otp->expired_at)->isPast()) {
+            $otp->delete();
+
+            return response()->json([
+                'status' => false,
+                'message' => str_replace('_', ' ', ucfirst($request->type)) . ' token has expired.',
+            ], 403);
+        }
+
+        $otp->delete();
+
+        return response()->json([
+            'status' => true,
+            'message' => str_replace('_', ' ', ucfirst($request->type)) . ' was successfull.',
+        ]);
     }
 }

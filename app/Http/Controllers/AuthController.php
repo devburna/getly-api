@@ -93,10 +93,32 @@ class AuthController extends Controller
     // verify-email
     public function verifyEmail(Request $request)
     {
-        return response()->json([
-            'status' => true,
-            'message' => trans('auth.email-verified'),
+        $validator = Validator::make($request->all(), [
+            'email' => 'required|email',
+            'token' => 'required',
+            'type' => 'required|in:email_verification',
         ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'status' => false,
+                'message' => $validator->errors()->first(),
+            ], 422);
+        }
+
+        $user = User::where('email', $request->email)->first();
+
+        $verify =  (new OTPController())->verify($request);
+
+        if ($verify->original['status']) {
+            $user->update([
+                'email_verified_at' => now(),
+            ]);
+
+            return $verify;
+        } else {
+            return $verify;
+        }
     }
 
     // set-pin
