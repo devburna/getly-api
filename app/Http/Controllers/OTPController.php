@@ -14,17 +14,22 @@ class OTPController extends Controller
 
     public function send(Request $request)
     {
-        $otp = OTP::create([
-            'email' => $request->email,
-            'token' => Hash::make($request->code),
-            'type' => $request->type,
-            'expired_at' => Carbon::parse(now())->addHour()
-        ]);
+        $otp = OTP::where(['email' => $request->email, 'type' => $request->type])->first();
 
-        $request['subject'] = str_replace('_', ' ', ucfirst($request->type));
-        $request['otp'] = $otp;
+        if (!$otp || Carbon::parse($otp->expired_at)->isPast()) {
 
-        Mail::to($request->email)->send(new OTPMailable($request));
+            $otp = OTP::create([
+                'email' => $request->email,
+                'token' => Hash::make($request->code),
+                'type' => $request->type,
+                'expired_at' => Carbon::parse(now())->addMinutes(30)
+            ]);
+
+            $request['subject'] = str_replace('_', ' ', ucfirst($request->type));
+            $request['otp'] = $otp;
+
+            Mail::to($request->email)->send(new OTPMailable($request));
+        }
 
         if ($request->message)
             return response()->json([
@@ -32,7 +37,6 @@ class OTPController extends Controller
                 'message' => $request->message,
             ]);
     }
-
 
     public function verify(Request $request)
     {
