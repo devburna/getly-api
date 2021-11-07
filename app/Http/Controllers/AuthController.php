@@ -51,7 +51,7 @@ class AuthController extends Controller
             (new OTPController())->send($request);
 
             $request['message'] = trans('auth.signup');
-            $request['code'] = 201;
+            $request['status_code'] = 201;
 
             return $this->login($request);
         });
@@ -82,13 +82,21 @@ class AuthController extends Controller
             ], 404);
         }
 
+        if (!$user->email_verified_at) {
+            $request['user'] = $user;
+            $request['code'] = Str::random(40);
+            $request['type'] = OTPType::EmailVerification();
+            $request['email_template'] = 'email_verification';
+            (new OTPController())->send($request);
+        }
+
         return response()->json([
             'status' => true,
             'data' => [
                 'token' => $user->createToken($request->device_name)->plainTextToken,
             ],
             'message' => $request->message ?? trans('auth.signin'),
-        ], $request->code ?? 200);
+        ], $request->status_code ?? 200);
     }
 
     // verify-email
