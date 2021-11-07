@@ -155,6 +155,45 @@ class GetlistController extends Controller
     }
 
     /**
+     * Update the specified resource in storage.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  \App\Models\Getlist  $getlist
+     * @return \Illuminate\Http\Response
+     */
+    public function updateImage(Request $request, Getlist $getlist)
+    {
+
+        $validator = Validator::make($request->all(), [
+            'image' => 'required|mimes:jpg,jpeg,png',
+        ]);
+
+
+        if ($validator->fails()) {
+            return response()->json([
+                'status' => false,
+                'message' => $validator->errors()->first(),
+            ], 422);
+        }
+
+        $getlist->update([
+            'image' =>  $this->cloudinary->upload($request->image->path(), [
+                'folder' => 'getly/getlists/',
+                'public_id' => (new SlugNormalizer())->normalize(strtolower($getlist->title)),
+                'overwrite' => true,
+                // 'notification_url' => '',
+                'resource_type' => 'image'
+            ])['secure_url'],
+        ]);
+
+        return response()->json([
+            'status' => true,
+            'data' => $getlist,
+            'message' => 'Success'
+        ]);
+    }
+
+    /**
      * Remove the specified resource from storage.
      *
      * @param  \App\Models\Getlist  $getlist

@@ -61,6 +61,9 @@ Route::prefix('v1')->group(function () {
 
                 # update
                 Route::put('', [\App\Http\Controllers\GetlistController::class, 'update']);
+
+                # update image
+                Route::post('image', [\App\Http\Controllers\GetlistController::class, 'updateImage']);
             });
         });
     });
