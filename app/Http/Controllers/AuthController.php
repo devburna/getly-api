@@ -45,7 +45,6 @@ class AuthController extends Controller
             (new ProfileController())->store($request);
 
             $request['user'] = $user;
-            $request['email'] = $user->email;
             $request['code'] = Str::random(40);
             $request['type'] = OTPType::EmailVerification();
             $request['email_template'] = 'email_verification';
@@ -126,6 +125,35 @@ class AuthController extends Controller
         }
     }
 
+    //set-pin
+    public function setPin(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'pin' => ['required', 'digits:4', function ($attribute, $value, $fail) use ($request) {
+                if ($request->user()->profile->password) {
+                    return $fail(__('Your pin has already been set.'));
+                }
+            }],
+            'pin_confirmation' => 'same:pin',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'status' => false,
+                'message' => $validator->errors()->first(),
+            ], 422);
+        }
+
+        $request->user()->profile->update([
+            'password' => Hash::make($request->pin),
+        ]);
+
+        return response()->json([
+            'status' => true,
+            'message' => 'Success',
+        ]);
+    }
+
     // verify-pin
     public function verifyPin(Request $request)
     {
@@ -153,10 +181,37 @@ class AuthController extends Controller
     // forgot-password
     public function recover(Request $request)
     {
+        $validator = Validator::make($request->all(), [
+            'email' => 'required|email',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'status' => false,
+                'message' => $validator->errors()->first(),
+            ], 422);
+        }
+
+        $user = User::where('email', $request->email)->first();
+
+        if (!$user = User::where('email', $request->email)->first()) {
+            return response()->json([
+                'status' => false,
+                'message' => trans('auth.failed'),
+            ], 404);
+        }
+
+        $request['user'] = $user;
+        $request['code'] = Str::random(40);
+        $request['type'] = OTPType::PasswordReset();
+        $request['email_template'] = 'forgot_password';
+
+        (new OTPController())->send($request);
+
         return response()->json([
             'status' => true,
             'data' => [
-                'email' => $request->email
+                'email' => $user->email
             ],
             'message' => trans('passwords.sent'),
         ]);
@@ -165,6 +220,42 @@ class AuthController extends Controller
     // reset-password
     public function reset(Request $request)
     {
+        $validator = Validator::make($request->all(), [
+            'token' => 'required',
+            'email' => 'required|email',
+            'password' => 'required|confirmed',
+            'type' => 'required|in:password_reset',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'status' => false,
+                'message' => $validator->errors()->first(),
+            ], 422);
+        }
+
+        if (!$user = User::where('email', $request->email)->first()) {
+            return response()->json([
+                'status' => false,
+                'message' => trans('auth.failed'),
+            ], 404);
+        }
+
+        $request['user'] = $user;
+        $request['email_template'] = 'password_reset';
+
+        $verify =  (new OTPController())->verify($request);
+
+        if ($verify->original['status']) {
+            $user->update([
+                'password' => Hash::make($request->password),
+            ]);
+
+            return $verify;
+        } else {
+            return $verify;
+        }
+
         return response()->json([
             'status' => true,
             'message' => trans('passwords.reset'),

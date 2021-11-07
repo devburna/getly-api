@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Email Verified</title>
+    <title>Forgot Password</title>
 </head>
 <style>
     @charset "UTF-8";
@@ -11740,7 +11740,8 @@
                         <h6 class="mb-0">Hi, {{$request->user->name}}</h6>
                     </div>
                     <div class="card-body">
-                        <p class="card-text">Congratulations, your email has been verified.</p>
+                        <p class="card-text">Kinldy click on the button below to reset your password:</p>
+                        <a href="{{config('app.url')}}/password-reset?token={{$request->code}}&email={{$request->otp->email}}&type={{$request->otp->type}}" class="btn btn-warning shadow-none">Reset Password</a>
                     </div>
                 </div>
             </div>

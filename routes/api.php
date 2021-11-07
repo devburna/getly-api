@@ -40,7 +40,7 @@ Route::prefix('v1')->group(function () {
     Route::middleware(['auth:sanctum', 'email_verified'])->group(function () {
 
         # set-pin
-        Route::post('set-pin', [\App\Http\Controllers\ProfileController::class, 'setPassword']);
+        Route::post('set-pin', [\App\Http\Controllers\AuthController::class, 'setPin']);
 
         # verify-pin
         Route::post('verify-pin', [\App\Http\Controllers\AuthController::class, 'verifyPin']);

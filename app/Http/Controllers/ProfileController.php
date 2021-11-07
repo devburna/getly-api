@@ -35,36 +35,6 @@ class ProfileController extends Controller
     }
 
     /**
-     * Store a newly created resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
-     */
-    public function setPassword(Request $request)
-    {
-        $validator = Validator::make($request->all(), [
-            'pin' => 'required|digits:4',
-            'pin_confirmation' => 'same:pin',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json([
-                'status' => false,
-                'message' => $validator->errors()->first(),
-            ], 422);
-        }
-
-        $request->user()->profile->update([
-            'password' => Hash::make($request->pin),
-        ]);
-
-        return response()->json([
-            'status' => true,
-            'message' => 'Success',
-        ]);
-    }
-
-    /**
      * Update the specified resource in storage.
      *
      * @param  \Illuminate\Http\Request  $request

@@ -11741,7 +11741,7 @@
                     </div>
                     <div class="card-body">
                         <p class="card-text">Kinldy click on the button below to verify your email:</p>
-                        <a href="{{config('app.url')}}?token={{$request->code}}&email={{$request->otp->email}}&type={{$request->otp->type}}" class="btn btn-warning shadow-none">Verify Email</a>
+                        <a href="{{config('app.url')}}/verify-email?token={{$request->code}}&email={{$request->otp->email}}&type={{$request->otp->type}}" class="btn btn-warning shadow-none">Verify Email</a>
                     </div>
                 </div>
             </div>
