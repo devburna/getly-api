@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 
@@ -29,16 +30,22 @@ class AuthController extends Controller
             ], 422);
         }
 
-        $user = User::create([
-            'name' => ucfirst($request->full_name),
-            'email' => strtolower($request->email),
-            'password' => Hash::make($request->password),
-        ]);
+        return DB::transaction(function () use ($request) {
+            $user = User::create([
+                'name' => ucfirst($request->full_name),
+                'email' => strtolower($request->email),
+                'password' => Hash::make($request->password),
+            ]);
 
-        $request['message'] = trans('auth.signup');
-        $request['code'] = 201;
+            $request['user_id'] = $user->id;
 
-        return $this->login($request);
+            (new ProfileController())->store($request);
+
+            $request['message'] = trans('auth.signup');
+            $request['code'] = 201;
+
+            return $this->login($request);
+        });
     }
 
     // login
