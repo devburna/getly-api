@@ -15,6 +15,13 @@ class CreateGetlistsTable extends Migration
     {
         Schema::create('getlists', function (Blueprint $table) {
             $table->id();
+            $table->unsignedBigInteger('user_id');
+            $table->string('image');
+            $table->string('title');
+            $table->dateTime('event_date');
+            $table->longText('short_message', 100)->nullable();
+            $table->boolean('privacy');
+            $table->softDeletes();
             $table->timestamps();
         });
     }

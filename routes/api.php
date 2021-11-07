@@ -47,5 +47,21 @@ Route::prefix('v1')->group(function () {
 
         # logout
         Route::post('logout', [\App\Http\Controllers\AuthController::class, 'logout']);
+
+        #getlists
+        Route::prefix('getlists')->group(function () {
+            # list
+            Route::get('', [\App\Http\Controllers\GetlistController::class, 'index']);
+
+            # create
+            Route::post('', [\App\Http\Controllers\GetlistController::class, 'store']);
+
+            #getlist
+            Route::prefix('{getlist}')->group(function () {
+
+                # update
+                Route::put('', [\App\Http\Controllers\GetlistController::class, 'update']);
+            });
+        });
     });
 });
