@@ -8,6 +8,13 @@ use Illuminate\Support\Str;
 
 class PaymentController extends Controller
 {
+    public $fw_sec_key;
+
+    public function __construct()
+    {
+        $this->fw_sec_key = 'FLWSECK_TEST-3f407c91b3396dc7040be5ead43693e9-X';
+    }
+
     public function generateFwPaymentLink(Request $request)
     {
         return Http::withHeaders([

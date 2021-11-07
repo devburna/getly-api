@@ -19,5 +19,5 @@ Route::get('/', function () {
 
 Route::prefix('verify')->group(function () {
     # send gift
-    Route::post('sent-gift', [\App\Http\Controllers\GiftController::class, 'verifySentGift'])->name('verify-sent-gift');
+    Route::get('sent-gift', [\App\Http\Controllers\GiftController::class, 'verifySentGift'])->name('verify-sent-gift');
 });
