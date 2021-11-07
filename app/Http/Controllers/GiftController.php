@@ -7,9 +7,7 @@ use App\Models\Gift;
 use App\Models\User;
 use Cloudinary\Api\Upload\UploadApi;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Validator;
-use Illuminate\Support\Str;
 use League\CommonMark\Normalizer\SlugNormalizer;
 
 class GiftController extends Controller
@@ -112,19 +110,13 @@ class GiftController extends Controller
             $request['user_id'] = $user->id;
         }
 
-        $request['redirect_url'] = '';
+        $request['redirect_url'] = route('verify-sent-gift');
         $request['amount'] = $request->price;
         $request['customer_email'] = $request->user()->email;
         $request['customer_phone'] = $request->user()->profile->phone;
         $request['customer_name'] = $request->user()->name;
 
-        return response()->json([
-            'status' => true,
-            'data' => [
-                'payment_link' => $this->generatePaymentLink($request),
-            ],
-            'message' => 'Success'
-        ], 200);
+        return (new PaymentController())->generateFwPaymentLink($request);
     }
 
     /**
@@ -156,35 +148,7 @@ class GiftController extends Controller
         ]);
     }
 
-    public function generatePaymentLink(Request $request)
+    public function verifySentGift(Request $request)
     {
-        return Http::withHeaders([
-            'Authorization' => 'Bearer ',
-        ])->post('https://api.flutterwave.com/v3/payments', [
-            'tx_ref' => Str::random(15),
-            'amount' => $request->amount,
-            'currency' => 'NGN',
-            'redirect_url' => $request->redirect_url,
-            'meta' => [
-                'consumer_id' => 23,
-                'consumer_mac' => '92a3-912ba-1192a',
-                'item' => $request
-            ],
-            'customer' => [
-                'email' => strtolower($request->customer_email),
-                'phonenumber' => $request->customer_phone,
-                'name' => ucfirst($request->customer_name),
-            ],
-            'customizations' => [
-                'title' => config('app.name'),
-                'description' => ucfirst($request->description),
-                'logo' => asset('img/logo.png'),
-            ],
-        ])->json();
-    }
-
-    public function notifyWhatsapp()
-    {
-        Http::post('https://api.whatsapp.com/send?phone=2348118579390&text=Hello%20World');
     }
 }
