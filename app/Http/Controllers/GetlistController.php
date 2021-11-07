@@ -33,9 +33,27 @@ class GetlistController extends Controller
                 'message' => 'Not found'
             ], 404);
         } else {
+
+            $lists = [];
+            foreach ($getlists as $getlist) {
+                # code...
+                $list = [
+                    'id' => $getlist->id,
+                    'image_url' => $getlist->image,
+                    'title' => $getlist->title,
+                    'event_date' => $getlist->event_date,
+                    'short_message' => $getlist->short_message,
+                    'privacy' => $getlist->privacy,
+                    'item_count' => $getlist->gifts ? $getlist->gifts->count() : 0,
+                    'created' => $getlist->created_at,
+                ];
+
+                array_push($lists, $list);
+            }
+
             return response()->json([
                 'status' => true,
-                'data' => $getlists,
+                'data' => $lists,
                 'message' => 'Found'
             ]);
         }
@@ -99,7 +117,20 @@ class GetlistController extends Controller
      */
     public function show(Getlist $getlist)
     {
-        //
+        return response()->json([
+            'status' => true,
+            'data' => [
+                'id' => $getlist->id,
+                'image_url' => $getlist->image,
+                'title' => $getlist->title,
+                'event_date' => $getlist->event_date,
+                'short_message' => $getlist->short_message,
+                'privacy' => $getlist->privacy,
+                'items' => $getlist->gifts,
+                'created' => $getlist->created_at,
+            ],
+            'message' => 'Found'
+        ]);
     }
 
     /**
@@ -167,7 +198,6 @@ class GetlistController extends Controller
         $validator = Validator::make($request->all(), [
             'image' => 'required|mimes:jpg,jpeg,png',
         ]);
-
 
         if ($validator->fails()) {
             return response()->json([

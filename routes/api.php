@@ -59,6 +59,9 @@ Route::prefix('v1')->group(function () {
             #getlist
             Route::prefix('{getlist}')->group(function () {
 
+                # getlist
+                Route::get('', [\App\Http\Controllers\GetlistController::class, 'show']);
+
                 # update
                 Route::put('', [\App\Http\Controllers\GetlistController::class, 'update']);
 
@@ -66,5 +69,14 @@ Route::prefix('v1')->group(function () {
                 Route::post('image', [\App\Http\Controllers\GetlistController::class, 'updateImage']);
             });
         });
+
+        #gifts
+        Route::prefix('gifts')->group(function () {
+            # create
+            Route::post('{getlist}/create', [\App\Http\Controllers\GiftController::class, 'create']);
+        });
+
+        # send gift
+        Route::post('send-gift', [\App\Http\Controllers\GiftController::class, 'send']);
     });
 });

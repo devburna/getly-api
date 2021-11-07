@@ -19,7 +19,7 @@ class CreateGetlistsTable extends Migration
             $table->string('image');
             $table->string('title');
             $table->dateTime('event_date');
-            $table->longText('short_message', 100)->nullable();
+            $table->longText('short_message')->nullable();
             $table->boolean('privacy');
             $table->softDeletes();
             $table->timestamps();
