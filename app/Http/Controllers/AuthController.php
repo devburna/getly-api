@@ -2,11 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\OTPType;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Str;
 
 class AuthController extends Controller
 {
@@ -40,6 +42,12 @@ class AuthController extends Controller
             $request['user_id'] = $user->id;
 
             (new ProfileController())->store($request);
+
+            $request['user'] = $user;
+            $request['email'] = $user->email;
+            $request['code'] = Str::random(40);
+            $request['otp_type'] = OTPType::EmailVerification();
+            (new OTPController())->send($request);
 
             $request['message'] = trans('auth.signup');
             $request['code'] = 201;
