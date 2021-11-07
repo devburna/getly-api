@@ -183,10 +183,17 @@ class GiftController extends Controller
 
         if ($payment['data']['status'] === 'successful') {
             $this->store($request);
+
+            return response()->json([
+                'status' => true,
+                'data' => $gift,
+                'message' => "You’ve just sent your gift to " . $gift['name'],
+            ]);
         }
 
-        return view('welcome', [
-            'payment' =>  $payment,
-        ]);
+        return response()->json([
+            'status' => false,
+            'message' => "Error occured while sending gift, kindly contact support immediately.",
+        ], 422);
     }
 }
