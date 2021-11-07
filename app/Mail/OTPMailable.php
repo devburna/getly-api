@@ -31,6 +31,6 @@ class OTPMailable extends Mailable
      */
     public function build()
     {
-        return $this->view('emails.' . $this->request->otp_type)->subject($this->request->subject)->with('request', $this->request);
+        return $this->view('emails.' . $this->request->email_template)->subject($this->request->subject)->with('request', $this->request);
     }
 }

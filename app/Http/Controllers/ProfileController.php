@@ -43,7 +43,7 @@ class ProfileController extends Controller
     public function setPassword(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'pin' => 'required|integer|size:6',
+            'pin' => 'required|digits:4',
             'pin_confirmation' => 'same:pin',
         ]);
 
@@ -55,7 +55,7 @@ class ProfileController extends Controller
         }
 
         $request->user()->profile->update([
-            'password' => Hash::make($request->password),
+            'password' => Hash::make($request->pin),
         ]);
 
         return response()->json([
@@ -78,7 +78,7 @@ class ProfileController extends Controller
                     return $fail(__('The current pin is incorrect.'));
                 }
             }],
-            'pin' => 'required|integer|size:6',
+            'pin' => 'required|digits:4',
             'pin_confirmation' => 'same:pin',
         ]);
 

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Enums\OTPType;
+use App\Mail\OTPMailable;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -46,7 +47,8 @@ class AuthController extends Controller
             $request['user'] = $user;
             $request['email'] = $user->email;
             $request['code'] = Str::random(40);
-            $request['otp_type'] = OTPType::EmailVerification();
+            $request['type'] = OTPType::EmailVerification();
+            $request['email_template'] = 'email_verification';
             (new OTPController())->send($request);
 
             $request['message'] = trans('auth.signup');
@@ -108,6 +110,9 @@ class AuthController extends Controller
 
         $user = User::where('email', $request->email)->first();
 
+        $request['user'] = $user;
+        $request['email_template'] = 'email_verified';
+
         $verify =  (new OTPController())->verify($request);
 
         if ($verify->original['status']) {
@@ -121,18 +126,24 @@ class AuthController extends Controller
         }
     }
 
-    // set-pin
-    public function setPin(Request $request)
-    {
-        return response()->json([
-            'status' => true,
-            'message' => 'Success',
-        ]);
-    }
-
     // verify-pin
     public function verifyPin(Request $request)
     {
+        $validator = Validator::make($request->all(), [
+            'pin' => ['required', function ($attribute, $value, $fail) use ($request) {
+                if (!Hash::check($value, $request->user()->profile->password)) {
+                    return $fail(__('Your pin is incorrect.'));
+                }
+            }],
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'status' => false,
+                'message' => $validator->errors()->first(),
+            ], 422);
+        }
+
         return response()->json([
             'status' => true,
             'message' => 'Success',
