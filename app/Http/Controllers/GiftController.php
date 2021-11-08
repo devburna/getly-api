@@ -25,11 +25,25 @@ class GiftController extends Controller
     /**
      * Display a listing of the resource.
      *
+     * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
-    public function index()
+    public function index(Request $request)
     {
-        //
+        $gifts = $request->user()->gifts()->where('getlist_id', 0)->get();
+
+        if ($gifts->isEmpty()) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Not found'
+            ], 404);
+        } else {
+            return response()->json([
+                'status' => true,
+                'data' => $gifts,
+                'message' => 'Found'
+            ]);
+        }
     }
 
     /**
@@ -178,6 +192,7 @@ class GiftController extends Controller
 
         $gift = collect($request->gift);
 
+        $request['user_id'] = $gift['user_id'];
         $request['reference'] = $gift['reference'];
         $request['name'] = $gift['name'];
         $request['price'] = $gift['price'];

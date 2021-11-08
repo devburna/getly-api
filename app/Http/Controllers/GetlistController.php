@@ -26,8 +26,9 @@ class GetlistController extends Controller
     public function index(Request $request)
     {
         $getlists = $request->user()->getlists;
+        $received_gifts = $request->user()->gifts;
 
-        if ($getlists->isEmpty()) {
+        if ($getlists->isEmpty() && $received_gifts->isEmpty()) {
             return response()->json([
                 'status' => false,
                 'message' => 'Not found'
@@ -35,6 +36,7 @@ class GetlistController extends Controller
         } else {
 
             $lists = [];
+
             foreach ($getlists as $getlist) {
                 # code...
                 $list = [
@@ -53,7 +55,10 @@ class GetlistController extends Controller
 
             return response()->json([
                 'status' => true,
-                'data' => $lists,
+                'data' => [
+                    'getlists' => $lists,
+                    'received_gifts_count' => $received_gifts ? $received_gifts->count() : 0,
+                ],
                 'message' => 'Found'
             ]);
         }

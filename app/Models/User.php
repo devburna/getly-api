@@ -54,4 +54,9 @@ class User extends Authenticatable
     {
         return $this->hasMany(Getlist::class, 'user_id');
     }
+
+    public function gifts(): HasMany
+    {
+        return $this->hasMany(Gift::class, 'user_id');
+    }
 }

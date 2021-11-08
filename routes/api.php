@@ -78,6 +78,10 @@ Route::prefix('v1')->group(function () {
 
         #gifts
         Route::prefix('gifts')->group(function () {
+
+            # received
+            Route::get('', [\App\Http\Controllers\GiftController::class, 'index']);
+
             # create
             Route::post('{getlist}', [\App\Http\Controllers\GiftController::class, 'create']);
         });

@@ -57,4 +57,15 @@ class Gift extends Model
     {
         return $this->belongsTo(User::class, 'sent_by');
     }
+
+    public function getSentByAttribute($value)
+    {
+        $sender = User::find($value);
+
+        return [
+            'name' => $sender->name,
+            'email' => $sender->email,
+            'phone' => $sender->phone,
+        ];
+    }
 }
