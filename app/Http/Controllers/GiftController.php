@@ -41,6 +41,12 @@ class GiftController extends Controller
      */
     public function create(Request $request, Getlist $getlist)
     {
+        if ($request->user()->cannot('view', $getlist)) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Not allowed'
+            ], 403);
+        }
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:50',
             'price' => 'required|numeric',
@@ -161,7 +167,7 @@ class GiftController extends Controller
             'receiver_name' => ucfirst($request->receiver_name),
             'receiver_email' => strtolower($request->receiver_email),
             'receiver_phone' => $request->receiver_phone,
-            'sent_by' => $request->sent_by,
+            'sent_by' => $request->sent_by ??  $request->user()->id,
         ]);
     }
 

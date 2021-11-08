@@ -30,7 +30,7 @@ class GiftPolicy
      */
     public function view(User $user, Gift $gift)
     {
-        //
+        return ($user->id === $gift->getlist->user_id) || ($user->email === $gift->getlist->receiver_email);
     }
 
     /**
@@ -53,7 +53,7 @@ class GiftPolicy
      */
     public function update(User $user, Gift $gift)
     {
-        //
+        return $this->view($user, $gift);
     }
 
     /**
@@ -65,7 +65,7 @@ class GiftPolicy
      */
     public function delete(User $user, Gift $gift)
     {
-        //
+        return $this->view($user, $gift);
     }
 
     /**
@@ -77,7 +77,7 @@ class GiftPolicy
      */
     public function restore(User $user, Gift $gift)
     {
-        //
+        return $this->view($user, $gift);
     }
 
     /**
@@ -89,6 +89,6 @@ class GiftPolicy
      */
     public function forceDelete(User $user, Gift $gift)
     {
-        //
+        return $this->view($user, $gift);
     }
 }

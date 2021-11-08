@@ -115,8 +115,15 @@ class GetlistController extends Controller
      * @param  \App\Models\Getlist  $getlist
      * @return \Illuminate\Http\Response
      */
-    public function show(Getlist $getlist)
+    public function show(Request $request, Getlist $getlist)
     {
+        if ($request->user()->cannot('view', $getlist)) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Not allowed'
+            ], 403);
+        }
+
         return response()->json([
             'status' => true,
             'data' => [
@@ -142,6 +149,12 @@ class GetlistController extends Controller
      */
     public function update(Request $request, Getlist $getlist)
     {
+        if ($request->user()->cannot('update', $getlist)) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Not allowed'
+            ], 403);
+        }
 
         if ($request->has('title')) {
             $validator = Validator::make($request->all(), [
@@ -194,6 +207,12 @@ class GetlistController extends Controller
      */
     public function updateImage(Request $request, Getlist $getlist)
     {
+        if ($request->user()->cannot('update', $getlist)) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Not allowed'
+            ], 403);
+        }
 
         $validator = Validator::make($request->all(), [
             'image' => 'required|mimes:jpg,jpeg,png',
@@ -221,16 +240,5 @@ class GetlistController extends Controller
             'data' => $getlist,
             'message' => 'Success'
         ]);
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     *
-     * @param  \App\Models\Getlist  $getlist
-     * @return \Illuminate\Http\Response
-     */
-    public function destroy(Getlist $getlist)
-    {
-        //
     }
 }

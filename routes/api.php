@@ -48,6 +48,12 @@ Route::prefix('v1')->group(function () {
         # logout
         Route::post('logout', [\App\Http\Controllers\AuthController::class, 'logout']);
 
+        #profile
+        Route::prefix('profile')->group(function () {
+            # me
+            Route::get('', [\App\Http\Controllers\ProfileController::class, 'index']);
+        });
+
         #getlists
         Route::prefix('getlists')->group(function () {
             # list
@@ -73,7 +79,7 @@ Route::prefix('v1')->group(function () {
         #gifts
         Route::prefix('gifts')->group(function () {
             # create
-            Route::post('{getlist}/create', [\App\Http\Controllers\GiftController::class, 'create']);
+            Route::post('{getlist}', [\App\Http\Controllers\GiftController::class, 'create']);
         });
 
         # send gift

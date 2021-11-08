@@ -19,6 +19,15 @@ class ProfileController extends Controller
         $this->cloudinary = (new UploadApi());
     }
 
+    public function index(Request $request)
+    {
+        return response()->json([
+            'status' => true,
+            'data' => $request->user(),
+            'message' => 'Fetched'
+        ]);
+    }
+
     /**
      * Store a newly created resource in storage.
      *

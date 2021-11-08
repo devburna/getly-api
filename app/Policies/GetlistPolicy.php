@@ -30,7 +30,7 @@ class GetlistPolicy
      */
     public function view(User $user, Getlist $getlist)
     {
-        //
+        return $user->id === $getlist->user_id;
     }
 
     /**
@@ -53,7 +53,7 @@ class GetlistPolicy
      */
     public function update(User $user, Getlist $getlist)
     {
-        //
+        return $this->view($user, $getlist);
     }
 
     /**
@@ -65,7 +65,7 @@ class GetlistPolicy
      */
     public function delete(User $user, Getlist $getlist)
     {
-        //
+        return $this->view($user, $getlist);
     }
 
     /**
@@ -77,7 +77,7 @@ class GetlistPolicy
      */
     public function restore(User $user, Getlist $getlist)
     {
-        //
+        return $this->view($user, $getlist);
     }
 
     /**
@@ -89,6 +89,6 @@ class GetlistPolicy
      */
     public function forceDelete(User $user, Getlist $getlist)
     {
-        //
+        return $this->view($user, $getlist);
     }
 }
