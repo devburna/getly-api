@@ -2,26 +2,28 @@
 
 namespace App\Mail;
 
+use App\Models\Gift;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
-use Illuminate\Http\Request;
 use Illuminate\Mail\Mailable;
 use Illuminate\Queue\SerializesModels;
 
-class OTPMailable extends Mailable
+class GiftMailable extends Mailable implements ShouldQueue
 {
     use Queueable, SerializesModels;
 
-    private $request;
+    public $gift, $template, $subject;
 
     /**
      * Create a new message instance.
      *
      * @return void
      */
-    public function __construct(Request $request)
+    public function __construct(Gift $gift, $template, $subject)
     {
-        $this->request = $request;
+        $this->gift = $gift;
+        $this->template = $template;
+        $this->subject = $subject;
     }
 
     /**
@@ -31,6 +33,6 @@ class OTPMailable extends Mailable
      */
     public function build()
     {
-        return $this->view('emails.otp.' . $this->request->email_template)->subject($this->request->subject)->with('request', $this->request);
+        return $this->view('emails.gift.' . $this->template)->subject($this->subject)->with('gift', $this->gift);
     }
 }

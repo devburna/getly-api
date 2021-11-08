@@ -18,8 +18,7 @@ class AuthController extends Controller
         $validator = Validator::make($request->all(), [
             'full_name' => 'required|string|max:50|unique:users,name',
             'email' => 'required|email|unique:users,email',
-            'country_code' => 'required|integer',
-            'phone' => 'required|digits:10',
+            'phone' => 'required|digits:10|unique:users,phone',
             'birthday' => 'required|date|before:today',
             'password' => 'required',
             'device_name' => 'required',
@@ -119,17 +118,21 @@ class AuthController extends Controller
         $request['user'] = $user;
         $request['email_template'] = 'email_verified';
 
-        $verify =  (new OTPController())->verify($request);
+        return DB::transaction(function () use ($user, $request) {
+            $verify =  (new OTPController())->verify($request);
 
-        if ($verify->original['status']) {
-            $user->update([
-                'email_verified_at' => now(),
-            ]);
+            if ($verify->original['status']) {
+                $user->update([
+                    'email_verified_at' => now(),
+                ]);
 
-            return $verify;
-        } else {
-            return $verify;
-        }
+                (new GiftController())->pendingGifts($user);
+
+                return $verify;
+            } else {
+                return $verify;
+            }
+        });
     }
 
     //set-pin

@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Gift extends Model
 {
@@ -27,6 +28,7 @@ class Gift extends Model
         'receiver_name',
         'receiver_email',
         'receiver_phone',
+        'sent_by',
     ];
 
     /**
@@ -50,4 +52,9 @@ class Gift extends Model
         'event_date' => 'datetime',
         'privacy' => 'boolean'
     ];
+
+    public function sender(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'sent_by');
+    }
 }

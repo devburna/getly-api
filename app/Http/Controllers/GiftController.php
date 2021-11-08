@@ -2,11 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\GiftMailable;
 use App\Models\Getlist;
 use App\Models\Gift;
 use App\Models\User;
 use Cloudinary\Api\Upload\UploadApi;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Validator;
 use League\CommonMark\Normalizer\SlugNormalizer;
 use Illuminate\Support\Str;
@@ -126,7 +128,7 @@ class GiftController extends Controller
             // 'notification_url' => '',
             'resource_type' => 'image'
         ])['secure_url'];
-        $request['sender_id'] = $request->user()->id;
+        $request['sent_by'] = $request->user()->id;
         $request['amount'] = $request->price;
         $request['customer_email'] = $request->user()->email;
         $request['customer_phone'] = $request->user()->profile->phone;
@@ -156,9 +158,10 @@ class GiftController extends Controller
             'short_message' => $request->short_message,
             'image' =>  $request->image,
             'link' => $request->link,
-            'receiver_name' => ucfirst($request->name),
+            'receiver_name' => ucfirst($request->receiver_name),
             'receiver_email' => strtolower($request->receiver_email),
             'receiver_phone' => $request->receiver_phone,
+            'sent_by' => $request->sent_by,
         ]);
     }
 
@@ -169,7 +172,6 @@ class GiftController extends Controller
 
         $gift = collect($request->gift);
 
-        $request['sender'] = $gift['sender_id'];
         $request['reference'] = $gift['reference'];
         $request['name'] = $gift['name'];
         $request['price'] = $gift['price'];
@@ -180,6 +182,7 @@ class GiftController extends Controller
         $request['receiver_name'] = $gift['receiver_name'];
         $request['receiver_email'] = $gift['receiver_email'];
         $request['receiver_phone'] = $gift['receiver_phone'];
+        $request['sent_by'] = $gift['sent_by'];
 
         if ($payment['data']['status'] === 'successful') {
             $this->store($request);
@@ -195,5 +198,22 @@ class GiftController extends Controller
             'status' => false,
             'message' => "Error occured while sending gift, kindly contact support immediately.",
         ], 422);
+    }
+
+    public function pendingGifts(User $user)
+    {
+        $gifts = Gift::where(['user_id' => null, 'getlist_id' => 0, 'receiver_email' => $user->email])->get();
+
+        if ($gifts->isEmpty()) {
+        } else {
+            foreach ($gifts as $gift) {
+                $gift->update([
+                    'user_id' => $user->id,
+                ]);
+            }
+
+            // notify sender through email gift, template , subject
+            Mail::to($gift->sender->email)->send(new GiftMailable($gift, 'redeemed', 'Gift Received'));
+        }
     }
 }

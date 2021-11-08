@@ -27,6 +27,7 @@ class CreateGiftsTable extends Migration
             $table->string('receiver_name');
             $table->string('receiver_email');
             $table->unsignedBigInteger('receiver_phone');
+            $table->unsignedBigInteger('sent_by');
             $table->softDeletes();
             $table->timestamps();
         });
