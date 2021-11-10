@@ -18,9 +18,7 @@
 </head>
 
 <body class="antialiased">
-    <pre>
-    {{print_r($payment)}}
-    </pre>
+    <h1>Online</h1>
 </body>
 
 </html>
