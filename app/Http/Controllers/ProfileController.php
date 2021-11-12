@@ -38,7 +38,7 @@ class ProfileController extends Controller
     {
         Profile::create([
             'user_id' => $request->user_id,
-            'phone' => $request->phone,
+            'phone' => $request->phone_code . $request->phone,
             'birthday' => $request->birthday,
         ]);
     }
