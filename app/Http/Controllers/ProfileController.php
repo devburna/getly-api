@@ -21,9 +21,12 @@ class ProfileController extends Controller
 
     public function index(Request $request)
     {
+        $user = $request->user();
+        $user->profile;
+
         return response()->json([
             'status' => true,
-            'data' => $request->user(),
+            'data' => $user,
             'message' => 'Fetched'
         ]);
     }
@@ -49,7 +52,7 @@ class ProfileController extends Controller
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
-    public function updatePassword(Request $request)
+    public function updatePin(Request $request)
     {
         $validator = Validator::make($request->all(), [
             'current_pin' => ['required', function ($attribute, $value, $fail) use ($request) {
@@ -59,6 +62,34 @@ class ProfileController extends Controller
             }],
             'pin' => 'required|digits:4',
             'pin_confirmation' => 'same:pin',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'status' => false,
+                'message' => $validator->errors()->first(),
+            ], 422);
+        }
+
+        $request->user()->profile->update([
+            'password' => Hash::make($request->pin_confirmation),
+        ]);
+
+        return response()->json([
+            'status' => true,
+            'message' => 'Success',
+        ]);
+    }
+
+    public function updatePassword(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'current_password' => ['required', function ($attribute, $value, $fail) use ($request) {
+                if (!Hash::check($value, $request->user()->password)) {
+                    return $fail(__('The current password is incorrect.'));
+                }
+            }],
+            'password' => 'required|confirmed',
         ]);
 
         if ($validator->fails()) {
@@ -99,7 +130,7 @@ class ProfileController extends Controller
         }
 
         $request->user()->profile->update([
-            'avatar' => $this->cloudinary->upload($request->avatar->pathinfo(), [
+            'avatar' => $this->cloudinary->upload($request->avatar->path(), [
                 'folder' => 'getly/users/',
                 'public_id' => (new SlugNormalizer())->normalize(strtolower($request->user()->name)),
                 'overwrite' => true,
@@ -110,6 +141,7 @@ class ProfileController extends Controller
 
         return response()->json([
             'status' => true,
+            'data' => $request->user(),
             'message' => 'Success',
         ]);
     }
@@ -131,9 +163,11 @@ class ProfileController extends Controller
 
         if ($request->has('phone')) {
             $validator = Validator::make($request->all(), [
-                'country_code' => 'required|integer',
-                'phone' => 'required|digits:10',
+                'phone_code' => 'required|integer',
+                'phone' => 'required|digits:10|unique:profiles,phone,' . $request->user()->profile->id,
             ]);
+
+            $request['phone_verified_at'] = null;
         }
 
         if ($validator->fails()) {
@@ -143,10 +177,11 @@ class ProfileController extends Controller
             ], 422);
         }
 
-        $request->user()->profile->update($request->only(['birthday', 'phone']));
+        $request->user()->profile->update($request->only(['birthday', 'phone', 'phone_verified_at']));
 
         return response()->json([
             'status' => true,
+            'data' => $request->user(),
             'message' => 'Success',
         ]);
     }

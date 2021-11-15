@@ -52,6 +52,18 @@ Route::prefix('v1')->group(function () {
         Route::prefix('profile')->group(function () {
             # me
             Route::get('', [\App\Http\Controllers\ProfileController::class, 'index']);
+
+            # update profile
+            Route::put('', [\App\Http\Controllers\ProfileController::class, 'update']);
+
+            # update avatar
+            Route::post('update-avatar', [\App\Http\Controllers\ProfileController::class, 'updateAvatar']);
+
+            # update pin
+            Route::post('update-pin', [\App\Http\Controllers\ProfileController::class, 'updatePin']);
+
+            # update password
+            Route::post('update-password', [\App\Http\Controllers\ProfileController::class, 'updatePassword']);
         });
 
         #getlists
