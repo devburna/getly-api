@@ -11737,7 +11737,7 @@
             <div class="col-md-6">
                 <div class="card bg-white border-0 p-4">
                     <div class="card-body">
-                        <h6 class="mb-0">Hi, {{$gift->sender->name}}</h6>
+                        <h6 class="mb-0">Hi, {{$gift->sent_by['name']}}</h6>
                     </div>
                     <div class="card-body">
                         <p class="card-text">Your gift has been received by {{$gift->receiver_name}}</p>

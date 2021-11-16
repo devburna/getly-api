@@ -225,17 +225,16 @@ class GiftController extends Controller
     public function pendingGifts(User $user)
     {
         $gifts = Gift::where(['user_id' => null, 'getlist_id' => 0, 'receiver_email' => $user->email])->get();
-
         if ($gifts->isEmpty()) {
         } else {
             foreach ($gifts as $gift) {
+                // notify sender through email gift, template , subject
+                Mail::to($gift->sent_by['email'])->send(new GiftMailable($gift, 'redeemed', 'Gift Received'));
+
                 $gift->update([
                     'user_id' => $user->id,
                 ]);
             }
-
-            // notify sender through email gift, template , subject
-            Mail::to($gift->sender->email)->send(new GiftMailable($gift, 'redeemed', 'Gift Received'));
         }
     }
 }
