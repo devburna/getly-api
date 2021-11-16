@@ -194,7 +194,7 @@ class GiftController extends Controller
         $gift = collect($request->gift);
 
         $request['user_id'] = $gift['user_id'] ?? null;
-        $request['reference'] = $gift['reference'];
+        $request['reference'] = $request->tx_ref . '-' . $request->transaction_id;
         $request['name'] = $gift['name'];
         $request['price'] = $gift['price'];
         $request['quantity'] = $gift['quantity'];
