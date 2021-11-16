@@ -91,14 +91,14 @@ Route::prefix('v1')->group(function () {
         #gifts
         Route::prefix('gifts')->group(function () {
 
+            # send gift
+            Route::post('', [\App\Http\Controllers\GiftController::class, 'send']);
+
             # received
             Route::get('', [\App\Http\Controllers\GiftController::class, 'index']);
 
             # create
             Route::post('{getlist}', [\App\Http\Controllers\GiftController::class, 'create']);
         });
-
-        # send gift
-        Route::post('send-gift', [\App\Http\Controllers\GiftController::class, 'send']);
     });
 });
