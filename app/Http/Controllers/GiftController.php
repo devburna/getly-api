@@ -134,8 +134,9 @@ class GiftController extends Controller
                 'message' => $validator->errors()->first(),
             ], 422);
         }
+        $user = User::where('email', $request->receiver_email)->first();
 
-        if (!$user = User::where('email', $request->receiver_email)->first()) {
+        if (!$user) {
             $request['user_id'] = null;
         } else {
             $request['user_id'] = $user->id;
@@ -148,6 +149,7 @@ class GiftController extends Controller
             // 'notification_url' => '',
             'resource_type' => 'image'
         ])['secure_url'];
+
         $request['sent_by'] = $request->user()->id;
         $request['amount'] = $request->price;
         $request['customer_email'] = $request->user()->email;
@@ -187,12 +189,11 @@ class GiftController extends Controller
 
     public function verifySentGift(Request $request)
     {
-
         $payment = (new PaymentController())->verifyFwPaymentLink($request);
 
         $gift = collect($request->gift);
 
-        $request['user_id'] = $gift['user_id'];
+        $request['user_id'] = $gift['user_id'] ?? null;
         $request['reference'] = $gift['reference'];
         $request['name'] = $gift['name'];
         $request['price'] = $gift['price'];
