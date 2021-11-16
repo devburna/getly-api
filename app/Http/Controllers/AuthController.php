@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Enums\OTPType;
+use App\Models\Profile;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -19,7 +20,11 @@ class AuthController extends Controller
             'full_name' => 'required|string|max:50|unique:users,name',
             'email' => 'required|email|unique:users,email',
             'phone_code' => 'required|integer',
-            'phone' => 'required|digits:10|unique:profiles,phone',
+            'phone' => ['required', 'digits:10', function ($attribute, $value, $fail) use ($request) {
+                if (Profile::where('phone', $request->phone_code . $request->phone)->first()) {
+                    return $fail(__('Phone number has already been taken.'));
+                }
+            }],
             'birthday' => 'required|date|before:today',
             'password' => 'required',
             'device_name' => 'required',
