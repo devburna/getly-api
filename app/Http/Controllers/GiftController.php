@@ -212,7 +212,7 @@ class GiftController extends Controller
             return response()->json([
                 'status' => true,
                 'data' => $gift,
-                'message' => "You’ve just sent your gift to " . $gift['name'],
+                'message' => "You’ve just sent your gift to " . $gift['receiver_name'],
             ]);
         }
 
