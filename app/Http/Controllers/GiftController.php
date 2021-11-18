@@ -2,12 +2,15 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\WalletUpdateType;
+use App\Http\Requests\UpdateWalletRequest;
 use App\Mail\GiftMailable;
 use App\Models\Getlist;
 use App\Models\Gift;
 use App\Models\User;
 use Cloudinary\Api\Upload\UploadApi;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Validator;
 use League\CommonMark\Normalizer\SlugNormalizer;
@@ -209,6 +212,11 @@ class GiftController extends Controller
         if ($payment['data']['status'] === 'successful') {
             $this->store($request);
 
+            if ($gift['user_id']) {
+                $user = User::where('email', $gift['receiver_email'])->first();
+                (new WalletController())->update($user, $gift['price'], WalletUpdateType::Credit());
+            }
+
             return response()->json([
                 'status' => true,
                 'data' => $gift,
@@ -225,15 +233,23 @@ class GiftController extends Controller
     public function pendingGifts(User $user)
     {
         $gifts = Gift::where(['user_id' => null, 'getlist_id' => 0, 'receiver_email' => $user->email])->get();
+
         if ($gifts->isEmpty()) {
         } else {
             foreach ($gifts as $gift) {
-                // notify sender through email gift, template , subject
-                Mail::to($gift->sent_by['email'])->send(new GiftMailable($gift, 'redeemed', 'Gift Received'));
 
-                $gift->update([
-                    'user_id' => $user->id,
-                ]);
+                DB::transaction(function () use ($gift, $user) {
+
+                    $gift->update([
+                        'user_id' => $user->id,
+                    ]);
+
+                    //update receiver's  balanace
+                    (new WalletController())->update($user, $gift->price, WalletUpdateType::Credit());
+
+                    // notify sender through email gift, template , subject
+                    Mail::to($gift->sent_by['email'])->send(new GiftMailable($gift, 'redeemed', 'Gift Received'));
+                });
             }
         }
     }

@@ -100,5 +100,12 @@ Route::prefix('v1')->group(function () {
             # create
             Route::post('{getlist}', [\App\Http\Controllers\GiftController::class, 'create']);
         });
+
+        #wallet
+        Route::prefix('wallet')->group(function () {
+
+            # show wallet
+            Route::get('', [\App\Http\Controllers\WalletController::class, 'show']);
+        });
     });
 });
