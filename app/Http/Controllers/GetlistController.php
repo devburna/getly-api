@@ -28,40 +28,32 @@ class GetlistController extends Controller
         $getlists = $request->user()->getlists;
         $received_gifts = $request->user()->gifts;
 
-        if ($getlists->isEmpty() && $received_gifts->isEmpty()) {
-            return response()->json([
-                'status' => false,
-                'message' => 'Not found'
-            ], 404);
-        } else {
+        $lists = [];
 
-            $lists = [];
+        foreach ($getlists as $getlist) {
+            # code...
+            $list = [
+                'id' => $getlist->id,
+                'image_url' => $getlist->image,
+                'title' => $getlist->title,
+                'event_date' => $getlist->event_date,
+                'short_message' => $getlist->short_message,
+                'privacy' => $getlist->privacy,
+                'item_count' => $getlist->gifts ? $getlist->gifts->count() : 0,
+                'created' => $getlist->created_at,
+            ];
 
-            foreach ($getlists as $getlist) {
-                # code...
-                $list = [
-                    'id' => $getlist->id,
-                    'image_url' => $getlist->image,
-                    'title' => $getlist->title,
-                    'event_date' => $getlist->event_date,
-                    'short_message' => $getlist->short_message,
-                    'privacy' => $getlist->privacy,
-                    'item_count' => $getlist->gifts ? $getlist->gifts->count() : 0,
-                    'created' => $getlist->created_at,
-                ];
-
-                array_push($lists, $list);
-            }
-
-            return response()->json([
-                'status' => true,
-                'data' => [
-                    'getlists' => $lists,
-                    'received_gifts_count' => $received_gifts ? $received_gifts->count() : 0,
-                ],
-                'message' => 'Found'
-            ]);
+            array_push($lists, $list);
         }
+
+        return response()->json([
+            'status' => true,
+            'data' => [
+                'getlists' => $lists,
+                'received_gifts_count' => $received_gifts ? $received_gifts->count() : 0,
+            ],
+            'message' => 'Found'
+        ]);
     }
 
     /**
