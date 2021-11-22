@@ -14,7 +14,10 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::get('/', function () {
-    return view('emails.gift.redeemed');
+    return response()->json([
+        'status' => true,
+        'message' => 'Serve is up and running.'
+    ]);
 });
 
 Route::prefix('verify')->group(function () {

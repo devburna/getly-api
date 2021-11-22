@@ -19,6 +19,9 @@
                     <div class="card-body">
                         <h6 class="lh-lg">Hi, <b>{{explode(' ', $request->user->name)[0]}}</b></h6>
                         <p class="card-text">Kinldy click on the button below to reset your password:</p>
+                    </div>
+                    <div class="card-body">
+
                         <a href="{{config('app.url')}}/password-reset?token={{$request->code}}&email={{$request->otp->email}}&type={{$request->otp->type}}" class="btn btn-warning shadow-none">Reset Password</a>
                     </div>
                     <div class="card-body">

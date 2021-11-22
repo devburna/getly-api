@@ -18,7 +18,9 @@
                 <div class="card bg-white border-0 p-2 p-lg-4">
                     <div class="card-body">
                         <h6 class="lh-lg">Hi, <b>{{explode(' ', $request->user->name)[0]}}</b></h6>
-                        <p class="card-text">Kinldy click on the button below to verify your email:</p>
+                        <p class="card-text">Kindly click on the button below to verify your email:</p>
+                    </div>
+                    <div class="card-body">
                         <a href="{{config('app.url')}}/verify-email?token={{$request->code}}&email={{$request->otp->email}}&type={{$request->otp->type}}" class="btn btn-warning shadow-none">Verify Email</a>
                     </div>
                     <div class="card-body">
