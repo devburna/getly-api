@@ -6,7 +6,7 @@ type: docker
 trigger:
   ref:
     - refs/heads/dev
-    - refs/heads/GTL-*
+    - refs/heads/TAK-*
 
 steps:
   - name: install
@@ -24,8 +24,8 @@ steps:
   #    DB_PASSWORD: ""
   #    REDIS_HOST: redis
   #    MAIL_MAILER: log
-  #    MAIL_FROM_ADDRESS: hello@getly.com
-  #    MAIL_FROM_NAME: Getly
+  #    MAIL_FROM_ADDRESS: hello@takeoutmedia.xyz
+  #    MAIL_FROM_NAME: Takeout Media
   #  commands:
   #    - ./vendor/bin/phpunit --configuration phpunit.xml
 
@@ -40,7 +40,7 @@ steps:
         from_secret: SSH_KEY
       port: 22
       rm: true
-      target: /var/www/api.getly.com
+      target: /var/www/getly/api.getly.app
       source:
         - ./*
     when:
@@ -57,8 +57,8 @@ steps:
       key:
         from_secret: SSH_KEY
       script:
-        - cp /var/www/envs/getly/.env.apistaging /var/www/api.getly.com/.env
-        - pushd /var/www/api.getly.com
+        - cp /var/www/envs/getly/.env.apistaging /var/www/getly/api.getly.app/.env
+        - pushd /var/www/api.getly.app
         - chown -R www-data:www-data ./storage/
         - php artisan migrate --force
         - php artisan key:generate
@@ -75,7 +75,7 @@ steps:
       channel:
         from_secret: SLACK_CHANNEL
     when:
-    status: [success, failure]
+    status: [ success, failure ]
 
 services:
   - name: redis
