@@ -65,7 +65,7 @@ class GetlistController extends Controller
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'image' => 'required|mimes:jpg,jpeg,png',
+            // 'image' => 'required|mimes:jpg,jpeg,png',
             'title ' => 'required|string|max:50',
             'event_date' => 'required|datetime',
             'privacy' => 'required|boolean'
@@ -86,13 +86,14 @@ class GetlistController extends Controller
 
         $getlist = Getlist::create([
             'user_id' => $request->user()->id,
-            'image' =>  $this->cloudinary->upload($request->image->path(), [
-                'folder' => 'getly/getlists/',
-                'public_id' => (new SlugNormalizer())->normalize(strtolower($request->title)),
-                'overwrite' => true,
-                // 'notification_url' => '',
-                'resource_type' => 'image'
-            ])['secure_url'],
+            // 'image' =>  $this->cloudinary->upload($request->image->path(), [
+            //     'folder' => 'getly/getlists/',
+            //     'public_id' => (new SlugNormalizer())->normalize(strtolower($request->title)),
+            //     'overwrite' => true,
+            //     // 'notification_url' => '',
+            //     'resource_type' => 'image'
+            // ])['secure_url'],
+            'image' => 'none',
             'title' => ucfirst($request->title),
             'event_date' => $request->event_date,
             'short_message' => $request->short_message,

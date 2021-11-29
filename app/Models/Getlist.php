@@ -32,6 +32,7 @@ class Getlist extends Model
      */
     protected $hidden = [
         'user_id',
+        'image',
         'deleted_at',
         'updated_at'
     ];
