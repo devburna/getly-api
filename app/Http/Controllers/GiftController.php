@@ -96,8 +96,8 @@ class GiftController extends Controller
         ])['secure_url'];
         $request['reference'] = (string) Str::uuid();
         $request['receiver_name'] = $request->user()->name;
-        $request['receiver_email'] = $request->user()->profile->phone;
-        $request['receiver_phone'] = $request->user()->email;
+        $request['receiver_email'] = $request->user()->email;
+        $request['receiver_phone'] = $request->user()->profile->phone;
 
         return response()->json([
             'status' => true,
