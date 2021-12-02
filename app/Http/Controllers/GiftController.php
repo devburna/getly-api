@@ -69,10 +69,7 @@ class GiftController extends Controller
             'price' => 'required|numeric',
             'quantity' => 'required|numeric',
             'image' => 'required|mimes:jpg,jpeg,png',
-            'link' => 'required|url',
-            'receiver_name' => 'required|string',
-            'receiver_email' => 'required|email',
-            'receiver_phone' => 'required|numeric',
+            'short_message' => 'string',
         ]);
 
         if ($request->has('short_message')) {
@@ -98,6 +95,9 @@ class GiftController extends Controller
             'resource_type' => 'image'
         ])['secure_url'];
         $request['reference'] = (string) Str::uuid();
+        $request['receiver_name'] = $request->user()->name;
+        $request['receiver_email'] = $request->user()->profile->phone;
+        $request['receiver_phone'] = $request->user()->email;
 
         return response()->json([
             'status' => true,
