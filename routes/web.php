@@ -23,4 +23,7 @@ Route::get('/', function () {
 Route::prefix('verify')->group(function () {
     # send gift
     Route::get('sent-gift', [\App\Http\Controllers\GiftController::class, 'verifySentGift'])->name('verify-sent-gift');
+
+    # verify-wish
+    Route::get('sent-wish', [\App\Http\Controllers\ContributorController::class, 'verifySentWish'])->name('verify-sent-wish');
 });

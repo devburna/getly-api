@@ -121,18 +121,24 @@ class GetlistController extends Controller
             ], 403);
         }
 
+        foreach ($getlist->gifts as $gift) {
+            # code...
+            $amt_contributed = $gift->contributors->sum('amount');
+
+            if ($amt_contributed >= $gift->price) {
+                $gift->closed = true;
+            } else {
+                $gift->closed = false;
+            }
+
+            $gift->contributors = $gift->contributors;
+        }
+
+        $getlist->gifts;
+
         return response()->json([
             'status' => true,
-            'data' => [
-                'id' => $getlist->id,
-                'image_url' => $getlist->image,
-                'title' => $getlist->title,
-                'event_date' => $getlist->event_date,
-                'short_message' => $getlist->short_message,
-                'privacy' => $getlist->privacy,
-                'items' => $getlist->gifts,
-                'created' => $getlist->created_at,
-            ],
+            'data' => $getlist,
             'message' => 'Found'
         ]);
     }

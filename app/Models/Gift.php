@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Gift extends Model
 {
@@ -56,6 +57,11 @@ class Gift extends Model
     public function sender(): BelongsTo
     {
         return $this->belongsTo(User::class, 'sent_by');
+    }
+
+    public function contributors(): HasMany
+    {
+        return $this->hasMany(Contributor::class, 'gift_id');
     }
 
     public function getSentByAttribute($value)

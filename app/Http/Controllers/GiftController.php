@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Enums\WalletUpdateType;
-use App\Http\Requests\UpdateWalletRequest;
 use App\Mail\GiftMailable;
 use App\Models\Getlist;
 use App\Models\Gift;
@@ -32,6 +31,30 @@ class GiftController extends Controller
      * @return \Illuminate\Http\Response
      */
     public function index(Request $request)
+    {
+        $gifts = $request->user()->gifts()->where('getlist_id', 0)->get();
+
+        if ($gifts->isEmpty()) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Not found'
+            ], 404);
+        } else {
+            return response()->json([
+                'status' => true,
+                'data' => $gifts,
+                'message' => 'Found'
+            ]);
+        }
+    }
+
+    /**
+     * Display a listing of the resource.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\Response
+     */
+    public function search(Request $request)
     {
         $gifts = $request->user()->gifts()->where('getlist_id', 0)->get();
 

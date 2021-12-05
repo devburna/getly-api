@@ -29,7 +29,7 @@ class PaymentController extends Controller
             ],
             'customer' => [
                 'email' => strtolower($request->customer_email),
-                'phonenumber' => $request->customer_phone,
+                'phone_number' => $request->customer_phone,
                 'name' => ucfirst($request->customer_name),
             ],
             'customizations' => [

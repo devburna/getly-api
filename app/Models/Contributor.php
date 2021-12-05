@@ -4,10 +4,9 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class Getlist extends Model
+class Contributor extends Model
 {
     use SoftDeletes, HasFactory;
 
@@ -17,12 +16,11 @@ class Getlist extends Model
      * @var string[]
      */
     protected $fillable = [
-        'user_id',
-        'image',
-        'title',
-        'event_date',
-        'short_message',
-        'privacy',
+        'gift_id',
+        'name',
+        'email',
+        'phone',
+        'amount'
     ];
 
     /**
@@ -31,7 +29,7 @@ class Getlist extends Model
      * @var array
      */
     protected $hidden = [
-        'user_id',
+        'gift_id',
         'deleted_at',
         'updated_at'
     ];
@@ -42,12 +40,6 @@ class Getlist extends Model
      * @var array
      */
     protected $casts = [
-        'event_date' => 'datetime',
-        'privacy' => 'boolean'
+        //
     ];
-
-    public function gifts(): HasMany
-    {
-        return $this->hasMany(Gift::class, 'getlist_id');
-    }
 }
