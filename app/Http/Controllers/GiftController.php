@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Enums\WalletUpdateType;
+use App\Http\Requests\UpdateWalletRequest;
 use App\Mail\GiftMailable;
 use App\Models\Getlist;
 use App\Models\Gift;
@@ -49,30 +50,6 @@ class GiftController extends Controller
     }
 
     /**
-     * Display a listing of the resource.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
-     */
-    public function search(Request $request)
-    {
-        $gifts = $request->user()->gifts()->where('getlist_id', 0)->get();
-
-        if ($gifts->isEmpty()) {
-            return response()->json([
-                'status' => false,
-                'message' => 'Not found'
-            ], 404);
-        } else {
-            return response()->json([
-                'status' => true,
-                'data' => $gifts,
-                'message' => 'Found'
-            ]);
-        }
-    }
-
-    /**
      * Store a newly created resource in storage.
      *
      * @param  \App\Models\Getlist  $getlist
@@ -91,7 +68,7 @@ class GiftController extends Controller
             'name' => 'required|string|max:50',
             'price' => 'required|numeric',
             'quantity' => 'required|numeric',
-            'image' => 'required|mimes:jpg,jpeg,png',
+            'photo' => 'required|mimes:jpg,jpeg,png',
             'short_message' => 'string',
         ]);
 
@@ -110,7 +87,7 @@ class GiftController extends Controller
 
         $request['user_id'] = $request->user()->id;
         $request['getlist_id'] = $getlist->id;
-        $request['image'] = $this->cloudinary->upload($request->image->path(), [
+        $request['image'] = $this->cloudinary->upload($request->photo->path(), [
             'folder' => 'getly/gifts/',
             'public_id' => (new SlugNormalizer())->normalize(strtolower($request->name)),
             'overwrite' => true,

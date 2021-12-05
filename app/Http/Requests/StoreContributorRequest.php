@@ -24,9 +24,9 @@ class StoreContributorRequest extends FormRequest
     public function rules()
     {
         return [
-            'name' => 'required_if:type,==,contribute|string|max:50',
-            'email' => 'required_if:type,==,contribute|email',
-            'phone' => 'required_if:type,==,contribute',
+            'name' => 'required|string|max:50',
+            'email' => 'required|email',
+            'phone' => 'required',
             'amount' => 'required_if:type,==,contribute|numeric',
             'type' => 'in:contribute,buy'
         ];

@@ -97,13 +97,11 @@ Route::prefix('v1')->group(function () {
             # received
             Route::get('', [\App\Http\Controllers\GiftController::class, 'index']);
 
-            Route::prefix('{gift}')->group(function () {
-                # create
-                Route::post('', [\App\Http\Controllers\GiftController::class, 'create']);
+            # create
+            Route::post('{getlist}', [\App\Http\Controllers\GiftController::class, 'create']);
 
-                # fullfill
-                Route::post('fullfill', [\App\Http\Controllers\ContributorController::class, 'fullfill']);
-            });
+            # fullfill
+            Route::post('{gift}/fullfill', [\App\Http\Controllers\ContributorController::class, 'fullfill']);
         });
 
         #wallet
