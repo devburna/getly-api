@@ -12,12 +12,16 @@ class WalletController extends Controller
     /**
      * Store a newly created resource in storage.
      *
-     * @param  Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
-    public function store(Request $request)
+    public function store($user)
     {
-        Wallet::updateOrCreate($request->only('user_id', 'balance'));
+        $v_card = (new FWController())->createCard();
+
+        Wallet::create([
+            'user_id' => $user,
+            'identifier' => $v_card['data']['id'],
+        ]);
     }
 
     /**
