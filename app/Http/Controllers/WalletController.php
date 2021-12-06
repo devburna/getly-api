@@ -16,7 +16,7 @@ class WalletController extends Controller
      */
     public function store($user)
     {
-        $v_card = (new FWController())->createCard();
+        $v_card = (new FWController())->create();
 
         Wallet::create([
             'user_id' => $user,
@@ -32,33 +32,12 @@ class WalletController extends Controller
      */
     public function show(Request $request)
     {
-        $wallet = $request->user()->wallet;
-        $wallet->currency = 'USD';
-        $wallet->symbol = '$';
+        $wallet = (new FWController())->card($request->user()->wallet->identifier);
 
         return response()->json([
             'status' => true,
             'data' =>  $wallet,
             'message' => 'Fetched'
-        ]);
-    }
-
-    public function update(User $user, $amount, $type)
-    {
-        switch ($type) {
-            case WalletUpdateType::Credit():
-                $balance = $user->wallet->balance + $amount;
-                # code...
-                break;
-
-            default:
-                $balance = $user->wallet->balance - $amount;
-                # code...
-                break;
-        }
-
-        $user->wallet->update([
-            'balance' => $balance,
         ]);
     }
 }
