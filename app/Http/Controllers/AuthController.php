@@ -47,7 +47,7 @@ class AuthController extends Controller
             $request['user_id'] = $user->id;
 
             (new ProfileController())->store($request);
-            (new WalletController())->store($request);
+            // (new WalletController())->store($request);
 
             $request['user'] = $user;
             $request['code'] = Str::random(40);
