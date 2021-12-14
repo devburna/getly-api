@@ -25,7 +25,11 @@ class GetlistController extends Controller
      */
     public function index(Request $request)
     {
-        $getlists = $request->user()->getlists;
+        if ($request->has('public')) {
+            $getlists = Getlist::where('privacy', false)->paginate(50);
+        } else {
+            $getlists = $request->user()->getlists;
+        }
         $received_gifts = $request->user()->gifts;
 
         $lists = [];
@@ -114,11 +118,13 @@ class GetlistController extends Controller
      */
     public function show(Request $request, Getlist $getlist)
     {
-        if ($request->user()->cannot('view', $getlist)) {
-            return response()->json([
-                'status' => false,
-                'message' => 'Not allowed'
-            ], 403);
+        if (!$request->has('public')) {
+            if ($request->user()->cannot('view', $getlist)) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Not allowed'
+                ], 403);
+            }
         }
 
         foreach ($getlist->gifts as $gift) {
