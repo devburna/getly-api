@@ -265,6 +265,12 @@ class GiftController extends Controller
 
     public function update(UpdateGiftRequest $request, Gift $gift)
     {
+        if ($gift->contributorsv) {
+            return response()->json([
+                'status' => false,
+                'message' => 'You can no longer update this gift.',
+            ], 422);
+        }
         if ($request->user()->cannot('view', $gift)) {
             return response()->json([
                 'status' => false,
@@ -282,7 +288,7 @@ class GiftController extends Controller
             ])['secure_url'];
         }
 
-        $gift->update($request->only(['name', 'short_message', 'image']));
+        $gift->update($request->only(['name', 'short_message', 'image', 'link']));
 
         return response()->json([
             'status' => true,

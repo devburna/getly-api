@@ -27,6 +27,7 @@ class UpdateGiftRequest extends FormRequest
             'name' => 'string',
             'photo' => 'mimes:jpg,jpeg,png',
             'short_message' => 'string',
+            'link' => 'url',
         ];
     }
 }
