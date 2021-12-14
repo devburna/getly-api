@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\UpdateProfileRequest;
 use App\Models\Profile;
 use Cloudinary\Api\Upload\UploadApi;
 use Illuminate\Http\Request;
@@ -153,30 +154,12 @@ class ProfileController extends Controller
      * @param  \App\Models\Profile  $profile
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request)
+    public function update(UpdateProfileRequest $request)
     {
-        if ($request->has('birthday')) {
-            $validator = Validator::make($request->all(), [
-                'birthday' => 'required|date|before:today',
-            ]);
+        if ($request->has('name')) {
+            $request->user()->update($request->only(['name']));
         }
-
-        if ($request->has('phone')) {
-            $validator = Validator::make($request->all(), [
-                'phone_code' => 'required|integer',
-                'phone' => 'required|digits:10|unique:profiles,phone,' . $request->user()->profile->id,
-            ]);
-
-            $request['phone_verified_at'] = null;
-        }
-
-        if ($validator->fails()) {
-            return response()->json([
-                'status' => false,
-                'message' => $validator->errors()->first(),
-            ], 422);
-        }
-
+        
         $request->user()->profile->update($request->only(['birthday', 'phone', 'phone_verified_at']));
 
         return response()->json([
