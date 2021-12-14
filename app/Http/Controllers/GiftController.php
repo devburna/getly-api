@@ -192,42 +192,50 @@ class GiftController extends Controller
 
     public function verifySentGift(Request $request)
     {
-        $payment = (new PaymentController())->verifyFwPaymentLink($request);
 
-        $gift = collect($request->gift);
+        if ($request->status === 'success') {
+            $payment = (new PaymentController())->verifyFwPaymentLink($request);
 
-        $request['user_id'] = $gift['user_id'] ?? null;
-        $request['reference'] = $request->tx_ref . '-' . $request->transaction_id;
-        $request['name'] = $gift['name'];
-        $request['price'] = $gift['price'];
-        $request['quantity'] = $gift['quantity'];
-        $request['short_message'] = $gift['short_message'];
-        $request['image'] = $gift['photo'];
-        $request['link'] = $gift['link'];
-        $request['receiver_name'] = $gift['receiver_name'];
-        $request['receiver_email'] = $gift['receiver_email'];
-        $request['receiver_phone'] = $gift['receiver_phone'];
-        $request['sent_by'] = $gift['sent_by'];
+            $gift = collect($request->gift);
 
-        if ($payment['data']['status'] === 'successful') {
-            $this->store($request);
+            $request['user_id'] = $gift['user_id'] ?? null;
+            $request['reference'] = $request->tx_ref . '-' . $request->transaction_id;
+            $request['name'] = $gift['name'];
+            $request['price'] = $gift['price'];
+            $request['quantity'] = $gift['quantity'];
+            $request['short_message'] = $gift['short_message'];
+            $request['image'] = $gift['photo'];
+            $request['link'] = $gift['link'];
+            $request['receiver_name'] = $gift['receiver_name'];
+            $request['receiver_email'] = $gift['receiver_email'];
+            $request['receiver_phone'] = $gift['receiver_phone'];
+            $request['sent_by'] = $gift['sent_by'];
 
-            if ($gift['user_id']) {
-                $user = User::where('email', $gift['receiver_email'])->first();
-                (new WalletController())->update($user, $gift['price'], WalletUpdateType::Credit());
+            if ($payment['data']['status'] === 'successful') {
+                $this->store($request);
+
+                if ($gift['user_id']) {
+                    $user = User::where('email', $gift['receiver_email'])->first();
+                    (new WalletController())->update($user, $gift['price'], WalletUpdateType::Credit());
+                }
+
+                return response()->json([
+                    'status' => true,
+                    'data' => $gift,
+                    'message' => "You’ve just sent your gift to " . $gift['receiver_name'],
+                ]);
             }
-
+        } elseif ($request->status === 'cancelled') {
             return response()->json([
-                'status' => true,
-                'data' => $gift,
-                'message' => "You’ve just sent your gift to " . $gift['receiver_name'],
-            ]);
+                'status' => false,
+                'message' => "Payment was cancelled.",
+            ], 422);
+        } else {
+            return response()->json([
+                'status' => false,
+                'message' => "Error occured while sending gift, kindly contact support immediately.",
+            ], 422);
         }
-
-        return response()->json([
-            'status' => false,
-            'message' => "Error occured while sending gift, kindly contact support immediately.",
-        ], 422);
     }
 
     public function pendingGifts(User $user)
