@@ -30,7 +30,7 @@ class GiftPolicy
      */
     public function view(User $user, Gift $gift)
     {
-        return ($user->id === $gift->getlist->user_id) || ($user->email === $gift->getlist->receiver_email);
+        return ($user->id === $gift->user_id) || ($user->email === $gift->receiver_email);
     }
 
     /**

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Enums\WalletUpdateType;
+use App\Http\Requests\UpdateGiftRequest;
 use App\Http\Requests\UpdateWalletRequest;
 use App\Mail\GiftMailable;
 use App\Models\Getlist;
@@ -260,5 +261,50 @@ class GiftController extends Controller
                 });
             }
         }
+    }
+
+    public function update(UpdateGiftRequest $request, Gift $gift)
+    {
+        if ($request->user()->cannot('view', $gift)) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Not allowed'
+            ], 403);
+        }
+
+        if ($request->hasFile('photo')) {
+            $request['image'] =  $this->cloudinary->upload($request->photo->path(), [
+                'folder' => 'getly/gifts/',
+                'public_id' => (new SlugNormalizer())->normalize(strtolower($gift->name)),
+                'overwrite' => true,
+                // 'notification_url' => '',
+                'resource_type' => 'image'
+            ])['secure_url'];
+        }
+
+        $gift->update($request->only(['name', 'short_message', 'image']));
+
+        return response()->json([
+            'status' => true,
+            'data' => $gift,
+            'message' => 'Success',
+        ]);
+    }
+
+    public function delete(Request $request, Gift $gift)
+    {
+        if ($request->user()->cannot('view', $gift)) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Not allowed'
+            ], 403);
+        }
+
+        $gift->delete();
+
+        return response()->json([
+            'status' => true,
+            'message' => 'Success'
+        ]);
     }
 }

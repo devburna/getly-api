@@ -103,8 +103,18 @@ Route::prefix('v1')->group(function () {
             # create
             Route::post('{getlist}', [\App\Http\Controllers\GiftController::class, 'create']);
 
-            # fullfill
-            Route::post('{gift}/fullfill', [\App\Http\Controllers\ContributorController::class, 'fullfill']);
+            #getlist
+            Route::prefix('{gift}')->group(function () {
+
+                # fullfill
+                Route::post('fullfill', [\App\Http\Controllers\ContributorController::class, 'fullfill']);
+
+                # update
+                Route::post('update', [\App\Http\Controllers\GiftController::class, 'update']);
+
+                # delete
+                Route::delete('', [\App\Http\Controllers\GiftController::class, 'delete']);
+            });
         });
 
         #wallet
