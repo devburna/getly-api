@@ -250,4 +250,21 @@ class GetlistController extends Controller
             'message' => 'Success'
         ]);
     }
+
+    public function delete(Request $request, Getlist $getlist)
+    {
+        if ($request->user()->cannot('view', $getlist)) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Not allowed'
+            ], 403);
+        }
+
+        $getlist->delete();
+
+        return response()->json([
+            'status' => true,
+            'message' => 'Success'
+        ]);
+    }
 }

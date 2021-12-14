@@ -85,6 +85,9 @@ Route::prefix('v1')->group(function () {
 
                 # update image
                 Route::post('image', [\App\Http\Controllers\GetlistController::class, 'updateImage']);
+
+                # delete
+                Route::delete('', [\App\Http\Controllers\GetlistController::class, 'delete']);
             });
         });
 
