@@ -40,4 +40,9 @@ class WalletController extends Controller
             'message' => 'Fetched'
         ]);
     }
+
+    public function create(Request $request)
+    {
+        return (new GladeController())->createVirtualCard($request);
+    }
 }

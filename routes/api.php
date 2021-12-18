@@ -120,8 +120,11 @@ Route::prefix('v1')->group(function () {
         #wallet
         Route::prefix('wallet')->group(function () {
 
-            # show wallet
+            # show
             Route::get('', [\App\Http\Controllers\WalletController::class, 'show']);
+
+            # create
+            Route::post('', [\App\Http\Controllers\WalletController::class, 'create']);
         });
     });
 });
