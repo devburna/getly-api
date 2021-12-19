@@ -123,9 +123,6 @@ Route::prefix('v1')->group(function () {
             # details
             Route::get('', [\App\Http\Controllers\VirtualCardController::class, 'details']);
 
-            # create
-            Route::post('', [\App\Http\Controllers\VirtualCardController::class, 'create']);
-
             # fund
             Route::post('fund', [\App\Http\Controllers\VirtualCardController::class, 'fund']);
 

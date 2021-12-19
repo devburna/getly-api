@@ -256,9 +256,9 @@ class GiftController extends Controller
                     if (!$user->virtualCard) {
                         $request['name'] = $user->name;
                         $request['amount'] = $gift->price;
-                        (new GladeController())->createVirtualCard($request);
+                        (new VirtualCardController())->create($request);
                     } else {
-                        (new GladeController())->fundVirtualCard($user->virtualCard->reference, $gift->price);
+                        (new VirtualCardController())->fund($user->virtualCard->reference, $gift->price);
                     }
 
                     // notify sender through email gift, template , subject
