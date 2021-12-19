@@ -120,11 +120,20 @@ Route::prefix('v1')->group(function () {
         #wallet
         Route::prefix('wallet')->group(function () {
 
-            # show
-            Route::get('', [\App\Http\Controllers\WalletController::class, 'show']);
+            # details
+            Route::get('', [\App\Http\Controllers\VirtualCardController::class, 'details']);
 
             # create
-            Route::post('', [\App\Http\Controllers\WalletController::class, 'create']);
+            Route::post('', [\App\Http\Controllers\VirtualCardController::class, 'create']);
+
+            # fund
+            Route::post('fund', [\App\Http\Controllers\VirtualCardController::class, 'fund']);
+
+            # withdraw
+            Route::post('withdraw', [\App\Http\Controllers\VirtualCardController::class, 'withdraw']);
+
+            # transactions
+            Route::get('transactions', [\App\Http\Controllers\VirtualCardController::class, 'transactions']);
         });
     });
 });

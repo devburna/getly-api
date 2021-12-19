@@ -133,7 +133,7 @@ class AuthController extends Controller
                     'email_verified_at' => now(),
                 ]);
 
-                (new GiftController())->pendingGifts($user);
+                (new GiftController())->pendingGifts($request, $user);
 
                 return $verify;
             } else {

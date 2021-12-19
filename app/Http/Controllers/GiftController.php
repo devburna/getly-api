@@ -239,7 +239,7 @@ class GiftController extends Controller
         }
     }
 
-    public function pendingGifts(User $user)
+    public function pendingGifts(Request $request, User $user)
     {
         $gifts = Gift::where(['user_id' => null, 'getlist_id' => 0, 'receiver_email' => $user->email])->get();
 
@@ -247,14 +247,19 @@ class GiftController extends Controller
         } else {
             foreach ($gifts as $gift) {
 
-                DB::transaction(function () use ($gift, $user) {
+                DB::transaction(function () use ($gift, $user, $request) {
 
                     $gift->update([
                         'user_id' => $user->id,
                     ]);
 
-                    //update receiver's  balanace
-                    (new WalletController())->update($user, $gift->price, WalletUpdateType::Credit());
+                    if (!$user->virtualCard) {
+                        $request['name'] = $user->name;
+                        $request['amount'] = $gift->price;
+                        (new GladeController())->createVirtualCard($request);
+                    } else {
+                        (new GladeController())->fundVirtualCard($user->virtualCard->reference, $gift->price);
+                    }
 
                     // notify sender through email gift, template , subject
                     Mail::to($gift->sent_by['email'])->send(new GiftMailable($gift, 'redeemed', 'Gift Received'));

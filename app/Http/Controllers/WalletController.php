@@ -2,8 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Enums\WalletUpdateType;
-use App\Models\User;
 use App\Models\Wallet;
 use Illuminate\Http\Request;
 
@@ -39,10 +37,5 @@ class WalletController extends Controller
             'data' =>  $wallet,
             'message' => 'Fetched'
         ]);
-    }
-
-    public function create(Request $request)
-    {
-        return (new GladeController())->createVirtualCard($request);
     }
 }
