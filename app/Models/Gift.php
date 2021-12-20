@@ -25,7 +25,7 @@ class Gift extends Model
         'price',
         'quantity',
         'short_message',
-        'image',
+        'image_url',
         'link',
         'receiver_name',
         'receiver_email',

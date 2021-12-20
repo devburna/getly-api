@@ -22,7 +22,7 @@ class CreateGiftsTable extends Migration
             $table->unsignedDouble('price', null, 2);
             $table->unsignedBigInteger('quantity');
             $table->longText('short_message')->nullable();
-            $table->string('image')->nullable();
+            $table->string('image_url')->nullable();
             $table->string('link')->nullable();
             $table->string('receiver_name');
             $table->string('receiver_email');

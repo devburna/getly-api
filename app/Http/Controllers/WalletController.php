@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Enums\TransactionType;
 use App\Http\Requests\WalletDepositRequest;
+use App\Models\User;
 use App\Models\Wallet;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -69,5 +70,45 @@ class WalletController extends Controller
             'status' => true,
             'message' => 'Payment sent',
         ]);
+    }
+
+    public function charge(Request $request, $email, $type = null)
+    {
+        if ($user = User::where('email', $email)->first()) {
+            return DB::transaction(function () use ($request, $user, $type) {
+                switch ($type) {
+                    case 'credit':
+                        $user->wallet->update([
+                            'balance' => $user->wallet->balance + $request->amount,
+                        ]);
+
+                        $spent = false;
+                        $summary = 'Gift received';
+                        break;
+
+                    default:
+
+                        $user->wallet->update([
+                            'balance' => $user->wallet->balance - $request->amount,
+                        ]);
+
+                        $spent = true;
+                        $summary = 'Gift sent';
+                        break;
+                }
+
+                $request['user_id'] = $user->id;
+                $request['amount'] = $request->amount;
+                $request['provider'] = 'getly';
+                $request['channel'] = 'gift';
+                $request['summary'] = $summary;
+                $request['reference'] = (string) Str::uuid();
+                $request['spent'] = $spent;
+                $request['status'] = TransactionType::Success();
+                $request['method'] = 'wallet';
+
+                (new TransactionController())->store($request);
+            });
+        }
     }
 }

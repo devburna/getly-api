@@ -25,7 +25,7 @@ class TransactionController extends Controller
         } else {
             return response()->json([
                 'status' => true,
-                'data' => $transactions->paginate(50),
+                'data' => $transactions->orderByDesc('created_at')->paginate(50),
                 'message' => 'Found'
             ]);
         }
@@ -45,6 +45,7 @@ class TransactionController extends Controller
             'channel' => $data['channel'],
             'amount' => $data['amount'],
             'summary' => $data['summary'],
+            'spent' => $data['spent'],
             'status' => $data['status'],
         ]);
     }

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Enums\WalletUpdateType;
+use App\Http\Requests\SendGiftRequest;
 use App\Http\Requests\UpdateGiftRequest;
 use App\Mail\GiftMailable;
 use App\Models\Getlist;
@@ -112,57 +113,41 @@ class GiftController extends Controller
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
-    public function send(Request $request)
+    public function send(SendGiftRequest $request)
     {
-        $validator = Validator::make($request->all(), [
-            'name' => 'required|string|max:50',
-            'price' => 'required|numeric',
-            'quantity' => 'required|numeric',
-            'image' => 'required|mimes:jpg,jpeg,png',
-            'link' => 'required|url',
-            'receiver_name' => 'required|string',
-            'receiver_email' => 'required|email',
-            'receiver_phone' => 'required|numeric',
-        ]);
+        return DB::transaction(function () use ($request) {
+            $receiver = User::where('email', $request->receiver_email)->first();
 
-        if ($request->has('short_message')) {
-            $validator = Validator::make($request->all(), [
-                'short_message' => 'required|string|max:100',
-            ]);
-        }
+            if (!$receiver) {
+                $request['user_id'] = null;
+            } else {
+                $request['user_id'] = $receiver->id;
+            }
 
-        if ($validator->fails()) {
+            $request['image_url'] = $this->cloudinary->upload($request->image->path(), [
+                'folder' => 'getly/gifts/',
+                'public_id' => (new SlugNormalizer())->normalize(strtolower($request->name)),
+                'overwrite' => true,
+                // 'notification_url' => '',
+                'resource_type' => 'image'
+            ])['secure_url'];
+            $request['reference'] = (string) Str::uuid();
+            $request['sent_by'] =  $request->user()->id;
+            $request['amount'] =  $request->price;
+
+            $receiver = User::where('email', $request->receiver_email)->first();
+
+            $gift = $this->store($request);
+
+            (new WalletController())->charge($request, $receiver->email, 'credit');
+            (new WalletController())->charge($request, $request->user()->email, 'debit');
+
             return response()->json([
-                'status' => false,
-                'message' => $validator->errors()->first(),
-            ], 422);
-        }
-        $user = User::where('email', $request->receiver_email)->first();
-
-        if (!$user) {
-            $request['user_id'] = null;
-        } else {
-            $request['user_id'] = $user->id;
-        }
-
-        $request['photo'] = $this->cloudinary->upload($request->image->path(), [
-            'folder' => 'getly/gifts/',
-            'public_id' => (new SlugNormalizer())->normalize(strtolower($request->name)),
-            'overwrite' => true,
-            // 'notification_url' => '',
-            'resource_type' => 'image'
-        ])['secure_url'];
-
-        $request['sent_by'] = $request->user()->id;
-        $request['amount'] = $request->price;
-        $request['customer_email'] = $request->user()->email;
-        $request['customer_phone'] = $request->user()->profile->phone;
-        $request['customer_name'] = $request->user()->name;
-        $request['description'] = $request->name;
-        $request['reference'] = (string) Str::uuid();
-        $request['redirect_url'] = route('verify-sent-gift', ['gift' => $request->all()]);
-
-        return (new FWController())->generatePaymentLink($request);
+                'status' => true,
+                'data' => $gift,
+                'message' => "You’ve just sent your gift to " . $gift->receiver_name,
+            ]);
+        });
     }
 
     /**
@@ -181,7 +166,7 @@ class GiftController extends Controller
             'price' => $request->price,
             'quantity' => $request->quantity,
             'short_message' => $request->short_message,
-            'image' =>  $request->image,
+            'image_url' =>  $request->image_url,
             'link' => $request->link,
             'receiver_name' => ucfirst($request->receiver_name),
             'receiver_email' => strtolower($request->receiver_email),
