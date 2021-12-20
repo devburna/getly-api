@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Transaction extends Model
 {
@@ -31,7 +32,7 @@ class Transaction extends Model
      * @var array
      */
     protected $hidden = [
-        'user_id',
+        // 'user_id',
         'provider',
         'deleted_at',
         'updated_at',
@@ -45,4 +46,9 @@ class Transaction extends Model
     protected $casts = [
         'spent' => 'boolean',
     ];
+
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
+    }
 }

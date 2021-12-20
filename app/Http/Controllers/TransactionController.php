@@ -54,7 +54,7 @@ class TransactionController extends Controller
     {
         $transaction = Transaction::where('reference', $request->tx_ref)->firstOrFail();
 
-        if ($transaction->status = TransactionType::Success()) {
+        if ($transaction->status == TransactionType::Success()) {
             return response()->json([
                 'status' => true,
                 'data' => $transaction,
