@@ -14,7 +14,7 @@ class CreateOTPSTable extends Migration
     public function up()
     {
         Schema::create('o_t_p_s', function (Blueprint $table) {
-            $table->id();
+            $table->id()->from(time());
             $table->string('email')->index();
             $table->string('token');
             $table->string('type');

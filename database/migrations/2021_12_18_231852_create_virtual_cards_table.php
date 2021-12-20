@@ -14,7 +14,7 @@ class CreateVirtualCardsTable extends Migration
     public function up()
     {
         Schema::create('virtual_cards', function (Blueprint $table) {
-            $table->id();
+            $table->id()->from(time());
             $table->unsignedBigInteger('user_id')->unique();
             $table->string('reference')->unique();
             $table->string('provider');

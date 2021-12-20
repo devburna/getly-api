@@ -14,7 +14,7 @@ class CreateGiftsTable extends Migration
     public function up()
     {
         Schema::create('gifts', function (Blueprint $table) {
-            $table->id();
+            $table->id()->from(time());
             $table->unsignedBigInteger('user_id')->nullable();
             $table->unsignedBigInteger('getlist_id')->default(0);
             $table->string('reference')->unique();

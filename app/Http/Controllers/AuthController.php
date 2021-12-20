@@ -3,40 +3,24 @@
 namespace App\Http\Controllers;
 
 use App\Enums\OTPType;
-use App\Models\Profile;
+use App\Http\Requests\ForgotPwdRequest;
+use App\Http\Requests\ResetPwdRequest;
+use App\Http\Requests\SetPinRequest;
+use App\Http\Requests\SigninRequest;
+use App\Http\Requests\SignupRequest;
+use App\Http\Requests\VerifyEmailRequest;
+use App\Http\Requests\VerifyPinRequest;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 
 class AuthController extends Controller
 {
     // register
-    public function register(Request $request)
+    public function register(SignupRequest $request)
     {
-        $validator = Validator::make($request->all(), [
-            'full_name' => 'required|string|max:50|unique:users,name',
-            'email' => 'required|email|unique:users,email',
-            'phone_code' => 'required|integer',
-            'phone' => ['required', 'digits:10', function ($attribute, $value, $fail) use ($request) {
-                if (Profile::where('phone', $request->phone_code . $request->phone)->first()) {
-                    return $fail(__('Phone number has already been taken.'));
-                }
-            }],
-            'birthday' => 'required|date|before:today',
-            'password' => 'required',
-            'device_name' => 'required',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json([
-                'status' => false,
-                'message' => $validator->errors()->first(),
-            ], 422);
-        }
-
         return DB::transaction(function () use ($request) {
             $user = User::create([
                 'name' => ucfirst($request->full_name),
@@ -46,38 +30,29 @@ class AuthController extends Controller
 
             $request['user_id'] = $user->id;
 
+            (new WalletController())->create($request);
             (new ProfileController())->store($request);
-            // (new WalletController())->store($request);
 
             $request['user'] = $user;
             $request['code'] = Str::random(40);
             $request['type'] = OTPType::EmailVerification();
             $request['email_template'] = 'email_verification';
+
             (new OTPController())->send($request);
 
-            $request['message'] = trans('auth.signup');
-            $request['status_code'] = 201;
-
-            return $this->login($request);
+            return response()->json([
+                'status' => true,
+                'data' => [
+                    'token' => $user->createToken($request->device_name)->plainTextToken,
+                ],
+                'message' => trans('auth.signup'),
+            ], 201);
         });
     }
 
     // login
-    public function login(Request $request)
+    public function login(SigninRequest $request)
     {
-        $validator = Validator::make($request->all(), [
-            'email' => 'required|email',
-            'password' => 'required',
-            'device_name' => 'required',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json([
-                'status' => false,
-                'message' => $validator->errors()->first(),
-            ], 422);
-        }
-
         $user = User::where('email', $request->email)->first();
 
         if (!$user || !Hash::check($request->password, $user->password)) {
@@ -105,21 +80,8 @@ class AuthController extends Controller
     }
 
     // verify-email
-    public function verifyEmail(Request $request)
+    public function verifyEmail(VerifyEmailRequest $request)
     {
-        $validator = Validator::make($request->all(), [
-            'email' => 'required|email',
-            'token' => 'required',
-            'type' => 'required|in:email_verification',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json([
-                'status' => false,
-                'message' => $validator->errors()->first(),
-            ], 422);
-        }
-
         $user = User::where('email', $request->email)->first();
 
         $request['user'] = $user;
@@ -143,24 +105,8 @@ class AuthController extends Controller
     }
 
     //set-pin
-    public function setPin(Request $request)
+    public function setPin(SetPinRequest $request)
     {
-        $validator = Validator::make($request->all(), [
-            'pin' => ['required', 'digits:4', function ($attribute, $value, $fail) use ($request) {
-                if ($request->user()->profile->password) {
-                    return $fail(__('Your pin has already been set.'));
-                }
-            }],
-            'pin_confirmation' => 'same:pin',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json([
-                'status' => false,
-                'message' => $validator->errors()->first(),
-            ], 422);
-        }
-
         $request->user()->profile->update([
             'password' => Hash::make($request->pin),
         ]);
@@ -172,23 +118,8 @@ class AuthController extends Controller
     }
 
     // verify-pin
-    public function verifyPin(Request $request)
+    public function verifyPin(VerifyPinRequest $request)
     {
-        $validator = Validator::make($request->all(), [
-            'pin' => ['required', function ($attribute, $value, $fail) use ($request) {
-                if (!Hash::check($value, $request->user()->profile->password)) {
-                    return $fail(__('Your pin is incorrect.'));
-                }
-            }],
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json([
-                'status' => false,
-                'message' => $validator->errors()->first(),
-            ], 422);
-        }
-
         return response()->json([
             'status' => true,
             'message' => 'Success',
@@ -196,19 +127,8 @@ class AuthController extends Controller
     }
 
     // forgot-password
-    public function recover(Request $request)
+    public function forgotPwd(ForgotPwdRequest $request)
     {
-        $validator = Validator::make($request->all(), [
-            'email' => 'required|email',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json([
-                'status' => false,
-                'message' => $validator->errors()->first(),
-            ], 422);
-        }
-
         $user = User::where('email', $request->email)->first();
 
         if (!$user = User::where('email', $request->email)->first()) {
@@ -235,22 +155,8 @@ class AuthController extends Controller
     }
 
     // reset-password
-    public function reset(Request $request)
+    public function resetPwd(ResetPwdRequest $request)
     {
-        $validator = Validator::make($request->all(), [
-            'token' => 'required',
-            'email' => 'required|email',
-            'password' => 'required|confirmed',
-            'type' => 'required|in:password_reset',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json([
-                'status' => false,
-                'message' => $validator->errors()->first(),
-            ], 422);
-        }
-
         if (!$user = User::where('email', $request->email)->first()) {
             return response()->json([
                 'status' => false,

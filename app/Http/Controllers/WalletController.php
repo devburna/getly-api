@@ -11,6 +11,11 @@ use Illuminate\Support\Str;
 
 class WalletController extends Controller
 {
+    public function create(Request $request)
+    {
+        Wallet::create($request->only('user_id'));
+    }
+    
     public function deposit(WalletDepositRequest $request)
     {
         return DB::transaction(function () use ($request) {

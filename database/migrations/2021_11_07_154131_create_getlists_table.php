@@ -14,7 +14,7 @@ class CreateGetlistsTable extends Migration
     public function up()
     {
         Schema::create('getlists', function (Blueprint $table) {
-            $table->id();
+            $table->id()->from(time());
             $table->unsignedBigInteger('user_id');
             $table->string('image');
             $table->string('title');

@@ -31,10 +31,10 @@ Route::prefix('v1')->group(function () {
     Route::post('verify-email', [\App\Http\Controllers\AuthController::class, 'verifyEmail']);
 
     # forgot-password
-    Route::post('forgot-password', [\App\Http\Controllers\AuthController::class, 'recover']);
+    Route::post('forgot-password', [\App\Http\Controllers\AuthController::class, 'forgotPwd']);
 
     # reset-password
-    Route::post('reset-password', [\App\Http\Controllers\AuthController::class, 'reset']);
+    Route::post('reset-password', [\App\Http\Controllers\AuthController::class, 'resetPwd']);
 
     #authenticated
     Route::middleware(['auth:sanctum', 'email_verified'])->group(function () {

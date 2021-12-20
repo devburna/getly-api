@@ -14,7 +14,7 @@ class CreateTransactionsTable extends Migration
     public function up()
     {
         Schema::create('transactions', function (Blueprint $table) {
-            $table->id();
+            $table->id()->from(time());
             $table->unsignedBigInteger('user_id');
             $table->string('reference')->unique();
             $table->string('provider');

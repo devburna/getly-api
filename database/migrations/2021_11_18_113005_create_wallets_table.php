@@ -14,9 +14,9 @@ class CreateWalletsTable extends Migration
     public function up()
     {
         Schema::create('wallets', function (Blueprint $table) {
-            $table->id();
+            $table->id()->from(time());
             $table->unsignedBigInteger('user_id')->unique();
-            $table->string('identifier')->unique();
+            $table->unsignedDouble('balance', null, 2)->default(0);
             $table->softDeletes();
             $table->timestamps();
         });

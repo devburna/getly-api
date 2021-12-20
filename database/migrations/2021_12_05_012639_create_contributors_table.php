@@ -14,7 +14,7 @@ class CreateContributorsTable extends Migration
     public function up()
     {
         Schema::create('contributors', function (Blueprint $table) {
-            $table->id();
+            $table->id()->from(time());
             $table->unsignedBigInteger('gift_id');
             $table->string('name');
             $table->string('email');

@@ -81,6 +81,12 @@ class TransactionController extends Controller
                         'summary' => ucfirst(strtolower($payment['data']['narration'])),
                         'status' => TransactionType::Success(),
                     ]);
+
+                    if ($transaction->channel === 'deposit') {
+                        $transaction->user->wallet->update([
+                            'balance' => $transaction->user->wallet->balance + $payment['data']['amount'],
+                        ]);
+                    }
                 }
 
                 return response()->json([
