@@ -11737,7 +11737,7 @@
             <div class="col-md-6">
                 <div class="card bg-white border-0 p-2 p-lg-4">
                     <div class="card-body">
-                        <h6 class="lh-lg">Hi, <b>{{explode(' ', $request->user->name)[0]}}</b></h6>
+                        <h6 class="lh-lg">Hi, <b>{{explode(' ', $gift->sender->name)[0]}}</b></h6>
                         <p class="card-text">Your gift has been received by {{ucfirst($gift->receiver_name)}}.</p>
                     </div>
                     <div class="card-body">

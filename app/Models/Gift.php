@@ -57,7 +57,7 @@ class Gift extends Model
 
     public function sender(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'sent_by');
+        return $this->belongsTo(User::class);
     }
 
     public function contributors(): HasMany

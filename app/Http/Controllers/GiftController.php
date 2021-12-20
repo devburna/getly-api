@@ -189,6 +189,7 @@ class GiftController extends Controller
             foreach ($gifts as $gift) {
 
                 DB::transaction(function () use ($gift, $user, $request) {
+                    $gift;
 
                     $gift->update([
                         'user_id' => $user->id,
@@ -199,7 +200,7 @@ class GiftController extends Controller
                     (new WalletController())->update($request, $gift->receiver_email, 'credit');
 
                     // notify sender through email gift, template , subject
-                    Mail::to($gift->sent_by['email'])->send(new GiftMailable($gift, 'redeemed', 'Gift Received'));
+                    // Mail::to($gift->sender->email)->send(new GiftMailable($gift, 'redeemed', 'Gift Received'));
                 });
             }
         }
