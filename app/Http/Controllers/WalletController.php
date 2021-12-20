@@ -72,7 +72,7 @@ class WalletController extends Controller
         ]);
     }
 
-    public function charge(Request $request, $email, $type = null)
+    public function update(Request $request, $email, $type = null)
     {
         if ($user = User::where('email', $email)->first()) {
             return DB::transaction(function () use ($request, $user, $type) {
@@ -83,7 +83,6 @@ class WalletController extends Controller
                         ]);
 
                         $spent = false;
-                        $summary = 'Gift received';
                         break;
 
                     default:
@@ -93,7 +92,6 @@ class WalletController extends Controller
                         ]);
 
                         $spent = true;
-                        $summary = 'Gift sent';
                         break;
                 }
 
@@ -101,7 +99,7 @@ class WalletController extends Controller
                 $request['amount'] = $request->amount;
                 $request['provider'] = 'getly';
                 $request['channel'] = 'gift';
-                $request['summary'] = $summary;
+                $request['summary'] = $request['summary'];
                 $request['reference'] = (string) Str::uuid();
                 $request['spent'] = $spent;
                 $request['status'] = TransactionType::Success();

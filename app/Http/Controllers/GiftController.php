@@ -131,16 +131,21 @@ class GiftController extends Controller
                 // 'notification_url' => '',
                 'resource_type' => 'image'
             ])['secure_url'];
-            $request['reference'] = (string) Str::uuid();
             $request['sent_by'] =  $request->user()->id;
+            $request['reference'] = (string) Str::uuid();
             $request['amount'] =  $request->price;
 
             $receiver = User::where('email', $request->receiver_email)->first();
 
             $gift = $this->store($request);
 
-            (new WalletController())->charge($request, $receiver->email, 'credit');
-            (new WalletController())->charge($request, $request->user()->email, 'debit');
+            if ($receiver) {
+                $request['summary'] = 'Gift received';
+                (new WalletController())->update($request, $receiver->email, 'credit');
+            }
+
+            $request['summary'] = 'Gift sent';
+            (new WalletController())->update($request, $request->user()->email, 'debit');
 
             return response()->json([
                 'status' => true,
@@ -175,55 +180,6 @@ class GiftController extends Controller
         ]);
     }
 
-    public function verifySentGift(Request $request)
-    {
-
-        if ($request->status === 'successful') {
-            $payment = (new FWController())->verifyPayment($request);
-
-            $gift = collect($request->gift);
-
-            $request['user_id'] = $gift['user_id'] ?? null;
-            $request['reference'] = $request->tx_ref . '-' . $request->transaction_id;
-            $request['name'] = $gift['name'];
-            $request['price'] = $gift['price'];
-            $request['quantity'] = $gift['quantity'];
-            $request['short_message'] = $gift['short_message'];
-            $request['image'] = $gift['photo'];
-            $request['link'] = $gift['link'];
-            $request['receiver_name'] = $gift['receiver_name'];
-            $request['receiver_email'] = $gift['receiver_email'];
-            $request['receiver_phone'] = $gift['receiver_phone'];
-            $request['sent_by'] = $gift['sent_by'];
-
-            if ($payment['data']['status'] === 'successful') {
-                $this->store($request);
-
-                if ($gift['user_id']) {
-                    $user = User::where('email', $gift['receiver_email'])->first();
-
-                    // fund receiver card here
-                }
-
-                return response()->json([
-                    'status' => true,
-                    'data' => $gift,
-                    'message' => "You’ve just sent your gift to " . $gift['receiver_name'],
-                ]);
-            }
-        } elseif ($request->status === 'cancelled') {
-            return response()->json([
-                'status' => false,
-                'message' => "Payment was cancelled.",
-            ], 422);
-        } else {
-            return response()->json([
-                'status' => false,
-                'message' => "Error occured while sending gift, kindly contact support immediately.",
-            ], 422);
-        }
-    }
-
     public function pendingGifts(Request $request, User $user)
     {
         $gifts = Gift::where(['user_id' => null, 'getlist_id' => 0, 'receiver_email' => $user->email])->get();
@@ -238,13 +194,9 @@ class GiftController extends Controller
                         'user_id' => $user->id,
                     ]);
 
-                    if (!$user->virtualCard) {
-                        $request['name'] = $user->name;
-                        $request['amount'] = $gift->price;
-                        (new VirtualCardController())->create($request);
-                    } else {
-                        (new VirtualCardController())->fund($user->virtualCard->reference, $gift->price);
-                    }
+                    $request['amount'] =  $gift->price;
+
+                    (new WalletController())->update($request, $gift->receiver_email, 'credit');
 
                     // notify sender through email gift, template , subject
                     Mail::to($gift->sent_by['email'])->send(new GiftMailable($gift, 'redeemed', 'Gift Received'));
