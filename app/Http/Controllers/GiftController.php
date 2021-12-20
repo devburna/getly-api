@@ -193,7 +193,7 @@ class GiftController extends Controller
     public function verifySentGift(Request $request)
     {
 
-        if ($request->status === 'success') {
+        if ($request->status === 'successful') {
             $payment = (new FWController())->verifyPayment($request);
 
             $gift = collect($request->gift);
@@ -216,7 +216,8 @@ class GiftController extends Controller
 
                 if ($gift['user_id']) {
                     $user = User::where('email', $gift['receiver_email'])->first();
-                    (new WalletController())->update($user, $gift['price'], WalletUpdateType::Credit());
+
+                    // fund receiver card here
                 }
 
                 return response()->json([
