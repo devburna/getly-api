@@ -130,6 +130,20 @@ Route::prefix('v1')->group(function () {
             Route::post('', [\App\Http\Controllers\WalletController::class, 'withdraw']);
         });
 
+        #card
+        Route::prefix('card')->group(function () {
+
+            # create
+            Route::post('', [\App\Http\Controllers\VirtualCardController::class, 'create']);
+
+            # topup
+            Route::put('', [\App\Http\Controllers\VirtualCardController::class, 'topup']);
+
+            # withdraw
+            Route::patch('', [\App\Http\Controllers\VirtualCardController::class, 'withdraw']);
+            
+        });
+
         #transactions
         Route::prefix('transactions')->group(function () {
 

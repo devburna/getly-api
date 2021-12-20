@@ -5,7 +5,7 @@ namespace App\Http\Requests;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Http\Request;
 
-class StoreContributorRequest extends FormRequest
+class VirtualCardRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -25,11 +25,11 @@ class StoreContributorRequest extends FormRequest
     public function rules(Request $request)
     {
         return [
-            'name' => 'required|string|max:50',
-            'email' => 'required|email',
-            'phone' => 'required',
-            'amount' => 'required_if:type,==,contribute|numeric',
-            'type' => 'in:contribute,buy'
+            'amount' => ['required', function ($attribute, $value, $fail) use ($request) {
+                if ($request->user()->wallet->balance < $request->amount) {
+                    return $fail(__('Insufficient balance'));
+                }
+            }],
         ];
     }
 }

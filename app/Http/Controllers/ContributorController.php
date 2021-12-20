@@ -37,6 +37,14 @@ class ContributorController extends Controller
                 ], 422);
             }
 
+            $total = $gift->price - $contributed;
+            if ($request->user()->wallet->balance < $gift->price || $request->user()->wallet->balance < $total) {
+                return response()->json([
+                    'status' => false,
+                    'message' => "Insufficient balance"
+                ], 422);
+            }
+
             switch ($request->type) {
                 case 'contribute':
                     $request['summary'] = 'Gift contribution';
@@ -46,7 +54,7 @@ class ContributorController extends Controller
                     break;
 
                 default:
-                    $request['amount'] = $gift->price - $contributed;;
+                    $request['amount'] = $total;
                     $request['summary'] = 'Gift purchase';
                     (new WalletController())->update($request, $gift->receiver_email, 'credit');
                     (new WalletController())->update($request, $request->user()->email, 'debit');

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\VirtualCardRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 
@@ -15,12 +16,7 @@ class GladeController extends Controller
         $this->mid =  env('GLADE_MERCHANT_ID');
     }
 
-    public function generatePaymentLink(Request $request)
-    {
-        
-    }
-
-    public function createVirtualCard(Request $request)
+    public function createVirtualCard(VirtualCardRequest $request)
     {
         try {
             $card = Http::withHeaders([
@@ -31,14 +27,14 @@ class GladeController extends Controller
                 'action' => 'create',
                 'billing' => [
                     'address' => '333 Fremont Road',
-                    'name' => $request->name,
+                    'name' => $request->user()->name,
                     'city' => 'San Fransisco',
                     'state' => 'California',
                     'postal_code' => '94124',
                 ],
                 'amount' => $request->amount,
-                'currency' => 'NGN',
-                'country' => 'NG',
+                'currency' => 'USD',
+                'country' => 'US',
             ])->json();
 
             if ($card['status'] = 200) {
@@ -50,14 +46,14 @@ class GladeController extends Controller
 
                     (new VirtualCardController())->store($request);
                 }
-                return $card;
             }
+            return $card;
         } catch (\Throwable $th) {
             throw $th;
         }
     }
 
-    public function fundVirtualCard($reference, $amount)
+    public function fundVirtualCard(VirtualCardRequest $request)
     {
         try {
             $card = Http::withHeaders([
@@ -66,19 +62,25 @@ class GladeController extends Controller
                 'mid' => $this->mid,
             ])->put('https://api.glade.ng/virtualcard', [
                 'action' => 'fund',
-                'reference' => $reference,
-                'amount' => $amount,
-            ]);
+                'reference' => $request->reference,
+                'amount' => $request->amount,
+            ])->json();
 
-            if ($card->ok()) {
-                return $card->json();
+            if ($card['status'] = 200) {
+                if ($card['message'] === 'Withdrawal Successfully') {
+                    $request['amount'] =  $request->amount;
+                    $request['summary'] = 'Virtual card topup';
+                    (new WalletController())->update($request, $request->user()->email, 'debit');
+                }
             }
+
+            return $card;
         } catch (\Throwable $th) {
             throw $th;
         }
     }
 
-    public function withdrawVirtualCard(Request $request, $reference, $amount)
+    public function withdrawVirtualCard(Request $request)
     {
         try {
             $card = Http::withHeaders([
@@ -87,22 +89,24 @@ class GladeController extends Controller
                 'mid' => $this->mid,
             ])->put('https://api.glade.ng/virtualcard', [
                 'action' => 'withdraw',
-                'reference' => $reference,
-                'amount' => $amount,
+                'reference' => $request->reference,
+                'amount' => $request->amount,
             ])->json();
 
             if ($card['status'] = 200) {
                 if ($card['message'] === 'Withdrawal Successfully') {
-                    return $this->moneyTransfer($request);
+                    $request['amount'] =  $request->amount;
+                    $request['summary'] = 'Virtual card withdrawal';
+                    (new WalletController())->update($request, $request->user()->email, 'credit');
                 }
-                return $card;
             }
+            return $card;
         } catch (\Throwable $th) {
             throw $th;
         }
     }
 
-    public function virtualCardTrx($reference)
+    public function virtualCardTrx(Request $request)
     {
         try {
             $card = Http::withHeaders([
@@ -111,18 +115,16 @@ class GladeController extends Controller
                 'mid' => $this->mid,
             ])->put('https://api.glade.ng/virtualcard', [
                 'action' => 'transactions',
-                'reference' => $reference,
-            ]);
+                'reference' => $request->reference,
+            ])->json();
 
-            if ($card->ok()) {
-                return $card->json();
-            }
+            return $card;
         } catch (\Throwable $th) {
             throw $th;
         }
     }
 
-    public function virtualCardDetails($reference)
+    public function virtualCardDetails(Request $request)
     {
         try {
             $card = Http::withHeaders([
@@ -131,36 +133,10 @@ class GladeController extends Controller
                 'mid' => $this->mid,
             ])->put('https://api.glade.ng/virtualcard', [
                 'action' => 'get',
-                'reference' => $reference,
-            ]);
+                'reference' => $request->reference,
+            ])->json();
 
-            if ($card->ok()) {
-                return $card->json();
-            }
-        } catch (\Throwable $th) {
-            throw $th;
-        }
-    }
-
-    public function moneyTransfer(Request $request)
-    {
-        try {
-            $transfer = Http::withHeaders([
-                'content-type' => 'application/json',
-                'key' => $this->key,
-                'mid' => $this->mid,
-            ])->post('https://demo.api.glade.ng/disburse', [
-                'action' => 'transfer',
-                'amount' => $request->amount,
-                'accountnumber' => $request->accountnumber,
-                'sender_name' => $request->sender_name,
-                'narration' => $request->narration,
-                'orderRef' => 'TX' . time(),
-            ]);
-
-            if ($transfer->ok()) {
-                return $transfer->json();
-            }
+            return $card;
         } catch (\Throwable $th) {
             throw $th;
         }

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Enums\TransactionType;
 use App\Http\Requests\WalletDepositRequest;
+use App\Http\Requests\WalletWithdrawRequest;
 use App\Models\User;
 use App\Models\Wallet;
 use Illuminate\Http\Request;
@@ -64,7 +65,7 @@ class WalletController extends Controller
         });
     }
 
-    public function withdraw(Request $request)
+    public function withdraw(WalletWithdrawRequest $request)
     {
         return response()->json([
             'status' => true,

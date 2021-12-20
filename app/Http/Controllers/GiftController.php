@@ -196,6 +196,7 @@ class GiftController extends Controller
                     ]);
 
                     $request['amount'] =  $gift->price;
+                    $request['summary'] = 'Gift received';
 
                     (new WalletController())->update($request, $gift->receiver_email, 'credit');
 
