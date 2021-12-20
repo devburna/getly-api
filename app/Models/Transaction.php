@@ -33,6 +33,7 @@ class Transaction extends Model
     protected $hidden = [
         'user_id',
         'provider',
+        'deleted_at',
         'updated_at',
     ];
 

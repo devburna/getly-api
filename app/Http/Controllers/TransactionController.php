@@ -54,6 +54,14 @@ class TransactionController extends Controller
     {
         $transaction = Transaction::where('reference', $request->tx_ref)->firstOrFail();
 
+        if ($transaction->status = TransactionType::Success()) {
+            return response()->json([
+                'status' => true,
+                'data' => $transaction,
+                'message' => 'Payment verified',
+            ]);
+        }
+
         switch ($transaction->provider) {
             case 'glade':
                 # code...
