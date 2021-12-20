@@ -56,13 +56,13 @@ class ContributorController extends Controller
             $request['reference'] = (string) Str::uuid();
             $request['redirect_url'] = route('verify-sent-wish', ['gift' => $gift->id]);
 
-            return (new PaymentController())->generateFwPaymentLink($request);
+            return (new FWController())->generatePaymentLink($request);
         }
     }
 
     public function verifySentWish(Request $request)
     {
-        $payment = (new PaymentController())->verifyFwPaymentLink($request);
+        $payment = (new FWController())->verifyPaymentLink($request);
 
         if ($payment['data']['status'] === 'successful') {
 
