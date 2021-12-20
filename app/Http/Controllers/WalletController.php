@@ -15,7 +15,16 @@ class WalletController extends Controller
     {
         Wallet::create($request->only('user_id'));
     }
-    
+
+    public function details(Request $request)
+    {
+        return response()->json([
+            'status' => false,
+            'data' => $request->user()->wallet,
+            'message' => 'Fetched',
+        ]);
+    }
+
     public function deposit(WalletDepositRequest $request)
     {
         return DB::transaction(function () use ($request) {
@@ -52,5 +61,13 @@ class WalletController extends Controller
 
             return response()->json($link);
         });
+    }
+
+    public function withdraw(Request $request)
+    {
+        return response()->json([
+            'status' => true,
+            'message' => 'Payment sent',
+        ]);
     }
 }

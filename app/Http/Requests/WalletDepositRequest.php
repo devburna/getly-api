@@ -24,7 +24,7 @@ class WalletDepositRequest extends FormRequest
     public function rules()
     {
         return [
-            'amount' => 'min:5|numeric',
+            'amount' => 'required|min:5|numeric',
         ];
     }
 }
