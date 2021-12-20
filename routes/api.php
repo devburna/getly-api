@@ -123,14 +123,21 @@ Route::prefix('v1')->group(function () {
             # details
             Route::get('', [\App\Http\Controllers\VirtualCardController::class, 'details']);
 
-            # fund
-            Route::post('fund', [\App\Http\Controllers\VirtualCardController::class, 'fund']);
+            # deposit
+            Route::post('deposit', [\App\Http\Controllers\WalletController::class, 'deposit']);
 
             # withdraw
             Route::post('withdraw', [\App\Http\Controllers\VirtualCardController::class, 'withdraw']);
 
             # transactions
             Route::get('transactions', [\App\Http\Controllers\VirtualCardController::class, 'transactions']);
+        });
+
+        #transactions
+        Route::prefix('transactions')->group(function () {
+
+            # details
+            Route::get('', [\App\Http\Controllers\TransactionController::class, 'index']);
         });
     });
 });

@@ -2,40 +2,50 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\TransactionType;
+use App\Http\Requests\WalletDepositRequest;
 use App\Models\Wallet;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 class WalletController extends Controller
 {
-    /**
-     * Store a newly created resource in storage.
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function store($user)
+    public function deposit(WalletDepositRequest $request)
     {
-        $v_card = (new FWController())->create();
+        return DB::transaction(function () use ($request) {
+            $request['user_id'] = $request->user()->id;
+            $request['amount'] = $request->amount;
+            $request['provider'] = 'flutterwave';
+            $request['channel'] = 'deposit';
+            $request['description'] = 'Deposit';
+            $request['reference'] = (string) Str::uuid();
+            $request['redirect_url'] = route('verify-payment');
+            $request['status'] = TransactionType::Pending();
 
-        Wallet::create([
-            'user_id' => $user,
-            'identifier' => $v_card['data']['id'],
-        ]);
-    }
+            switch (env('PAYMENT_PROVIDER')) {
+                case 'glade':
+                    $link = (new GladeController())->generatePaymentLink($request);
+                    break;
 
-    /**
-     * Display the specified resource.
-     *
-     * @param  Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
-     */
-    public function show(Request $request)
-    {
-        $wallet = (new FWController())->card($request->user()->wallet->identifier);
+                default:
+                    # code...
+                    $link = (new FWController())->generatePaymentLink($request);
+                    break;
+            }
 
-        return response()->json([
-            'status' => true,
-            'data' =>  $wallet,
-            'message' => 'Fetched'
-        ]);
+            switch ($link['status']) {
+                case 'success':
+                    // create transaction
+                    (new TransactionController())->store($request);
+                    break;
+
+                default:
+                    # code...
+                    break;
+            }
+
+            return response()->json($link);
+        });
     }
 }

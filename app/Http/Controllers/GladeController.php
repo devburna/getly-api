@@ -15,6 +15,11 @@ class GladeController extends Controller
         $this->mid =  env('GLADE_MERCHANT_ID');
     }
 
+    public function generatePaymentLink(Request $request)
+    {
+        
+    }
+
     public function createVirtualCard(Request $request)
     {
         try {

@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Enums\WalletUpdateType;
 use App\Http\Requests\UpdateGiftRequest;
-use App\Http\Requests\UpdateWalletRequest;
 use App\Mail\GiftMailable;
 use App\Models\Getlist;
 use App\Models\Gift;
@@ -163,7 +162,7 @@ class GiftController extends Controller
         $request['reference'] = (string) Str::uuid();
         $request['redirect_url'] = route('verify-sent-gift', ['gift' => $request->all()]);
 
-        return (new PaymentController())->generateFwPaymentLink($request);
+        return (new FWController())->generatePaymentLink($request);
     }
 
     /**
@@ -195,7 +194,7 @@ class GiftController extends Controller
     {
 
         if ($request->status === 'success') {
-            $payment = (new PaymentController())->verifyFwPaymentLink($request);
+            $payment = (new FWController())->verifyPayment($request);
 
             $gift = collect($request->gift);
 

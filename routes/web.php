@@ -21,6 +21,9 @@ Route::get('/', function () {
 });
 
 Route::prefix('verify')->group(function () {
+    # payment
+    Route::get('payment', [\App\Http\Controllers\TransactionController::class, 'verify'])->name('verify-payment');
+
     # send gift
     Route::get('sent-gift', [\App\Http\Controllers\GiftController::class, 'verifySentGift'])->name('verify-sent-gift');
 
