@@ -34,6 +34,7 @@ class WalletController extends Controller
             $request['amount'] = $request->amount;
             $request['provider'] = 'flutterwave';
             $request['channel'] = 'deposit';
+            $request['spent'] = false;
             $request['description'] = 'Deposit';
             $request['reference'] = (string) Str::uuid();
             $request['redirect_url'] = route('verify-payment');
