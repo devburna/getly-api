@@ -38,15 +38,6 @@ class VirtualCardController extends Controller
         });
     }
 
-    public function store($card)
-    {
-        VirtualCard::create([
-            'user_id' => $card['user_id'],
-            'reference' => $card['reference'],
-            'provider' => $card['provider'],
-        ]);
-    }
-
     public function details(Request $request, VirtualCard $virtualCard)
     {
         if ($request->user()->cannot('view', $virtualCard)) {
