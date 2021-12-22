@@ -50,7 +50,7 @@ class TransactionController extends Controller
         ]);
     }
 
-    // verify transactionÎ
+    // verify transaction
     public function verify(Request $request)
     {
         $transaction = Transaction::where('reference', $request->tx_ref)->firstOrFail();
@@ -63,29 +63,27 @@ class TransactionController extends Controller
             ]);
         }
 
-        switch ($transaction->provider) {
-            case 'glade':
-                # code...
-                break;
-
-            default:
-
-                $payment = (new FWController())->verifyPayment($request);
-                break;
-        }
-
         switch ($request->status) {
             case 'successful':
-                if ($payment['data']['amount'] = $transaction->amount) {
+                $payment = (new FWController())->verifyPayment($request->transaction_id);
+
+                if (!$payment) {
+                    return response()->json([
+                        'status' => false,
+                        'message' => 'Error verifying transaction'
+                    ], 422);
+                }
+
+                if ($payment['amount'] = $transaction->amount) {
                     $transaction->update([
-                        'method' => $payment['data']['payment_type'],
-                        'summary' => ucfirst(strtolower($payment['data']['narration'])),
+                        'method' => $payment['payment_type'],
+                        'summary' => ucfirst(strtolower($payment['narration'])),
                         'status' => TransactionType::Success(),
                     ]);
 
                     if ($transaction->channel === 'deposit') {
                         $transaction->user->wallet->update([
-                            'balance' => $transaction->user->wallet->balance + $payment['data']['amount'],
+                            'balance' => $transaction->user->wallet->balance + $payment['amount'],
                         ]);
                     }
                 }
@@ -93,7 +91,7 @@ class TransactionController extends Controller
                 return response()->json([
                     'status' => true,
                     'data' => $transaction,
-                    'message' => $payment['data']['status'],
+                    'message' => $payment['status'],
                 ]);
 
                 break;
@@ -132,6 +130,7 @@ class TransactionController extends Controller
                     'data' => $transaction,
                     'message' => 'Error verifying transaction. Please contact support',
                 ], 422);
+
                 break;
         }
     }

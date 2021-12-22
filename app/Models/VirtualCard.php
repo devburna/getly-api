@@ -28,6 +28,7 @@ class VirtualCard extends Model
     protected $hidden = [
         'user_id',
         'created_at',
+        'deleted_at',
         'updated_at',
     ];
 }

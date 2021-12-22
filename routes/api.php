@@ -136,15 +136,16 @@ Route::prefix('v1')->group(function () {
             # create
             Route::post('', [\App\Http\Controllers\VirtualCardController::class, 'create']);
 
-            # details
-            Route::get('', [\App\Http\Controllers\VirtualCardController::class, 'details']);
+            Route::prefix('{virtualCard}')->group(function () {
+                # details
+                Route::get('', [\App\Http\Controllers\VirtualCardController::class, 'details']);
 
-            # topup
-            Route::put('', [\App\Http\Controllers\VirtualCardController::class, 'topup']);
+                # topup
+                Route::put('', [\App\Http\Controllers\VirtualCardController::class, 'topup']);
 
-            # withdraw
-            Route::patch('', [\App\Http\Controllers\VirtualCardController::class, 'withdraw']);
-
+                # withdraw
+                Route::patch('', [\App\Http\Controllers\VirtualCardController::class, 'withdraw']);
+            });
         });
 
         #transactions

@@ -30,7 +30,7 @@ class VirtualCardPolicy
      */
     public function view(User $user, VirtualCard $virtualCard)
     {
-        //
+        return $user->id === $virtualCard->user_id;
     }
 
     /**
@@ -53,7 +53,7 @@ class VirtualCardPolicy
      */
     public function update(User $user, VirtualCard $virtualCard)
     {
-        //
+        return $this->view($user, $virtualCard);
     }
 
     /**
@@ -65,7 +65,7 @@ class VirtualCardPolicy
      */
     public function delete(User $user, VirtualCard $virtualCard)
     {
-        //
+        return $this->view($user, $virtualCard);
     }
 
     /**
@@ -77,7 +77,7 @@ class VirtualCardPolicy
      */
     public function restore(User $user, VirtualCard $virtualCard)
     {
-        //
+        return $this->view($user, $virtualCard);
     }
 
     /**
@@ -89,6 +89,6 @@ class VirtualCardPolicy
      */
     public function forceDelete(User $user, VirtualCard $virtualCard)
     {
-        //
+        return $this->view($user, $virtualCard);
     }
 }

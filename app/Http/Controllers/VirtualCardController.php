@@ -11,7 +11,6 @@ class VirtualCardController extends Controller
 {
     public function create(VirtualCardRequest $request)
     {
-
         return DB::transaction(function ($request) {
             $response =  (new GladeController())->createVirtualCard($request->user()->name, $request->amount);
 
@@ -39,28 +38,90 @@ class VirtualCardController extends Controller
         });
     }
 
-    public function store(VirtualCardRequest $request)
+    public function store($card)
     {
-        VirtualCard::create($request->only(['user_id', 'reference', 'provider']));
+        VirtualCard::create([
+            'user_id' => $card['user_id'],
+            'reference' => $card['reference'],
+            'provider' => $card['provider'],
+        ]);
     }
 
-    public function details(Request $request)
+    public function details(Request $request, VirtualCard $virtualCard)
     {
-        return (new GladeController())->virtualCardDetails($request);
+        if ($request->user()->cannot('view', $virtualCard)) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Not allowed'
+            ], 403);
+        }
+        return (new GladeController())->virtualCardDetails($virtualCard->reference);
     }
 
-    public function topup(VirtualCardRequest $request)
+    public function topup(VirtualCardRequest $request, VirtualCard $virtualCard)
     {
-        return (new GladeController())->fundVirtualCard($request);
+        if ($request->user()->cannot('view', $virtualCard)) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Not allowed'
+            ], 403);
+        }
+        $response = (new GladeController())->fundVirtualCard($request->amount, $virtualCard->reference);
+
+        if (!$response) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Error processing topup.'
+            ], 422);
+        }
+
+        $request->user()->wallet->update([
+            'balance' => $request->user()->wallet->balance - $request->amount,
+        ]);
+
+        return response()->json([
+            'status' => true,
+            'message' => 'Topup was successful'
+        ]);
     }
 
-    public function withdraw(Request $request)
+    public function withdraw(Request $request, VirtualCard $virtualCard)
     {
-        return (new GladeController())->withdrawVirtualCard($request);
+        if ($request->user()->cannot('view', $virtualCard)) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Not allowed'
+            ], 403);
+        }
+
+        $response = (new GladeController())->withdrawVirtualCard($request->amount, $virtualCard->reference);
+
+        if (!$response) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Error processing withdrawal.'
+            ], 422);
+        }
+
+        $request->user()->wallet->update([
+            'balance' => $request->user()->wallet->balance + $request->amount,
+        ]);
+
+        return response()->json([
+            'status' => true,
+            'message' => 'Withdrawal was successful'
+        ]);
     }
 
-    public function transactions(Request $request)
+    public function transactions(Request $request, VirtualCard $virtualCard)
     {
-        return (new GladeController())->virtualCardTrx($request);
+        if ($request->user()->cannot('view', $virtualCard)) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Not allowed'
+            ], 403);
+        }
+
+        return (new GladeController())->virtualCardTrx($virtualCard);
     }
 }

@@ -28,7 +28,11 @@ class StoreContributorRequest extends FormRequest
             'name' => 'required|string|max:50',
             'email' => 'required|email',
             'phone' => 'required',
-            'amount' => 'required_if:type,==,contribute|numeric',
+            'amount' => ['required_if:type,==,contribute', 'numeric', function ($attribute, $value, $fail) use ($request) {
+                if ($request->user()->wallet->balance < $request->amount) {
+                    return $fail(__('Insufficient balance'));
+                }
+            }],
             'type' => 'in:contribute,buy'
         ];
     }
