@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\TransactionType;
 use App\Http\Requests\StoreContributorRequest;
 use App\Models\Contributor;
 use App\Models\Gift;
@@ -11,6 +12,13 @@ use Illuminate\Support\Str;
 
 class ContributorController extends Controller
 {
+    public $reference;
+
+    public function __construct()
+    {
+        $this->reference = str_shuffle(time() . mt_rand(1000, 9999));
+    }
+
     /**
      * Store a newly created resource in storage.
      *
@@ -38,7 +46,8 @@ class ContributorController extends Controller
             }
 
             $total = $gift->price - $contributed;
-            if ($request->user()->wallet->balance < $gift->price || $request->user()->wallet->balance < $total) {
+
+            if ($request->user()->wallet->balance < $total) {
                 return response()->json([
                     'status' => false,
                     'message' => "Insufficient balance"
@@ -47,17 +56,69 @@ class ContributorController extends Controller
 
             switch ($request->type) {
                 case 'contribute':
-                    $request['summary'] = 'Gift contribution';
-                    (new WalletController())->update($request, $gift->receiver_email, 'credit');
-                    (new WalletController())->update($request, $request->user()->email, 'debit');
+                    (new TransactionController())->store([
+                        'user_id' => $gift->sender->id,
+                        'reference' => str_shuffle(time() . mt_rand(1000, 9999)),
+                        'provider' => 'getly',
+                        'channel' => 'contribution',
+                        'amount' => $request->amount,
+                        'summary' => 'Gift contribution',
+                        'spent' => true,
+                        'status' => TransactionType::Success(),
+                    ]);
+
+                    $gift->sender->wallet->update([
+                        'balance' => $gift->sender->wallet->balance - $request->amount,
+                    ]);
+
+                    (new TransactionController())->store([
+                        'user_id' => $gift->owner->id,
+                        'reference' => str_shuffle(time() . mt_rand(1000, 9999)),
+                        'provider' => 'getly',
+                        'channel' => 'contribution',
+                        'amount' => $request->amount,
+                        'summary' => 'Gift contribution',
+                        'spent' => false,
+                        'status' => TransactionType::Success(),
+                    ]);
+
+                    $gift->owner->wallet->update([
+                        'balance' => $gift->owner->wallet->balance + $request->amount,
+                    ]);
 
                     break;
 
                 default:
-                    $request['amount'] = $total;
-                    $request['summary'] = 'Gift purchase';
-                    (new WalletController())->update($request, $gift->receiver_email, 'credit');
-                    (new WalletController())->update($request, $request->user()->email, 'debit');
+
+                    (new TransactionController())->store([
+                        'user_id' => $gift->sender->id,
+                        'reference' => str_shuffle(time() . mt_rand(1000, 9999)),
+                        'provider' => 'getly',
+                        'channel' => 'purchase',
+                        'amount' => $total,
+                        'summary' => 'Gift purchase',
+                        'spent' => true,
+                        'status' => TransactionType::Success(),
+                    ]);
+
+                    $gift->sender->wallet->update([
+                        'balance' => $gift->sender->wallet->balance - $total,
+                    ]);
+
+                    (new TransactionController())->store([
+                        'user_id' => $gift->owner->id,
+                        'reference' => str_shuffle(time() . mt_rand(1000, 9999)),
+                        'provider' => 'getly',
+                        'channel' => 'purchase',
+                        'amount' => $total,
+                        'summary' => 'Gift purchase',
+                        'spent' => false,
+                        'status' => TransactionType::Success(),
+                    ]);
+
+                    $gift->owner->wallet->update([
+                        'balance' => $gift->owner->wallet->balance + $total,
+                    ]);
                     break;
             }
 

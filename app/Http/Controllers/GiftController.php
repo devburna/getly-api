@@ -2,28 +2,27 @@
 
 namespace App\Http\Controllers;
 
-use App\Enums\WalletUpdateType;
+use App\Enums\TransactionType;
+use App\Http\Requests\CreatGiftRequest;
 use App\Http\Requests\SendGiftRequest;
 use App\Http\Requests\UpdateGiftRequest;
-use App\Mail\GiftMailable;
 use App\Models\Getlist;
 use App\Models\Gift;
 use App\Models\User;
 use Cloudinary\Api\Upload\UploadApi;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Validator;
 use League\CommonMark\Normalizer\SlugNormalizer;
-use Illuminate\Support\Str;
 
 class GiftController extends Controller
 {
-    private $cloudinary;
+    private $cloudinary, $reference;
 
     public function __construct()
     {
         $this->cloudinary = (new UploadApi());
+        $this->reference = str_shuffle(time() . mt_rand(1000, 9999));
     }
 
     /**
@@ -57,7 +56,7 @@ class GiftController extends Controller
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
-    public function create(Request $request, Getlist $getlist)
+    public function create(CreatGiftRequest $request, Getlist $getlist)
     {
         if ($request->user()->cannot('view', $getlist)) {
             return response()->json([
@@ -65,45 +64,34 @@ class GiftController extends Controller
                 'message' => 'Not allowed'
             ], 403);
         }
-        $validator = Validator::make($request->all(), [
-            'name' => 'required|string|max:50',
-            'price' => 'required|numeric',
-            'quantity' => 'required|numeric',
-            'photo' => 'required|mimes:jpg,jpeg,png',
-            'short_message' => 'string',
-        ]);
 
-        if ($request->has('short_message')) {
-            $validator = Validator::make($request->all(), [
-                'short_message' => 'required|string|max:100',
-            ]);
-        }
-
-        if ($validator->fails()) {
-            return response()->json([
-                'status' => false,
-                'message' => $validator->errors()->first(),
-            ], 422);
-        }
-
-        $request['user_id'] = $request->user()->id;
-        $request['getlist_id'] = $getlist->id;
-        $request['image'] = $this->cloudinary->upload($request->photo->path(), [
+        $request['image_url'] = $this->cloudinary->upload($request->photo->path(), [
             'folder' => 'getly/gifts/',
             'public_id' => (new SlugNormalizer())->normalize(strtolower($request->name)),
             'overwrite' => true,
-            // 'notification_url' => '',
             'resource_type' => 'image'
         ])['secure_url'];
-        $request['reference'] = (string) Str::uuid();
-        $request['receiver_name'] = $request->user()->name;
-        $request['receiver_email'] = $request->user()->email;
-        $request['receiver_phone'] = $request->user()->profile->phone;
+
+        $gift = $this->store([
+            'user_id' => $request->user()->id,
+            'getlist_id' => $getlist->id,
+            'reference' => $this->reference,
+            'name' => $request->name,
+            'price' => $request->price,
+            'quantity' => $request->quantity,
+            'short_message' => $request->short_message,
+            'image_url' =>  $request->image_url,
+            'link' => $request->link,
+            'receiver_name' => $request->user()->name,
+            'receiver_email' => $request->user()->email,
+            'receiver_phone' => $request->user()->profile->phone,
+            'sent_by' => $request->user()->id,
+        ]);
 
         return response()->json([
             'status' => true,
-            'data' => $this->store($request),
-            'message' => 'Success'
+            'data' => $gift,
+            'message' => 'Gift created'
         ], 201);
     }
 
@@ -131,21 +119,54 @@ class GiftController extends Controller
                 // 'notification_url' => '',
                 'resource_type' => 'image'
             ])['secure_url'];
-            $request['sent_by'] =  $request->user()->id;
-            $request['reference'] = (string) Str::uuid();
-            $request['amount'] =  $request->price;
 
-            $receiver = User::where('email', $request->receiver_email)->first();
-
-            $gift = $this->store($request);
+            $gift = $this->store([
+                'user_id' => $request->user_id,
+                'getlist_id' => 0,
+                'reference' => $this->reference,
+                'name' => $request->name,
+                'price' => $request->price,
+                'quantity' => $request->quantity,
+                'short_message' => $request->short_message,
+                'image_url' =>  $request->image_url,
+                'link' => $request->link,
+                'receiver_name' => $request->receiver_name,
+                'receiver_email' => $request->receiver_email,
+                'receiver_phone' => $request->receiver_phone,
+                'sent_by' => $request->user()->id,
+            ]);
 
             if ($receiver) {
-                $request['summary'] = 'Gift received';
-                (new WalletController())->update($request, $receiver->email, 'credit');
+                (new TransactionController())->store([
+                    'user_id' => $receiver->id,
+                    'reference' => $this->reference,
+                    'provider' => 'getly',
+                    'channel' => 'gift',
+                    'amount' => $request->price,
+                    'summary' => 'Gift received from ' . $request->user()->name,
+                    'spent' => false,
+                    'status' => TransactionType::Success(),
+                ]);
+
+                $receiver->wallet->update([
+                    'balance' => $receiver->wallet->balance + $request->price,
+                ]);
             }
 
-            $request['summary'] = 'Gift sent';
-            (new WalletController())->update($request, $request->user()->email, 'debit');
+            (new TransactionController())->store([
+                'user_id' => $request->user()->id,
+                'reference' => $this->reference,
+                'provider' => 'getly',
+                'channel' => 'gift',
+                'amount' => $request->price,
+                'summary' => 'Gift sent to ' . $request->receiver_name,
+                'spent' => true,
+                'status' => TransactionType::Success(),
+            ]);
+
+            $request->user()->wallet->update([
+                'balance' => $request->user()->wallet->balance - $request->price,
+            ]);
 
             return response()->json([
                 'status' => true,
@@ -158,25 +179,24 @@ class GiftController extends Controller
     /**
      * Store a newly created resource in storage.
      *
-     * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
-    public function store(Request $request)
+    public function store($gift)
     {
         return Gift::updateOrCreate([
-            'user_id' => $request->user_id ?? null,
-            'getlist_id' => $request->getlist_id ?? 0,
-            'reference' => $request->reference,
-            'name' => ucfirst($request->name),
-            'price' => $request->price,
-            'quantity' => $request->quantity,
-            'short_message' => $request->short_message,
-            'image_url' =>  $request->image_url,
-            'link' => $request->link,
-            'receiver_name' => ucfirst($request->receiver_name),
-            'receiver_email' => strtolower($request->receiver_email),
-            'receiver_phone' => $request->receiver_phone,
-            'sent_by' => $request->sent_by ??  $request->user()->id,
+            'user_id' => $gift['user_id'],
+            'getlist_id' => $gift['getlist_id'],
+            'reference' => $gift['reference'],
+            'name' => ucfirst($gift['name']),
+            'price' => $gift['price'],
+            'quantity' => $gift['quantity'],
+            'short_message' => $gift['short_message'],
+            'image_url' =>  $gift['image_url'],
+            'link' => $gift['link'],
+            'receiver_name' => ucfirst($gift['receiver_name']),
+            'receiver_email' => strtolower($gift['receiver_email']),
+            'receiver_phone' => $gift['receiver_phone'],
+            'sent_by' => $gift['sent_by'],
         ]);
     }
 
@@ -189,16 +209,24 @@ class GiftController extends Controller
             foreach ($gifts as $gift) {
 
                 DB::transaction(function () use ($gift, $user, $request) {
-                    $gift;
-
                     $gift->update([
                         'user_id' => $user->id,
                     ]);
 
-                    $request['amount'] =  $gift->price;
-                    $request['summary'] = 'Gift received';
+                    (new TransactionController())->store([
+                        'user_id' => $request->user()->id,
+                        'reference' => $this->reference,
+                        'provider' => 'getly',
+                        'channel' => 'gift',
+                        'amount' => $request->price,
+                        'summary' => 'Gift received from ' . $gift->sender->name,
+                        'spent' => false,
+                        'status' => TransactionType::Success(),
+                    ]);
 
-                    (new WalletController())->update($request, $gift->receiver_email, 'credit');
+                    $request->user()->wallet->update([
+                        'balance' => $request->user()->wallet->balance + $request->price,
+                    ]);
 
                     // notify sender through email gift, template , subject
                     // Mail::to($gift->sender->email)->send(new GiftMailable($gift, 'redeemed', 'Gift Received'));
@@ -232,7 +260,7 @@ class GiftController extends Controller
             ])['secure_url'];
         }
 
-        $gift->update($request->only(['name', 'short_message', 'image', 'link']));
+        $gift->update($request->only(['short_message', 'image', 'link']));
 
         return response()->json([
             'status' => true,

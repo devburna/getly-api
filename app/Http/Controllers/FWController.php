@@ -14,37 +14,49 @@ class FWController extends Controller
         $this->fw_sec_key = 'FLWSECK_TEST-3f407c91b3396dc7040be5ead43693e9-X';
     }
 
-    public function generatePaymentLink(Request $request)
+    public function generatePaymentLink($data)
     {
-        return Http::withHeaders([
+        $response =  Http::withHeaders([
             'Authorization' => 'Bearer ' . $this->fw_sec_key,
         ])->post('https://api.flutterwave.com/v3/payments', [
-            'tx_ref' => $request->reference,
-            'amount' => $request->amount,
+            'tx_ref' => $data['reference'],
+            'amount' => $data['amount'],
             'currency' => 'NGN',
-            'redirect_url' => $request->redirect_url,
+            'redirect_url' => route('verify-payment'),
             'meta' => [
                 'consumer_id' => 23,
                 'consumer_mac' => '92a3-912ba-1192a',
             ],
             'customer' => [
-                'email' => strtolower($request->user()->email),
-                'phone_number' => $request->user()->profile->phone,
-                'name' => ucfirst($request->user()->name),
+                'email' => $data['email'],
+                'phone_number' => $data['phone'],
+                'name' => $data['name'],
             ],
             'customizations' => [
                 'title' => config('app.name'),
-                'description' => ucfirst($request->description),
+                'description' => $data['description'],
                 'logo' => asset('img/logo.png'),
             ],
         ])->json();
+
+        if ($response['status'] === 'success') {
+            return $response['data']['link'];
+        }
+
+        return null;
     }
 
-    public function verifyPayment(Request $request)
+    public function verifyPayment($trx_id)
     {
-        return Http::withHeaders([
+        $response =  Http::withHeaders([
             'Authorization' => 'Bearer ' . $this->fw_sec_key,
-        ])->get('https://api.flutterwave.com/v3/transactions/' . $request->transaction_id . '/verify')->json();
+        ])->get('https://api.flutterwave.com/v3/transactions/' . $trx_id . '/verify')->json();
+
+        if ($response['status'] === 'success') {
+            return $response['data'];
+        }
+
+        return null;
     }
 
     public function create()

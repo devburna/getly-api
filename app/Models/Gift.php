@@ -55,24 +55,29 @@ class Gift extends Model
         'privacy' => 'boolean'
     ];
 
-    public function sender(): BelongsTo
-    {
-        return $this->belongsTo(User::class);
-    }
-
     public function contributors(): HasMany
     {
         return $this->hasMany(Contributor::class, 'gift_id');
     }
 
-    public function getSentByAttribute($value)
-    {
-        $sender = User::find($value);
+    // public function getSentByAttribute($value)
+    // {
+    //     $sender = User::find($value);
 
-        return [
-            'name' => $sender->name,
-            'email' => $sender->email,
-            'phone' => $sender->phone,
-        ];
+    //     return [
+    //         'name' => $sender->name,
+    //         'email' => $sender->email,
+    //         'phone' => $sender->phone,
+    //     ];
+    // }
+
+    public function sender(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'sent_by');
+    }
+
+    public function owner(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'user_id');
     }
 }

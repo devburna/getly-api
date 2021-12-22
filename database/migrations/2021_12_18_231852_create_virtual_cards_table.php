@@ -15,9 +15,10 @@ class CreateVirtualCardsTable extends Migration
     {
         Schema::create('virtual_cards', function (Blueprint $table) {
             $table->id()->from(time());
-            $table->unsignedBigInteger('user_id')->unique();
+            $table->unsignedBigInteger('user_id');
             $table->string('reference')->unique();
             $table->string('provider');
+            $table->softDeletes();
             $table->timestamps();
         });
     }

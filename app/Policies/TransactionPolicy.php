@@ -53,7 +53,7 @@ class TransactionPolicy
      */
     public function update(User $user, Transaction $transaction)
     {
-        $this->view($user, $transaction);
+        return $this->view($user, $transaction);
     }
 
     /**
@@ -65,7 +65,7 @@ class TransactionPolicy
      */
     public function delete(User $user, Transaction $transaction)
     {
-        $this->view($user, $transaction);
+        return $this->view($user, $transaction);
     }
 
     /**
@@ -77,7 +77,7 @@ class TransactionPolicy
      */
     public function restore(User $user, Transaction $transaction)
     {
-        $this->view($user, $transaction);
+        return $this->view($user, $transaction);
     }
 
     /**
@@ -89,6 +89,6 @@ class TransactionPolicy
      */
     public function forceDelete(User $user, Transaction $transaction)
     {
-        $this->view($user, $transaction);
+        return $this->view($user, $transaction);
     }
 }
