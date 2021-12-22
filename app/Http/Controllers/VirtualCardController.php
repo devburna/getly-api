@@ -11,7 +11,7 @@ class VirtualCardController extends Controller
 {
     public function create(VirtualCardRequest $request)
     {
-        return DB::transaction(function ($request) {
+        return DB::transaction(function () use ($request) {
             $response =  (new GladeController())->createVirtualCard($request->user()->name, $request->amount);
 
             if (!$response) {

@@ -77,7 +77,7 @@ class TransactionController extends Controller
                 if ($payment['amount'] = $transaction->amount) {
                     $transaction->update([
                         'method' => $payment['payment_type'],
-                        'summary' => ucfirst(strtolower($payment['narration'])),
+                        // 'summary' => ucfirst(strtolower($payment['narration'])),
                         'status' => TransactionType::Success(),
                     ]);
 
