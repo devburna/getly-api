@@ -26,7 +26,7 @@ class VirtualCardRequest extends FormRequest
     {
         return [
             'amount' => ['required', function ($attribute, $value, $fail) use ($request) {
-                if ($request->user()->wallet->balance < $request->amount) {
+                if ($request->user()->wallet->balance < ($request->amount + env('GLADE_CARD_FEE'))) {
                     return $fail(__('Insufficient balance'));
                 }
             }],

@@ -48,7 +48,7 @@ class VirtualCardController extends Controller
             ]);
 
             $request->user()->wallet->update([
-                'balance' => $request->user()->wallet->balance - $request->amount,
+                'balance' => $request->user()->wallet->balance - ($request->amount + env('GLADE_CARD_FEE')),
             ]);
 
             return response()->json([
@@ -109,7 +109,7 @@ class VirtualCardController extends Controller
         }
 
         $request->user()->wallet->update([
-            'balance' => $request->user()->wallet->balance - $request->amount,
+            'balance' => $request->user()->wallet->balance - ($request->amount + env('GLADE_CARD_FEE')),
         ]);
 
         return response()->json([
