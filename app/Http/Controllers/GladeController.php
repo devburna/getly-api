@@ -32,8 +32,8 @@ class GladeController extends Controller
                 'postal_code' => '94124',
             ],
             'amount' => $amount,
-            'currency' => 'USD',
-            'country' => 'US',
+            'currency' => 'NGN',
+            'country' => 'NG',
         ])->json();
 
         if ($card['status'] = 200) {
