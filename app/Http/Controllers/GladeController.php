@@ -36,9 +36,10 @@ class GladeController extends Controller
             'country' => 'NG',
         ])->json();
 
+        return $card;
+
         if ($card['status'] = 200) {
             if ($card['message'] === 'Created Successfully') {
-                $card['provider'] = 'glade';
                 return $card;
             }
         }

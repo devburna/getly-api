@@ -10,6 +10,13 @@ use Illuminate\Support\Facades\DB;
 
 class VirtualCardController extends Controller
 {
+    public $reference;
+
+    public function __construct()
+    {
+        $this->reference = str_shuffle(time() . mt_rand(1000, 9999));
+    }
+
     public function create(VirtualCardRequest $request)
     {
         return DB::transaction(function () use ($request) {
@@ -25,7 +32,7 @@ class VirtualCardController extends Controller
             VirtualCard::create([
                 'user_id' => $request->user()->id,
                 'reference' => $response['card_data']['reference'],
-                'provider' => $response['provider'],
+                'provider' => 'glade',
             ]);
 
             (new TransactionController())->store([
@@ -41,7 +48,7 @@ class VirtualCardController extends Controller
             ]);
 
             $request->user()->wallet->update([
-                'balance' => $request->user()->wallet->balance - ($request->amount + 2),
+                'balance' => $request->user()->wallet->balance - $request->amount,
             ]);
 
             return response()->json([
