@@ -69,6 +69,28 @@ class VirtualCardController extends Controller
         return (new GladeController())->virtualCardDetails($virtualCard->reference);
     }
 
+    public function cards(Request $request, VirtualCard $virtualCard)
+    {
+        $cards = $request->user()->virtualCards;
+
+        if ($cards->isEmpty()) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Not found'
+            ], 404);
+        }
+
+        foreach ($cards as $virtualCard) {
+            $virtualCard->details = (new GladeController())->virtualCardDetails($virtualCard->reference);;
+        }
+
+        return response()->json([
+            'status' => true,
+            'data' => $cards,
+            'message' => 'Not found'
+        ]);
+    }
+
     public function topup(VirtualCardRequest $request, VirtualCard $virtualCard)
     {
         if ($request->user()->cannot('view', $virtualCard)) {

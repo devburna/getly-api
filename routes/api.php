@@ -131,10 +131,13 @@ Route::prefix('v1')->group(function () {
         });
 
         #card
-        Route::prefix('card')->group(function () {
+        Route::prefix('cards')->group(function () {
 
             # create
             Route::post('', [\App\Http\Controllers\VirtualCardController::class, 'create']);
+
+            # cards
+            Route::get('', [\App\Http\Controllers\VirtualCardController::class, 'cards']);
 
             Route::prefix('{virtualCard}')->group(function () {
                 # details
