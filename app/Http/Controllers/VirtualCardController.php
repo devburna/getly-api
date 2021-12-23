@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\TransactionType;
 use App\Http\Requests\VirtualCardRequest;
 use App\Models\VirtualCard;
 use Illuminate\Http\Request;
@@ -25,6 +26,18 @@ class VirtualCardController extends Controller
                 'user_id' => $request->user()->id,
                 'reference' => $response['card_data']['reference'],
                 'provider' => $response['provider'],
+            ]);
+
+            (new TransactionController())->store([
+                'user_id' => $request->user()->id,
+                'reference' => $this->reference,
+                'provider' => 'flutterwave',
+                'channel' => 'deposit',
+                'amount' => $request->amount,
+                'charges' => 2,
+                'summary' => 'Wallet deposit',
+                'spent' => false,
+                'status' => TransactionType::Pending(),
             ]);
 
             $request->user()->wallet->update([

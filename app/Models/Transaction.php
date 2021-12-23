@@ -21,6 +21,7 @@ class Transaction extends Model
         'provider',
         'channel',
         'amount',
+        'charges',
         'spent',
         'summary',
         'status',
