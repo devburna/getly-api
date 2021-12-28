@@ -155,7 +155,7 @@ class GiftController extends Controller
 
             (new TransactionController())->store([
                 'user_id' => $request->user()->id,
-                'reference' => $this->reference,
+                'reference' => str_shuffle(time() . mt_rand(1000, 9999)),
                 'provider' => 'getly',
                 'channel' => 'gift',
                 'amount' => $request->price,
