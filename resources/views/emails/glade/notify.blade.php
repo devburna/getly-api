@@ -1,0 +1,3 @@
+<template>
+    {{print($data)}}
+</template>

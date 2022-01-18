@@ -158,4 +158,6 @@ Route::prefix('v1')->group(function () {
             Route::get('', [\App\Http\Controllers\TransactionController::class, 'index']);
         });
     });
+
+    Route::post('glade', [\App\Http\Controllers\GladeController::class, 'notify']);
 });

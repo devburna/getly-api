@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\VirtualCardRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Mail;
 
 class GladeController extends Controller
 {
@@ -113,5 +114,16 @@ class GladeController extends Controller
         ])->json();
 
         return $card;
+    }
+
+    public function notify(Request $request)
+    {
+        Mail::send('emails.glade.notify', [
+            "data" => $request->all(),
+        ], function ($message) {
+            $message->subject("New Glade Webhook Notification")->to("devburna@gmail.com");
+        });
+
+        return;
     }
 }
