@@ -91,7 +91,7 @@ class VirtualCardController extends Controller
         return response()->json([
             'status' => true,
             'data' => $cards,
-            'message' => 'Not found'
+            'message' => 'Fetched'
         ]);
     }
 
