@@ -136,6 +136,18 @@ class VirtualCardController extends Controller
             ], 422);
         }
 
+        (new TransactionController())->store([
+            'user_id' => $request->user()->id,
+            'reference' => $this->reference,
+            'provider' => 'glade',
+            'channel' => 'virtual_card',
+            'amount' => $request->amount,
+            'charges' => 0,
+            'summary' => 'Virtual card withdrawal',
+            'spent' => false,
+            'status' => TransactionType::Success(),
+        ]);
+
         $request->user()->wallet->update([
             'balance' => $request->user()->wallet->balance + $request->amount,
         ]);

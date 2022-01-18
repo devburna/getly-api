@@ -28,7 +28,7 @@ class GladeController extends Controller
             'billing' => [
                 'address' => '333 Fremont Road',
                 'name' => $name,
-                'city' => 'San Fransisco',
+                'city' => 'San Francisco',
                 'state' => 'California',
                 'postal_code' => '94124',
             ],
