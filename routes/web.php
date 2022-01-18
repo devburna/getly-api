@@ -19,14 +19,3 @@ Route::get('/', function () {
         'message' => 'Serve is up and running.'
     ]);
 });
-
-Route::prefix('verify')->group(function () {
-    # payment
-    Route::get('payment', [\App\Http\Controllers\TransactionController::class, 'verify'])->name('verify-payment');
-
-    # send gift
-    Route::get('sent-gift', [\App\Http\Controllers\GiftController::class, 'verifySentGift'])->name('verify-sent-gift');
-
-    # verify-wish
-    Route::get('sent-wish', [\App\Http\Controllers\ContributorController::class, 'verifySentWish'])->name('verify-sent-wish');
-});
