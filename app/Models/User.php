@@ -56,9 +56,9 @@ class User extends Authenticatable
         return $this->hasOne(Wallet::class);
     }
 
-    public function virtualCards(): HasMany
+    public function virtualCard(): HasOne
     {
-        return $this->hasMany(VirtualCard::class, 'user_id');
+        return $this->hasOne(VirtualCard::class);
     }
 
     public function getlists(): HasMany
