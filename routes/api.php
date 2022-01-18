@@ -143,6 +143,9 @@ Route::prefix('v1')->group(function () {
                 # details
                 Route::get('', [\App\Http\Controllers\VirtualCardController::class, 'details']);
 
+                # transactions
+                Route::get('transactions', [\App\Http\Controllers\VirtualCardController::class, 'transactions']);
+
                 # topup
                 Route::put('', [\App\Http\Controllers\VirtualCardController::class, 'topup']);
 

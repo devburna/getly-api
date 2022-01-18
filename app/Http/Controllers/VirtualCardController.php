@@ -22,39 +22,43 @@ class VirtualCardController extends Controller
         return DB::transaction(function () use ($request) {
             $response =  (new GladeController())->createVirtualCard($request->user()->name, $request->amount);
 
-            if (!$response) {
-                return response()->json([
-                    'status' => false,
-                    'message' => 'Error creating card.'
-                ], 422);
+            switch ($response['status']) {
+                case 200:
+                    VirtualCard::create([
+                        'user_id' => $request->user()->id,
+                        'reference' => $response['card_data']['reference'],
+                        'provider' => 'glade',
+                    ]);
+
+                    (new TransactionController())->store([
+                        'user_id' => $request->user()->id,
+                        'reference' => $this->reference,
+                        'provider' => 'glade',
+                        'channel' => 'virtual_card',
+                        'amount' => $request->amount,
+                        'charges' => env('GLADE_CARD_FEE'),
+                        'summary' => 'New virtual card',
+                        'spent' => true,
+                        'status' => TransactionType::Success(),
+                    ]);
+
+                    $request->user()->wallet->update([
+                        'balance' => $request->user()->wallet->balance - ($request->amount + env('GLADE_CARD_FEE')),
+                    ]);
+
+                    return response()->json([
+                        'status' => true,
+                        'message' => $response['message']
+                    ], 201);
+                    break;
+
+                default:
+                    return response()->json([
+                        'status' => false,
+                        'message' => $response['message']
+                    ], 422);
+                    break;
             }
-
-            VirtualCard::create([
-                'user_id' => $request->user()->id,
-                'reference' => $response['card_data']['reference'],
-                'provider' => 'glade',
-            ]);
-
-            (new TransactionController())->store([
-                'user_id' => $request->user()->id,
-                'reference' => $this->reference,
-                'provider' => 'glade',
-                'channel' => 'virtual_card',
-                'amount' => $request->amount,
-                'charges' => 2,
-                'summary' => 'New virtual card',
-                'spent' => true,
-                'status' => TransactionType::Success(),
-            ]);
-
-            $request->user()->wallet->update([
-                'balance' => $request->user()->wallet->balance - ($request->amount + env('GLADE_CARD_FEE')),
-            ]);
-
-            return response()->json([
-                'status' => true,
-                'message' => 'Card created.'
-            ], 201);
         });
     }
 
@@ -101,21 +105,38 @@ class VirtualCardController extends Controller
         }
         $response = (new GladeController())->fundVirtualCard($request->amount, $virtualCard->reference);
 
-        if (!$response) {
-            return response()->json([
-                'status' => false,
-                'message' => 'Error processing topup.'
-            ], 422);
+        switch ($response['status']) {
+            case 200:
+
+                (new TransactionController())->store([
+                    'user_id' => $request->user()->id,
+                    'reference' => $this->reference,
+                    'provider' => 'glade',
+                    'channel' => 'virtual_card',
+                    'amount' => $request->amount,
+                    'charges' => env('GLADE_CARD_FEE'),
+                    'summary' => 'Virtual card topup',
+                    'spent' => false,
+                    'status' => TransactionType::Success(),
+                ]);
+
+                $request->user()->wallet->update([
+                    'balance' => $request->user()->wallet->balance - ($request->amount + env('GLADE_CARD_FEE')),
+                ]);
+
+                return response()->json([
+                    'status' => true,
+                    'message' => $response['message']
+                ]);
+                break;
+
+            default:
+                return response()->json([
+                    'status' => false,
+                    'message' => $response['message']
+                ], 422);
+                break;
         }
-
-        $request->user()->wallet->update([
-            'balance' => $request->user()->wallet->balance - ($request->amount + env('GLADE_CARD_FEE')),
-        ]);
-
-        return response()->json([
-            'status' => true,
-            'message' => 'Topup was successful'
-        ]);
     }
 
     public function withdraw(Request $request, VirtualCard $virtualCard)
@@ -129,33 +150,38 @@ class VirtualCardController extends Controller
 
         $response = (new GladeController())->withdrawVirtualCard($request->amount, $virtualCard->reference);
 
-        if (!$response) {
-            return response()->json([
-                'status' => false,
-                'message' => 'Error processing withdrawal.'
-            ], 422);
+        switch ($response['status']) {
+            case 200:
+
+                (new TransactionController())->store([
+                    'user_id' => $request->user()->id,
+                    'reference' => $this->reference,
+                    'provider' => 'glade',
+                    'channel' => 'virtual_card',
+                    'amount' => $request->amount,
+                    'charges' => 0,
+                    'summary' => 'Virtual card withdrawal',
+                    'spent' => false,
+                    'status' => TransactionType::Success(),
+                ]);
+
+                $request->user()->wallet->update([
+                    'balance' => $request->user()->wallet->balance + $request->amount,
+                ]);
+
+                return response()->json([
+                    'status' => true,
+                    'message' => $response['message']
+                ]);
+                break;
+
+            default:
+                return response()->json([
+                    'status' => false,
+                    'message' => $response['message']
+                ], 422);
+                break;
         }
-
-        (new TransactionController())->store([
-            'user_id' => $request->user()->id,
-            'reference' => $this->reference,
-            'provider' => 'glade',
-            'channel' => 'virtual_card',
-            'amount' => $request->amount,
-            'charges' => 0,
-            'summary' => 'Virtual card withdrawal',
-            'spent' => false,
-            'status' => TransactionType::Success(),
-        ]);
-
-        $request->user()->wallet->update([
-            'balance' => $request->user()->wallet->balance + $request->amount,
-        ]);
-
-        return response()->json([
-            'status' => true,
-            'message' => 'Withdrawal was successful'
-        ]);
     }
 
     public function transactions(Request $request, VirtualCard $virtualCard)

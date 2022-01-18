@@ -28,7 +28,7 @@ class GladeController extends Controller
             'billing' => [
                 'address' => '333 Fremont Road',
                 'name' => $name,
-                'city' => 'San Francisco',
+                'city' => 'San Fransisco',
                 'state' => 'California',
                 'postal_code' => '94124',
             ],
@@ -37,12 +37,7 @@ class GladeController extends Controller
             'country' => 'NG',
         ])->json();
 
-        if ($card['status'] = 200) {
-            if ($card['message'] === 'Created Successfully') {
-                return $card;
-            }
-        }
-        return null;
+        return $card;
     }
 
     public function fundVirtualCard($amount, $card)
@@ -57,13 +52,7 @@ class GladeController extends Controller
             'amount' => $amount,
         ])->json();
 
-        if ($card['status'] = 200) {
-            if ($card['message'] === 'Withdrawal Successfully') {
-                return true;
-            }
-        }
-
-        return false;
+        return $card;
     }
 
     public function withdrawVirtualCard($amount, $card)
@@ -78,12 +67,7 @@ class GladeController extends Controller
             'amount' => $amount,
         ])->json();
 
-        if ($card['status'] = 200) {
-            if ($card['message'] === 'Withdrawal Successfully') {
-                return true;
-            }
-        }
-        return false;
+        return $card;
     }
 
     public function virtualCardTrx($card)
@@ -95,6 +79,8 @@ class GladeController extends Controller
         ])->put('https://api.glade.ng/virtualcard', [
             'action' => 'transactions',
             'reference' => $card,
+            'from_date' => '2022-01-01',
+            'to_date' => '2022-01-19'
         ])->json();
 
         return $card;
