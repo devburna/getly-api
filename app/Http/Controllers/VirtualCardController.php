@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Enums\TransactionType;
+use App\Http\Requests\VirtualCardRequest;
 use App\Models\VirtualCard;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -16,44 +17,44 @@ class VirtualCardController extends Controller
         $this->reference = str_shuffle(time() . mt_rand(1000, 9999));
     }
 
-    public function create(Request $request)
+    public function create(VirtualCardRequest $request)
     {
         return DB::transaction(function () use ($request) {
-            return (new Union54Controller())->createVirtualCard($request);
+            $response =  (new GladeController())->createVirtualCard($request->user()->name, $request->amount);
 
-            // if (!$response) {
-            //     return response()->json([
-            //         'status' => false,
-            //         'message' => 'Error creating card.'
-            //     ], 422);
-            // }
+            if (!$response) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Error creating card.'
+                ], 422);
+            }
 
-            // VirtualCard::create([
-            //     'user_id' => $request->user()->id,
-            //     'reference' => $response['data']['u54CardId'],
-            //     'provider' => 'union54',
-            // ]);
+            VirtualCard::create([
+                'user_id' => $request->user()->id,
+                'reference' => $response['card_data']['reference'],
+                'provider' => 'glade',
+            ]);
 
-            // (new TransactionController())->store([
-            //     'user_id' => $request->user()->id,
-            //     'reference' => $this->reference,
-            //     'provider' => 'union54',
-            //     'channel' => 'virtual_card',
-            //     'amount' => 0,
-            //     'charges' => 2,
-            //     'summary' => 'New virtual card',
-            //     'spent' => true,
-            //     'status' => TransactionType::Success(),
-            // ]);
+            (new TransactionController())->store([
+                'user_id' => $request->user()->id,
+                'reference' => $this->reference,
+                'provider' => 'glade',
+                'channel' => 'virtual_card',
+                'amount' => $request->amount,
+                'charges' => 2,
+                'summary' => 'New virtual card',
+                'spent' => true,
+                'status' => TransactionType::Success(),
+            ]);
 
-            // $request->user()->wallet->update([
-            //     'balance' => $request->user()->wallet->balance - 0,
-            // ]);
+            $request->user()->wallet->update([
+                'balance' => $request->user()->wallet->balance - ($request->amount + env('GLADE_CARD_FEE')),
+            ]);
 
-            // return response()->json([
-            //     'status' => true,
-            //     'message' => 'Card created.'
-            // ], 201);
+            return response()->json([
+                'status' => true,
+                'message' => 'Card created.'
+            ], 201);
         });
     }
 
@@ -90,7 +91,7 @@ class VirtualCardController extends Controller
         ]);
     }
 
-    public function topup(Request $request, VirtualCard $virtualCard)
+    public function topup(VirtualCardRequest $request, VirtualCard $virtualCard)
     {
         if ($request->user()->cannot('view', $virtualCard)) {
             return response()->json([
