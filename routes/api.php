@@ -34,6 +34,7 @@ Route::prefix('v1')->group(function () {
     # push-subscription
     Route::prefix('push-subscription')->middleware(['auth:sanctum'])->group(function () {
         Route::post('', [\App\Http\Controllers\PushController::class, 'store']);
+        Route::post('test', [\App\Http\Controllers\PushController::class, 'test']);
     });
 
     #authenticated
