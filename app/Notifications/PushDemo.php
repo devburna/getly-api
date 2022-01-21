@@ -7,6 +7,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 use NotificationChannels\WebPush\WebPushMessage;
+use NotificationChannels\WebPush\WebPushChannel;
 
 class PushDemo extends Notification
 {
@@ -30,7 +31,7 @@ class PushDemo extends Notification
      */
     public function via($notifiable)
     {
-        return ['webpush'];
+        return [WebPushChannel::class];
     }
 
     public function toWebPush($notifiable, $notification)
