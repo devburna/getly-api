@@ -44,7 +44,11 @@ class PushController extends Controller
      */
     public function test()
     {
-        event(new PushNotification('hello world'));
+        event(new PushNotification([
+            'subject' => 'Push Notification',
+            'body' => 'Testing Pushing Notification 😎',
+            'icon' => asset('img/logo.png')
+        ]));
 
         return "ok";
     }
