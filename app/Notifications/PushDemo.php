@@ -30,7 +30,7 @@ class PushDemo extends Notification
      */
     public function via($notifiable)
     {
-        return [WebPushChannel::class];
+        return ['webpush'];
     }
 
     public function toWebPush($notifiable, $notification)
