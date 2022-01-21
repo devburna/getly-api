@@ -31,6 +31,11 @@ Route::prefix('v1')->group(function () {
     # reset-password
     Route::post('reset-password', [\App\Http\Controllers\AuthController::class, 'resetPwd']);
 
+    # push-subscription
+    Route::prefix('push-subscription')->group(function () {
+        Route::post('', [\App\Http\Controllers\PushController::class, 'store']);
+    });
+
     #authenticated
     Route::middleware(['auth:sanctum', 'email_verified'])->group(function () {
 
