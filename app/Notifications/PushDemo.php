@@ -9,7 +9,7 @@ use Illuminate\Notifications\Notification;
 use NotificationChannels\WebPush\WebPushMessage;
 use NotificationChannels\WebPush\WebPushChannel;
 
-class PushDemo extends Notification implements ShouldQueue
+class PushDemo extends Notification
 {
     use Queueable;
 
@@ -34,11 +34,11 @@ class PushDemo extends Notification implements ShouldQueue
         return [WebPushChannel::class];
     }
 
-    public function toWebPush($notifiable, $notification)
+    public function toPushNotification($notifiable)
     {
         return (new WebPushMessage)
             ->title('I\'m Notification Title')
-            ->icon('/notification-icon.png')
+            ->icon(asset('img/logo.png'))
             ->body('Great, Push Notifications work!')
             ->action('View App', 'notification_action');
     }

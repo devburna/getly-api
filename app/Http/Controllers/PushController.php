@@ -13,7 +13,7 @@ class PushController extends Controller
     {
         $this->middleware('auth');
     }
-
+    
     /**
      * Store the PushSubscription.
      *

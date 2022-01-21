@@ -31,8 +31,8 @@ Route::prefix('v1')->group(function () {
     # reset-password
     Route::post('reset-password', [\App\Http\Controllers\AuthController::class, 'resetPwd']);
 
-    # push-subscription
-    Route::prefix('push-subscription')->middleware(['auth:sanctum'])->group(function () {
+    # notifications
+    Route::prefix('notifications')->middleware(['auth:sanctum'])->group(function () {
         Route::post('', [\App\Http\Controllers\PushController::class, 'store']);
         Route::post('test', [\App\Http\Controllers\PushController::class, 'test']);
     });
