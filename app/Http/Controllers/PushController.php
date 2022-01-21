@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Events\PushNotification;
 use App\Models\User;
 use App\Notifications\PushDemo;
 use Illuminate\Http\Request;
@@ -13,7 +14,7 @@ class PushController extends Controller
     {
         $this->middleware('auth');
     }
-    
+
     /**
      * Store the PushSubscription.
      *
@@ -43,7 +44,7 @@ class PushController extends Controller
      */
     public function test()
     {
-        Notification::send(User::all(), new PushDemo);
+        event(new PushNotification('hello world'));
 
         return "ok";
     }
