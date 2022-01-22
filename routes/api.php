@@ -156,11 +156,11 @@ Route::prefix('v1')->group(function () {
             Route::get('', [\App\Http\Controllers\TransactionController::class, 'index']);
         });
 
-        # notifications
-        Route::prefix('notifications')->group(function () {
-            Route::post('', [\App\Http\Controllers\PushNotificationController::class, 'store']);
-            Route::post('send', [\App\Http\Controllers\PushNotificationController::class, 'send']);
-        });
+    # notifications
+    Route::prefix('notifications')->middleware(['auth:sanctum'])->group(function () {
+        Route::post('', [\App\Http\Controllers\PushNotificationController::class, 'store']);
+        Route::post('send', [\App\Http\Controllers\PushNotificationController::class, 'send']);
+    });
     });
 
     Route::post('glade', [\App\Http\Controllers\GladeController::class, 'notify']);
