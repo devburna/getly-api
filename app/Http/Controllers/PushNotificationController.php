@@ -37,25 +37,22 @@ class PushNotificationController extends Controller
      */
     public function send(Request $request)
     {
-        foreach (PushNotification::get() as $push) {
-            $response =  Http::withHeaders([
-                "Accept" => "application/json",
-                "Content-Type" => "application/json",
-                "Authorization" => "Bearer " . env("FCM_KEY")
-            ])->post("https://fcm.googleapis.com/fcm/send", [
-                "notification" => [
-                    "webpush" => [
-                        "notification" => [
-                            "title" => $request->title,
-                            "body" => $request->body,
-                            "requireInteraction" => $request->require_interaction,
-                            "badge" => asset('img/logo.png'),
-                        ]
-                    ]
-                ],
-                "to" => $push->token
-            ]);
+        if (!$request->has('to')) {
+            foreach (PushNotification::get() as $push) {
+                $response = $this->push($request->title, $request->body, $push->token);
 
+                switch ($response->status()) {
+                    case 200:
+                        return $response->json();
+                        break;
+
+                    default:
+                        return;
+                        break;
+                }
+            }
+        } else {
+            $response = $this->push($request->title, $request->body, $request->to);
             switch ($response->status()) {
                 case 200:
                     return $response->json();
@@ -66,5 +63,26 @@ class PushNotificationController extends Controller
                     break;
             }
         }
+    }
+
+    public function push($title, $body, $token, $action = true)
+    {
+        return Http::withHeaders([
+            "Accept" => "application/json",
+            "Content-Type" => "application/json",
+            "Authorization" => "Bearer " . env("FCM_KEY")
+        ])->post("https://fcm.googleapis.com/fcm/send", [
+            "notification" => [
+                "webpush" => [
+                    "notification" => [
+                        "title" => $title,
+                        "body" => $body,
+                        "requireInteraction" => $action,
+                        "badge" => asset('img/logo.png'),
+                    ]
+                ]
+            ],
+            "to" => $token
+        ]);
     }
 }
