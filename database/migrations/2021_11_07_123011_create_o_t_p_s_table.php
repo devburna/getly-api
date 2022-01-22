@@ -15,7 +15,7 @@ class CreateOTPSTable extends Migration
     {
         Schema::create('o_t_p_s', function (Blueprint $table) {
             $table->id()->from(time());
-            $table->string('email')->index();
+            $table->string('email');
             $table->string('token');
             $table->string('type');
             $table->timestamp('expired_at');
