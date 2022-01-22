@@ -45,7 +45,8 @@ class PushController extends Controller
      */
     public function test(Request $request)
     {
-        return Http::withHeaders([
+        $response =  Http::withHeaders([
+            "Accept" => "application/json",
             "Content-Type" => "application/json",
             "Authorization" => "Bearer " . env("FCM_KEY")
         ])->post("https://fcm.googleapis.com/fcm/send", [
@@ -61,5 +62,15 @@ class PushController extends Controller
             ],
             "to" => $request->to
         ]);
+
+        switch ($response->status()) {
+            case 200:
+                return $response->json();
+                break;
+
+            default:
+                return;
+                break;
+        }
     }
 }
