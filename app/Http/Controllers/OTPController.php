@@ -52,7 +52,7 @@ class OTPController extends Controller
         if (!Hash::check($request->token, $otp->token)) {
             return response()->json([
                 'status' => false,
-                'message' => str_replace('_', ' ', ucfirst($request->type)) . ' token is invalid.',
+                'message' => $request->token,
             ], 404);
         }
 
