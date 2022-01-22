@@ -37,32 +37,34 @@ class PushNotificationController extends Controller
      */
     public function send(Request $request)
     {
-        $response =  Http::withHeaders([
-            "Accept" => "application/json",
-            "Content-Type" => "application/json",
-            "Authorization" => "Bearer " . env("FCM_KEY")
-        ])->post("https://fcm.googleapis.com/fcm/send", [
-            "notification" => [
-                "webpush" => [
-                    "notification" => [
-                        "title" => $request->title,
-                        "body" => $request->body,
-                        "requireInteraction" => $request->require_interaction,
-                        "badge" => asset('img/logo.png'),
+        foreach (PushNotification::get() as $push) {
+            $response =  Http::withHeaders([
+                "Accept" => "application/json",
+                "Content-Type" => "application/json",
+                "Authorization" => "Bearer " . env("FCM_KEY")
+            ])->post("https://fcm.googleapis.com/fcm/send", [
+                "notification" => [
+                    "webpush" => [
+                        "notification" => [
+                            "title" => $request->title,
+                            "body" => $request->body,
+                            "requireInteraction" => $request->require_interaction,
+                            "badge" => asset('img/logo.png'),
+                        ]
                     ]
-                ]
-            ],
-            "to" => $request->to
-        ]);
+                ],
+                "to" => $push->token
+            ]);
 
-        switch ($response->status()) {
-            case 200:
-                return $response->json();
-                break;
+            switch ($response->status()) {
+                case 200:
+                    return $response->json();
+                    break;
 
-            default:
-                return;
-                break;
+                default:
+                    return;
+                    break;
+            }
         }
     }
 }
