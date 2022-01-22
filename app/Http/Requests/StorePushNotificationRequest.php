@@ -24,7 +24,7 @@ class StorePushNotificationRequest extends FormRequest
     public function rules()
     {
         return [
-            "token" => "required"
+            "token" => "required|unique:push_notifications,token"
         ];
     }
 }
