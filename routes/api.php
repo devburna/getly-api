@@ -31,12 +31,6 @@ Route::prefix('v1')->group(function () {
     # reset-password
     Route::post('reset-password', [\App\Http\Controllers\AuthController::class, 'resetPwd']);
 
-    # notifications
-    Route::prefix('notifications')->middleware(['auth:sanctum'])->group(function () {
-        Route::post('', [\App\Http\Controllers\PushController::class, 'store']);
-        Route::post('test', [\App\Http\Controllers\PushController::class, 'test']);
-    });
-
     #authenticated
     Route::middleware(['auth:sanctum', 'email_verified'])->group(function () {
 
@@ -160,6 +154,12 @@ Route::prefix('v1')->group(function () {
 
             # details
             Route::get('', [\App\Http\Controllers\TransactionController::class, 'index']);
+        });
+
+        # notifications
+        Route::prefix('notifications')->group(function () {
+            Route::post('', [\App\Http\Controllers\PushNotificationController::class, 'store']);
+            Route::post('send', [\App\Http\Controllers\PushNotificationController::class, 'send']);
         });
     });
 

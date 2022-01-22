@@ -2,14 +2,13 @@
 
 namespace App\Http\Controllers;
 
-use App\Events\PushNotification;
-use App\Models\User;
-use App\Notifications\PushDemo;
+use App\Http\Requests\StorePushNotificationRequest;
+use App\Http\Requests\UpdatePushNotificationRequest;
+use App\Models\PushNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Notification;
 
-class PushController extends Controller
+class PushNotificationController extends Controller
 {
     public function __construct()
     {
@@ -17,23 +16,20 @@ class PushController extends Controller
     }
 
     /**
-     * Store the PushSubscription.
+     * Store a newly created resource in storage.
      *
-     * @param \Illuminate\Http\Request $request
-     * @return \Illuminate\Http\JsonResponse
+     * @param  \App\Http\Requests\StorePushNotificationRequest  $request
+     * @return \Illuminate\Http\Response
      */
-    public function store(Request $request)
+    public function store(StorePushNotificationRequest $request)
     {
         $this->validate($request, [
-            'endpoint'    => 'required',
-            'keys.auth'   => 'required',
-            'keys.p256dh' => 'required'
+            'token' => 'required',
         ]);
-        $endpoint = $request->endpoint;
-        $token = $request->keys['auth'];
-        $key = $request->keys['p256dh'];
-        $user = $request->user();
-        $user->updatePushSubscription($endpoint, $key, $token);
+
+        $request['user_id'] = $request->user()->id;
+
+        PushNotification::updateOrCreate($request->only(['user_id', 'token']));
 
         return response()->json(['success' => true], 200);
     }
@@ -43,7 +39,7 @@ class PushController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function test(Request $request)
+    public function send(Request $request)
     {
         $response =  Http::withHeaders([
             "Accept" => "application/json",
