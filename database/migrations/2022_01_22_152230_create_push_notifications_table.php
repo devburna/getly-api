@@ -15,7 +15,7 @@ class CreatePushNotificationsTable extends Migration
     {
         Schema::create('push_notifications', function (Blueprint $table) {
             $table->id()->from(time());
-            $table->unsignedBigInteger('user_id')->unique();
+            $table->unsignedBigInteger('user_id');
             $table->string('token')->unique();
             $table->softDeletes();
             $table->timestamps();
