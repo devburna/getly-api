@@ -42,7 +42,14 @@ class OTPController extends Controller
     {
         $otp = OTP::where(['email' => $request->email, 'type' => $request->type])->first();
 
-        if (!$otp || !Hash::check($request->token, $otp->token)) {
+        if (!$otp) {
+            return response()->json([
+                'status' => false,
+                'message' => trans('auth.failed'),
+            ], 404);
+        }
+
+        if (!Hash::check($request->token, $otp->token)) {
             return response()->json([
                 'status' => false,
                 'message' => str_replace('_', ' ', ucfirst($request->type)) . ' token is invalid.',
