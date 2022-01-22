@@ -25,7 +25,7 @@ class PushNotificationController extends Controller
     {
         $request['user_id'] = $request->user()->id;
 
-        PushNotification::create($request->only(['user_id', 'token']));
+        PushNotification::updateOrCreate($request->only(['user_id', 'token']));
 
         return response()->json(['success' => true], 200);
     }
