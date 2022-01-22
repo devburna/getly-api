@@ -6,6 +6,7 @@ use App\Events\PushNotification;
 use App\Models\User;
 use App\Notifications\PushDemo;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Notification;
 
 class PushController extends Controller
@@ -42,14 +43,24 @@ class PushController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function test()
+    public function test(Request $request)
     {
-        event(new PushNotification([
-            'subject' => 'Push Notification',
-            'body' => 'Push Notification Works 😎',
-            'icon' => asset('img/logo.png')
-        ]));
-
-        return "ok";
+        return Http::withHeaders([
+            "Content-Type" => "application/json",
+            "Accept" => "application/json",
+            "Authorization" => "Bearer " . env("FCM_KEY")
+        ])->post("https://fcm.googleapis.com/fcm/send", [
+            "notification" => [
+                "webpush" => [
+                    "notification" => [
+                        "title" => $request->title,
+                        "body" => $request->body,
+                        "requireInteraction" => $request->require_interaction,
+                        "badge" => asset('img/logo.png'),
+                    ]
+                ]
+            ],
+            "to" => $request->to
+        ])->json();
     }
 }
