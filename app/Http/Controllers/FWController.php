@@ -4,59 +4,69 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Str;
 
 class FWController extends Controller
 {
-    public $fw_sec_key;
+    public $fw_sec_key, $reference;
 
     public function __construct()
     {
         $this->fw_sec_key = 'FLWSECK_TEST-3f407c91b3396dc7040be5ead43693e9-X';
+        $this->reference = str::uuid();
     }
 
-    public function generatePaymentLink($data)
+    public function generatePaymentLink($amount, $name, $email, $phone, $description)
     {
         $response =  Http::withHeaders([
             'Authorization' => 'Bearer ' . $this->fw_sec_key,
         ])->post('https://api.flutterwave.com/v3/payments', [
-            'tx_ref' => $data['reference'],
-            'amount' => $data['amount'],
+            'tx_ref' => $this->reference,
+            'amount' => $amount,
             'currency' => 'NGN',
-            'redirect_url' => route('verify-payment'),
+            'redirect_url' => env('APP_URL') . '/payment',
             'meta' => [
                 'consumer_id' => 23,
                 'consumer_mac' => '92a3-912ba-1192a',
             ],
             'customer' => [
-                'email' => $data['email'],
-                'phone_number' => $data['phone'],
-                'name' => $data['name'],
+                'email' => $email,
+                'phone_number' => $phone,
+                'name' => $name,
             ],
             'customizations' => [
                 'title' => config('app.name'),
-                'description' => $data['description'],
+                'description' => $description,
                 'logo' => asset('img/logo.png'),
             ],
-        ])->json();
+        ]);
 
-        if ($response['status'] === 'success') {
-            return $response['data']['link'];
+        if ($response->status() === 200) {
+            $link = $response->json();
+
+            return [
+                'data' => [
+                    'link' => $link['data']['link'],
+                    'reference' => $this->reference
+                ],
+                'message' => $link['message']
+            ];
+        } else {
+            return null;
         }
-
-        return null;
     }
 
-    public function verifyPayment($trx_id)
+    public function verifyPayment($transaction_id)
     {
         $response =  Http::withHeaders([
             'Authorization' => 'Bearer ' . $this->fw_sec_key,
-        ])->get('https://api.flutterwave.com/v3/transactions/' . $trx_id . '/verify')->json();
+        ])->get('https://api.flutterwave.com/v3/transactions/' . $transaction_id . '/verify');
 
-        if ($response['status'] === 'success') {
-            return $response['data'];
+        if ($response->status() === 200) {
+            return $response->json();
+        } else {
+            return null;
         }
-
-        return null;
     }
 
     public function create()

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Enums\TransactionType;
 use App\Models\Transaction;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class TransactionController extends Controller
 {
@@ -53,85 +54,76 @@ class TransactionController extends Controller
     // verify transaction
     public function verify(Request $request)
     {
-        $transaction = Transaction::where('reference', $request->tx_ref)->firstOrFail();
+        return DB::transaction(function () use ($request) {
+            switch ($request->status) {
+                case 'successful':
+                    $transaction = Transaction::where('reference', $request->tx_ref)->first();
+                    $payment = (new FWController())->verifyPayment($request->transaction_id);
 
-        if ($transaction->status == TransactionType::Success()) {
-            return response()->json([
-                'status' => true,
-                'data' => $transaction,
-                'message' => 'Payment verified',
-            ]);
-        }
+                    if (!$transaction || !$payment) {
+                        return response()->json([
+                            'status' => false,
+                            'message' => 'Error verifying transaction'
+                        ], 422);
+                    }
 
-        switch ($request->status) {
-            case 'successful':
-                $payment = (new FWController())->verifyPayment($request->transaction_id);
+                    if ($transaction->status = TransactionType::Success()) {
+                        return response()->json([
+                            'status' => true,
+                            'message' => 'Payment successful'
+                        ]);
+                    }
 
-                if (!$payment) {
-                    return response()->json([
-                        'status' => false,
-                        'message' => 'Error verifying transaction'
-                    ], 422);
-                }
+                    if ($payment['data']['amount'] != $transaction->amount) {
+                        return response()->json([
+                            'status' => false,
+                            'message' => 'Error verifying transaction'
+                        ], 422);
+                    }
 
-                if ($payment['amount'] = $transaction->amount) {
                     $transaction->update([
-                        'method' => $payment['payment_type'],
-                        // 'summary' => ucfirst(strtolower($payment['narration'])),
+                        'method' => $payment['data']['payment_type'],
                         'status' => TransactionType::Success(),
                     ]);
 
-                    if ($transaction->channel === 'deposit') {
-                        $transaction->user->wallet->update([
-                            'balance' => $transaction->user->wallet->balance + $payment['amount'],
-                        ]);
+                    switch ($transaction->channel) {
+                        case 'deposit':
+                            $transaction->user->wallet->update([
+                                'balance' => $transaction->user->wallet->balance + $payment['data']['amount'],
+                            ]);
+                            break;
+
+                        case 'transfer':
+                            $transaction->user->wallet->update([
+                                'balance' => $transaction->user->wallet->balance - $payment['data']['amount'],
+                            ]);
+                            break;
+
+                        default:
+                            # code...
+                            break;
                     }
-                }
 
-                return response()->json([
-                    'status' => true,
-                    'data' => $transaction,
-                    'message' => $payment['status'],
-                ]);
+                    return response()->json([
+                        'status' => true,
+                        'message' => 'Payment successful'
+                    ]);
 
-                break;
+                    break;
+                case 'cancelled':
+                    return response()->json([
+                        'status' => false,
+                        'message' => 'Payment cancelled'
+                    ], 422);
+                    break;
 
-            case 'cancelled':
-                $transaction->update([
-                    'summary' => 'Payment cancelled',
-                    'status' => TransactionType::Cancelled(),
-                ]);
-
-                return response()->json([
-                    'status' => false,
-                    'data' => $transaction,
-                    'message' => 'Payment was cancelled',
-                ], 422);
-
-                break;
-
-            case 'failed':
-                $transaction->update([
-                    'summary' => 'Payment failed',
-                    'status' => TransactionType::Failed(),
-                ]);
-
-                return response()->json([
-                    'status' => false,
-                    'data' => $transaction,
-                    'message' => 'Payment failed',
-                ], 422);
-
-                break;
-            default:
-
-                return response()->json([
-                    'status' => false,
-                    'data' => $transaction,
-                    'message' => 'Error verifying transaction. Please contact support',
-                ], 422);
-
-                break;
-        }
+                default:
+                    return response()->json([
+                        'status' => false,
+                        'message' => 'Error verifying payment. Please contact support'
+                    ], 422);
+                    break;
+            }
+        });
     }
 }

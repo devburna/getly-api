@@ -19,3 +19,5 @@ Route::get('/', function () {
         'message' => 'Serve is up and running.'
     ]);
 });
+
+Route::get('payment', [\App\Http\Controllers\TransactionController::class, 'verify']);
