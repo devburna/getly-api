@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\VirtualCard;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
@@ -13,7 +14,7 @@ class FWController extends Controller
     public function __construct()
     {
         $this->fw_sec_key = 'FLWSECK_TEST-3f407c91b3396dc7040be5ead43693e9-X';
-        $this->reference = str::uuid();
+        $this->reference = Str::uuid();
     }
 
     public function generatePaymentLink($amount, $name, $email, $phone, $description)
@@ -69,215 +70,106 @@ class FWController extends Controller
         }
     }
 
-    public function create()
+    public function createVirtualCard($name, $amount)
     {
-        try {
-            $curl = curl_init();
+        $response =  Http::withHeaders([
+            'Authorization' => 'Bearer ' . $this->fw_sec_key,
+        ])->get('https://api.flutterwave.com/v3/virtual-cards', [
+            'currency' => 'USD',
+            'amount' => $amount,
+            'billing_name' => $name,
+            'billing_address' => '333 fremont road',
+            'billing_city' => 'San Francisco',
+            'billing_state' => 'CA',
+            'billing_postal_code' => '984105',
+            'billing_country' => 'US',
+            'callback_url' => route('flw-webhook'),
+        ]);
 
-            curl_setopt_array($curl, array(
-                CURLOPT_URL => env('FW_URL') . "/virtual-cards",
-                CURLOPT_RETURNTRANSFER => true,
-                CURLOPT_ENCODING => "",
-                CURLOPT_MAXREDIRS => 10,
-                CURLOPT_TIMEOUT => 0,
-                CURLOPT_FOLLOWLOCATION => true,
-                CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-                CURLOPT_CUSTOMREQUEST => "POST",
-                CURLOPT_POSTFIELDS => [
-                    "currency" => "USD",
-                    "amount" => 0,
-                    "billing_name" => "Jermaine Graham",
-                    "billing_address" => "333 fremont road",
-                    "billing_city" => "San Francisco",
-                    "billing_state" => "CA",
-                    "billing_postal_code" => "984105",
-                    "billing_country" => "US",
-                    "callback_url" => "https://getly.heroku.com/"
-                ],
-                CURLOPT_HTTPHEADER => array(
-                    "Content-Type: application/json",
-                    "Authorization: Bearer " . env('FW_SEC_KEY')
-                ),
-            ));
-
-            $response = curl_exec($curl);
-
-            curl_close($curl);
-
-            return $response;
-        } catch (\Throwable $th) {
-            return response()->json([
-                'status' => false,
-                'message' => $th->getMessage()
-            ]);
+        if ($response->status() === 200) {
+            return $response->json();
+        } else {
+            return null;
         }
     }
 
-    public function card($card)
+    public function getVirtualCard($card)
     {
-        try {
-            $curl = curl_init();
+        $response =  Http::withHeaders([
+            'Authorization' => 'Bearer ' . $this->fw_sec_key,
+        ])->get('https://api.flutterwave.com/v3/virtual-cards/' . $card);
 
-            curl_setopt_array($curl, array(
-                CURLOPT_URL => env('FW_URL') . "/virtual-cards/" . $card,
-                CURLOPT_RETURNTRANSFER => true,
-                CURLOPT_ENCODING => "",
-                CURLOPT_MAXREDIRS => 10,
-                CURLOPT_TIMEOUT => 0,
-                CURLOPT_FOLLOWLOCATION => true,
-                CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-                CURLOPT_CUSTOMREQUEST => "GET",
-                CURLOPT_HTTPHEADER => array(
-                    "Content-Type: application/json",
-                    "Authorization: Bearer " . env('FW_SEC_KEY')
-                ),
-            ));
-
-            $response = curl_exec($curl);
-
-            curl_close($curl);
-            return $response;
-        } catch (\Throwable $th) {
-            return response()->json([
-                'status' => false,
-                'message' => $th->getMessage()
-            ]);
+        if ($response->status() === 200) {
+            return $response->json();
+        } else {
+            return null;
         }
     }
 
-    public function fund($card, $amount)
+    public function fundVirtualCard($card, $amount)
     {
-        try {
-            $curl = curl_init();
+        $response =  Http::withHeaders([
+            'Authorization' => 'Bearer ' . $this->fw_sec_key,
+        ])->post('https://api.flutterwave.com/v3/virtual-cards/' . $card . '/fund', [
+            'debit_currency' => 'NGN',
+            'amount' => $amount
+        ]);
 
-            curl_setopt_array($curl, array(
-                CURLOPT_URL => env('FW_URL') . "/virtual-cards/" . $card . "/fund",
-                CURLOPT_RETURNTRANSFER => true,
-                CURLOPT_ENCODING => "",
-                CURLOPT_MAXREDIRS => 10,
-                CURLOPT_TIMEOUT => 0,
-                CURLOPT_FOLLOWLOCATION => true,
-                CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-                CURLOPT_CUSTOMREQUEST => "POST",
-                CURLOPT_POSTFIELDS => [
-                    "debit_currency" => "NGN",
-                    "amount" => $amount
-                ],
-                CURLOPT_HTTPHEADER => array(
-                    "Content-Type: application/json",
-                    "Authorization: Bearer " . env('FW_SEC_KEY')
-                ),
-            ));
-
-            $response = curl_exec($curl);
-
-            curl_close($curl);
-            return $response;
-        } catch (\Throwable $th) {
-            return response()->json([
-                'status' => false,
-                'message' => $th->getMessage()
-            ]);
+        if ($response->status() === 200) {
+            return $response->json();
+        } else {
+            return null;
         }
     }
 
-    public function transactions($card, $from, $to, $index, $size)
+    public function withdrawVirtualCard($card, $amount)
     {
-        try {
-            $curl = curl_init();
+        $response =  Http::withHeaders([
+            'Authorization' => 'Bearer ' . $this->fw_sec_key,
+        ])->post('https://api.flutterwave.com/v3/virtual-cards/' . $card . '/withdraw', [
+            'amount' => $amount
+        ]);
 
-            curl_setopt_array($curl, array(
-                CURLOPT_URL => env('FW_URL') . "/virtual-cards/" . $card . "/transactions?from=" . $from . "&to=" . $to . "&index=" . $index . "&size=" . $size,
-                CURLOPT_RETURNTRANSFER => true,
-                CURLOPT_ENCODING => "",
-                CURLOPT_MAXREDIRS => 10,
-                CURLOPT_TIMEOUT => 0,
-                CURLOPT_FOLLOWLOCATION => true,
-                CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-                CURLOPT_CUSTOMREQUEST => "GET",
-                CURLOPT_HTTPHEADER => array(
-                    "Content-Type: application/json",
-                    "Authorization: Bearer " . env('FW_SEC_KEY')
-                ),
-            ));
-
-            $response = curl_exec($curl);
-
-            curl_close($curl);
-            return $response;
-        } catch (\Throwable $th) {
-            return response()->json([
-                'status' => false,
-                'message' => $th->getMessage()
-            ]);
+        if ($response->status() === 200) {
+            return $response->json();
+        } else {
+            return null;
         }
     }
 
-
-    public function withdraw($card, $amount)
+    public function virtualCardTransactions($card, $from, $to, $index, $size)
     {
-        try {
-            $curl = curl_init();
+        $response =  Http::withHeaders([
+            'Authorization' => 'Bearer ' . $this->fw_sec_key,
+        ])->post('https://api.flutterwave.com/v3/virtual-cards/' . $card . '/transactions', [
+            'from' => $from,
+            'to' => $to,
+            'index' => $index,
+            'size' => $size,
+        ]);
 
-            curl_setopt_array($curl, array(
-                CURLOPT_URL => env('FW_URL') . "/virtual-cards/" . $card,
-                CURLOPT_RETURNTRANSFER => true,
-                CURLOPT_ENCODING => "",
-                CURLOPT_MAXREDIRS => 10,
-                CURLOPT_TIMEOUT => 0,
-                CURLOPT_FOLLOWLOCATION => true,
-                CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-                CURLOPT_CUSTOMREQUEST => "POST",
-                CURLOPT_POSTFIELDS => [
-                    "amount" => $amount
-                ],
-                CURLOPT_HTTPHEADER => array(
-                    "Content-Type: application/json",
-                    "Authorization: Bearer " . env('FW_SEC_KEY')
-                ),
-            ));
-
-            $response = curl_exec($curl);
-
-            curl_close($curl);
-            return $response;
-        } catch (\Throwable $th) {
-            return response()->json([
-                'status' => false,
-                'message' => $th->getMessage()
-            ]);
+        if ($response->status() === 200) {
+            return $response->json();
+        } else {
+            return null;
         }
     }
 
-    public function blockUnblock($card, $action)
+    public function webHook(Request $request)
     {
-        try {
-            $curl = curl_init();
+        switch ($request['Type']) {
+            case 'Notification':
+                $card = VirtualCard::where('reference', $request['CardId'])->first();
 
-            curl_setopt_array($curl, array(
-                CURLOPT_URL => env('FW_URL') . "/virtual-cards/" . $card . "/status/" . $action,
-                CURLOPT_RETURNTRANSFER => true,
-                CURLOPT_ENCODING => "",
-                CURLOPT_MAXREDIRS => 10,
-                CURLOPT_TIMEOUT => 0,
-                CURLOPT_FOLLOWLOCATION => true,
-                CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-                CURLOPT_CUSTOMREQUEST => "PUT",
-                CURLOPT_HTTPHEADER => array(
-                    "Content-Type: application/json",
-                    "Authorization: Bearer " . env('FW_SEC_KEY')
-                ),
-            ));
+                if ($card) {
+                    // send sms
+                    return (new TwilioController())->send($card->user->profile->phone, 'OTP', $request['Otp']);
+                }
+                break;
 
-            $response = curl_exec($curl);
-
-            curl_close($curl);
-            return $response;
-        } catch (\Throwable $th) {
-            return response()->json([
-                'status' => false,
-                'message' => $th->getMessage()
-            ]);
+            default:
+                # code...
+                break;
         }
     }
 }

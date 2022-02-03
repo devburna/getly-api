@@ -126,27 +126,22 @@ Route::prefix('v1')->group(function () {
         });
 
         #card
-        Route::prefix('cards')->group(function () {
+        Route::prefix('card')->group(function () {
 
             # create
             Route::post('', [\App\Http\Controllers\VirtualCardController::class, 'create']);
 
-            # cards
-            Route::get('', [\App\Http\Controllers\VirtualCardController::class, 'cards']);
+            # card
+            Route::get('', [\App\Http\Controllers\VirtualCardController::class, 'details']);
 
-            Route::prefix('{virtualCard}')->group(function () {
-                # details
-                Route::get('', [\App\Http\Controllers\VirtualCardController::class, 'details']);
+            # topup
+            Route::put('', [\App\Http\Controllers\VirtualCardController::class, 'topup']);
 
-                # transactions
-                Route::get('transactions', [\App\Http\Controllers\VirtualCardController::class, 'transactions']);
+            # withdraw
+            Route::patch('', [\App\Http\Controllers\VirtualCardController::class, 'withdraw']);
 
-                # topup
-                Route::put('', [\App\Http\Controllers\VirtualCardController::class, 'topup']);
-
-                # withdraw
-                Route::patch('', [\App\Http\Controllers\VirtualCardController::class, 'withdraw']);
-            });
+            # transactions
+            Route::get('transactions', [\App\Http\Controllers\VirtualCardController::class, 'transactions']);
         });
 
         #transactions
@@ -156,11 +151,11 @@ Route::prefix('v1')->group(function () {
             Route::get('', [\App\Http\Controllers\TransactionController::class, 'index']);
         });
 
-    # notifications
-    Route::prefix('notifications')->middleware(['auth:sanctum'])->group(function () {
-        Route::post('', [\App\Http\Controllers\PushNotificationController::class, 'store']);
-        Route::post('send', [\App\Http\Controllers\PushNotificationController::class, 'send']);
-    });
+        # notifications
+        Route::prefix('notifications')->middleware(['auth:sanctum'])->group(function () {
+            Route::post('', [\App\Http\Controllers\PushNotificationController::class, 'store']);
+            Route::post('send', [\App\Http\Controllers\PushNotificationController::class, 'send']);
+        });
     });
 
     Route::post('glade', [\App\Http\Controllers\GladeController::class, 'notify']);
