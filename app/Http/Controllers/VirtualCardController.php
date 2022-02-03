@@ -14,7 +14,6 @@ class VirtualCardController extends Controller
 {
     public function create(VirtualCardRequest $request)
     {
-        return (new TwilioController())->send($request->user()->profile->phone, 'Testing');
         return DB::transaction(function () use ($request) {
 
             if ($request->user()->virtualCard) {
