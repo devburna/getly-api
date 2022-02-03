@@ -40,7 +40,7 @@ class VirtualCardController extends Controller
 
             (new TransactionController())->store([
                 'user_id' => $request->user()->id,
-                'reference' => $card['data']['card_hash'],
+                'reference' => Str::uuid(),
                 'provider' => 'flutterwave',
                 'channel' => 'virtual_card',
                 'amount' => $request->amount,
@@ -183,8 +183,8 @@ class VirtualCardController extends Controller
 
         return response()->json([
             'status' => true,
-            'data' => $card,
-            'message' => 'Card transactions fetched successfully!'
+            'data' => $card['data'],
+            'message' => $card['message']
         ]);
     }
 }

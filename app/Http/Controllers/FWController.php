@@ -13,7 +13,7 @@ class FWController extends Controller
 
     public function __construct()
     {
-        $this->fw_sec_key = 'FLWSECK_TEST-3f407c91b3396dc7040be5ead43693e9-X';
+        $this->fw_sec_key = env('FW_SEC_KEY');
         $this->reference = Str::uuid();
     }
 
@@ -74,15 +74,15 @@ class FWController extends Controller
     {
         $response =  Http::withHeaders([
             'Authorization' => 'Bearer ' . $this->fw_sec_key,
-        ])->get('https://api.flutterwave.com/v3/virtual-cards', [
-            'currency' => 'USD',
+        ])->post('https://api.flutterwave.com/v3/virtual-cards', [
+            'currency' => 'NGN',
             'amount' => $amount,
             'billing_name' => $name,
             'billing_address' => '333 fremont road',
             'billing_city' => 'San Francisco',
             'billing_state' => 'CA',
             'billing_postal_code' => '984105',
-            'billing_country' => 'US',
+            'billing_country' => 'NG',
             'callback_url' => route('flw-webhook'),
         ]);
 
@@ -141,7 +141,7 @@ class FWController extends Controller
     {
         $response =  Http::withHeaders([
             'Authorization' => 'Bearer ' . $this->fw_sec_key,
-        ])->post('https://api.flutterwave.com/v3/virtual-cards/' . $card . '/transactions', [
+        ])->get('https://api.flutterwave.com/v3/virtual-cards/' . $card . '/transactions', [
             'from' => $from,
             'to' => $to,
             'index' => $index,
