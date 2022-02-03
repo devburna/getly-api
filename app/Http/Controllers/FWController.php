@@ -163,7 +163,7 @@ class FWController extends Controller
 
                 if ($card) {
                     // send sms
-                    return (new TwilioController())->send($card->user->profile->phone, 'OTP', $request['Otp']);
+                    return (new TwilioController())->send($card->user->profile->phone, $request['Otp']);
                 }
                 break;
 
