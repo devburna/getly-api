@@ -57,7 +57,7 @@ steps:
       key:
         from_secret: SSH_KEY
       script:
-        - cp /var/www/envs/getly/.env.apistaging /var/www/getly/api.getly.app/.env
+        - cp /var/www/envs/getly/.env.staging /var/www/getly/api.getly.app/.env
         - pushd /var/www/api.getly.app
         - chown -R www-data:www-data ./storage/
         - php artisan migrate --force
