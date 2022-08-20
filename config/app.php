@@ -161,7 +161,7 @@ return [
         Illuminate\Translation\TranslationServiceProvider::class,
         Illuminate\Validation\ValidationServiceProvider::class,
         Illuminate\View\ViewServiceProvider::class,
-        //NotificationChannels\WebPush\WebPushServiceProvider::class,
+        NotificationChannels\WebPush\WebPushServiceProvider::class,
 
         /*
          * Package Service Providers...
