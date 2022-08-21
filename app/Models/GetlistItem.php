@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\GetlistItemStatus;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -41,7 +42,7 @@ class GetlistItem extends Model
      * @var array
      */
     protected $casts = [
-        //
+        'status' => GetlistItemStatus::class
     ];
 
     public function getlist(): BelongsTo

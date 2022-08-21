@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\GetlistItemStatus;
 use App\Http\Requests\StoreGetlistItemRequest;
 use App\Http\Requests\UpdateGetlistItemRequest;
 use App\Models\GetlistItem;
@@ -17,6 +18,10 @@ class GetlistItemController extends Controller
      */
     public function store(StoreGetlistItemRequest $request)
     {
+
+        // set status
+        $request['status'] = GetlistItemStatus::UNFULFILLED();
+
         // upload image
         $request['image_url'] = (new UploadApi())->upload($request->image->path(), [
             'folder' => config('app.name') . '/gifts/',
@@ -32,7 +37,8 @@ class GetlistItemController extends Controller
             'price',
             'quantity',
             'details',
-            'image_url'
+            'image_url',
+            'status'
         ]));
 
         return $this->show($getlistItem, null, 201);

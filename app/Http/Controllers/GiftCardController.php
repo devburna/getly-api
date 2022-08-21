@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\GiftCardStatus;
 use App\Http\Requests\StoreGiftCardRequest;
 use App\Http\Requests\UpdateGiftCardRequest;
 use App\Models\GiftCard;
@@ -42,13 +43,17 @@ class GiftCardController extends Controller
      */
     public function store(StoreGiftCardRequest $request)
     {
+        // set status
+        $request['status'] = GiftCardStatus::REDEEMABLE();
+
         return GiftCard::create($request->only([
             'user_id',
             'sender_id',
             'receiver_name',
             'receiver_email_address',
             'receiver_phone_number',
-            'message'
+            'message',
+            'status'
         ]));
     }
 

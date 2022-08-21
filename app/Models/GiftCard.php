@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\GiftCardStatus;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -43,7 +44,7 @@ class GiftCard extends Model
      * @var array
      */
     protected $casts = [
-        //
+        'status' => GiftCardStatus::class
     ];
 
     public function user(): BelongsTo

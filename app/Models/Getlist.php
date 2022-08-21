@@ -23,7 +23,7 @@ class Getlist extends Model
         'event_date',
         'message',
         'privacy',
-        'image_url'
+        'image_url',
     ];
 
     /**
