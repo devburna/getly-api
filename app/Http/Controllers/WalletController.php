@@ -28,10 +28,20 @@ class WalletController extends Controller
      * Update the specified resource in storage.
      *
      * @param  \App\Http\Requests\UpdateWalletRequest  $request
-     * @param  \App\Models\Wallet  $wallet
      * @return \Illuminate\Http\Response
      */
-    public function update(UpdateWalletRequest $request, Wallet $wallet)
+    public function fund(StoreWalletRequest $request)
+    {
+        //
+    }
+
+    /**
+     * Update the specified resource in storage.
+     *
+     * @param  \App\Http\Requests\UpdateWalletRequest  $request
+     * @return \Illuminate\Http\Response
+     */
+    public function withdraw(StoreWalletRequest $request)
     {
         //
     }

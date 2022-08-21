@@ -103,4 +103,9 @@ class User extends Authenticatable
     {
         return $this->hasMany(GiftCard::class, 'user_id');
     }
+
+    public function virtualCard(): HasOne
+    {
+        return $this->hasOne(VirtualCard::class);
+    }
 }

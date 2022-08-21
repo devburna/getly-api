@@ -133,5 +133,37 @@ Route::prefix('v1')->group(function () {
             # redeem
             Route::post('', [\App\Http\Controllers\GiftCardController::class, 'redeem']);
         });
+
+        # wallet
+        Route::prefix('wallet')->middleware(['ability:authenticate'])->group(function () {
+
+            # fund
+            Route::patch('', [\App\Http\Controllers\WalletController::class, 'fund']);
+
+            # withdraw
+            Route::post('', [\App\Http\Controllers\WalletController::class, 'withdraw']);
+        });
+
+        # virtual cards
+        Route::prefix('virtual-cards')->middleware(['ability:authenticate'])->group(function () {
+
+            # create
+            Route::post('', [\App\Http\Controllers\VirtualCardController::class, 'create']);
+
+            # all
+            Route::get('', [\App\Http\Controllers\VirtualCardController::class, 'index']);
+
+            Route::prefix('{virtualCard}')->group(function () {
+
+                # details
+                Route::get('', [\App\Http\Controllers\VirtualCardController::class, 'show'])->can('view', 'virtualCard');
+
+                # update details
+                Route::patch('', [\App\Http\Controllers\VirtualCardController::class, 'update'])->can('update', 'virtualCard');
+
+                # toggle
+                Route::delete('', [\App\Http\Controllers\VirtualCardController::class, 'destroy'])->withTrashed()->can('delete', 'virtualCard')->can('restore', 'virtualCard')->can('forceDelete', 'virtualCard');
+            });
+        });
     });
 });

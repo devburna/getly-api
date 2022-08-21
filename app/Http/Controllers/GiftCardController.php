@@ -55,6 +55,15 @@ class GiftCardController extends Controller
     {
         return DB::transaction(function () use ($request) {
 
+            // checks if sender can fund gift
+            if ($request->user()->wallet->current_balance < array_sum(array_column($request->items, 'price'))) {
+                return response()->json([
+                    'status' => false,
+                    'data' => null,
+                    'message' => 'Insufficient funds, please fund wallet and try again.',
+                ], 422);
+            }
+
             // set sender id
             $request['sender_id'] = $request->user()->id;
 
@@ -76,6 +85,15 @@ class GiftCardController extends Controller
                 // store gift card item
                 (new GiftCardItemController())->store($giftCardItem);
             }
+
+            // debit sender wallet
+            $current_balance = ((int)$request->user()->wallet->current_balance - (int)array_sum(array_column($request->items, 'price')));
+            $previous_balance = $request->user()->wallet->current_balance;
+
+            $request->user()->wallet->update([
+                'previous_balance' => $previous_balance < 0 ? 0.00 : $previous_balance,
+                'current_balance' => $current_balance < 0 ? 0.00 : $current_balance,
+            ]);
 
             // notify receiver via email, whatsapp or sms
             $giftCard['id'] = $giftCard->id;
@@ -125,18 +143,6 @@ class GiftCardController extends Controller
             'data' => $giftCard,
             'message' => $message,
         ], $code);
-    }
-
-    /**
-     * Update the specified resource in storage.
-     *
-     * @param  \App\Http\Requests\UpdateGiftCardRequest  $request
-     * @param  \App\Models\GiftCard  $giftCard
-     * @return \Illuminate\Http\Response
-     */
-    public function update(UpdateGiftCardRequest $request, GiftCard $giftCard)
-    {
-        //
     }
 
     /**
@@ -190,6 +196,16 @@ class GiftCardController extends Controller
         $giftCard->sender;
         $giftCard->items;
 
+        // checks if receiver has registered
+        if (!$user = User::where('email_address', $giftCard->receiver_email_address)->orWhere('phone_number',    $giftCard->receiver_phone_number)->first()) {
+            return response()->json([
+                'status' => false,
+                'data' => $giftCard,
+                'message' => 'You must create an account to redeem gift card.',
+            ], 422);
+        }
+
+        // checks if gift card has been redeemed
         if (!$giftCard->status->is(GiftCardStatus::REDEEMABLE())) {
             return response()->json([
                 'status' => false,
@@ -201,6 +217,12 @@ class GiftCardController extends Controller
         // update gift card status
         $giftCard->update([
             'status' => GiftCardStatus::CLAIMED()
+        ]);
+
+        // credit receiver
+        $user->wallet->update([
+            'previous_balance' => $user->wallet->current_balance,
+            'current_balance' => ((int)$user->wallet->current_balance + (int)$giftCard->items->sum('price')),
         ]);
 
         // notify sender via email, whatsapp or sms

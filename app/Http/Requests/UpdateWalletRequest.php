@@ -24,8 +24,8 @@ class UpdateWalletRequest extends FormRequest
     public function rules()
     {
         return [
-            'current_balance' => 'required',
-            'previous_balance' => 'required',
+            'amount' => 'required|numeric',
+            'meta' => 'required',
         ];
     }
 }
