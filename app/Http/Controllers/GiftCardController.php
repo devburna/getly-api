@@ -9,6 +9,7 @@ use App\Http\Requests\UpdateGiftCardRequest;
 use App\Models\GiftCard;
 use App\Models\User;
 use App\Notifications\GiftCard as NotificationsGiftCard;
+use App\Notifications\Redeemed;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -77,6 +78,7 @@ class GiftCardController extends Controller
             }
 
             // notify receiver via email, whatsapp or sms
+            $giftCard['id'] = $giftCard->id;
             $giftCard->notify(new NotificationsGiftCard($giftCard->createToken('redeem-gift-card', ['redeem-gift-card'])->plainTextToken));
 
             return $this->show($giftCard, 'success', 201);
@@ -153,5 +155,61 @@ class GiftCardController extends Controller
         }
 
         return $this->show($giftCard);
+    }
+
+    /**
+     * Display the specified resource.
+     *
+     * @param  \App\Http\Requests\Request  $request
+     * @return \Illuminate\Http\Response
+     */
+    public function preview(Request $request)
+    {
+        // retrive gift card
+        $giftCard = $request->user();
+        $giftCard->sender;
+        $giftCard->items;
+
+        return response()->json([
+            'status' => true,
+            'data' => $giftCard,
+            'message' => 'success',
+        ]);
+    }
+
+    /**
+     * Display the specified resource.
+     *
+     * @param  \App\Http\Requests\Request  $request
+     * @return \Illuminate\Http\Response
+     */
+    public function redeem(Request $request)
+    {
+        // retrive gift card
+        $giftCard = $request->user();
+        $giftCard->sender;
+        $giftCard->items;
+
+        if (!$giftCard->status->is(GiftCardStatus::REDEEMABLE())) {
+            return response()->json([
+                'status' => false,
+                'data' => $giftCard,
+                'message' => 'This gift card has already been ' . GiftCardStatus::CLAIMED() . '.',
+            ], 422);
+        }
+
+        // update gift card status
+        $giftCard->update([
+            'status' => GiftCardStatus::CLAIMED()
+        ]);
+
+        // notify sender via email, whatsapp or sms
+        $giftCard->notify(new Redeemed());
+
+        return response()->json([
+            'status' => true,
+            'data' => $giftCard,
+            'message' => 'success',
+        ]);
     }
 }

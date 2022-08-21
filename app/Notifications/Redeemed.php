@@ -5,9 +5,10 @@ namespace App\Notifications;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
+use Illuminate\Notifications\Messages\VonageMessage;
 use Illuminate\Notifications\Notification;
 
-class ResetPassword extends Notification implements ShouldQueue
+class Redeemed extends Notification implements ShouldQueue
 {
     use Queueable;
 
@@ -29,7 +30,7 @@ class ResetPassword extends Notification implements ShouldQueue
      */
     public function via($notifiable)
     {
-        return ['mail'];
+        return ['mail', 'vonage', 'database'];
     }
 
     /**
@@ -41,10 +42,25 @@ class ResetPassword extends Notification implements ShouldQueue
     public function toMail($notifiable)
     {
         return (new MailMessage)
-            ->subject('Reset Password Successful')
-            ->greeting("Hi, {$notifiable->first_name}")
-            ->line('Your password has been reset succussfully.')
+        ->error()
+            ->subject("{$notifiable->receiver_name} Has Received Your Gift 😇")
+            ->greeting("Hi, {$notifiable->sender->first_name}")
+            ->line("Your gift was received by {$notifiable->receiver_name}.")
             ->line('Thank you for using ' . config('app.name') . '!');
+    }
+
+    /**
+     * Get the Vonage / SMS representation of the notification.
+     *
+     * @param  mixed  $notifiable
+     * @return \Illuminate\Notifications\Messages\VonageMessage
+     */
+    public function toVonage($notifiable)
+    {
+        return (new VonageMessage)
+            ->clientReference(config('app.name'))
+            ->content("{$notifiable->receiver_name} has received your gift 😇")
+            ->unicode();
     }
 
     /**
@@ -56,7 +72,8 @@ class ResetPassword extends Notification implements ShouldQueue
     public function toArray($notifiable)
     {
         return [
-            //
+            'user_id' =>  $notifiable->sender->id,
+            'body' =>  "{$notifiable->receiver_name} has received your gift 😇",
         ];
     }
 }

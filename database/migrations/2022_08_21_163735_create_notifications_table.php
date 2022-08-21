@@ -18,7 +18,7 @@ return new class extends Migration
             $table->string('type');
             $table->string('data');
             $table->timestamp('read_at')->nullable();
-            $table->string('notifiable_id')->unique();
+            $table->string('notifiable_id');
             $table->string('notifiable_type');
             $table->softDeletes();
             $table->timestamps();
