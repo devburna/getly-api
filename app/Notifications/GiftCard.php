@@ -5,6 +5,7 @@ namespace App\Notifications;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
+use Illuminate\Notifications\Messages\VonageMessage;
 use Illuminate\Notifications\Notification;
 
 class GiftCard extends Notification implements ShouldQueue
@@ -33,7 +34,7 @@ class GiftCard extends Notification implements ShouldQueue
             return ['mail', 'database'];
         }
 
-        return ['mail'];
+        return ['mail', 'vonage'];
     }
 
     /**
@@ -53,6 +54,21 @@ class GiftCard extends Notification implements ShouldQueue
             ->line("You've got a gift from {$notifiable->sender->first_name}, use the button below to redeem your gift.")
             ->action('Redeem Gift', url($url))
             ->line('Thank you for using ' . config('app.name') . '!');
+    }
+
+    /**
+     * Get the Vonage / SMS representation of the notification.
+     *
+     * @param  mixed  $notifiable
+     * @return \Illuminate\Notifications\Messages\VonageMessage
+     */
+    public function toVonage($notifiable)
+    {
+        $url = "/redeem?gift={$notifiable->id}?receiver_name={$notifiable->receiver_name}?receiver_email_adress={$notifiable->receiver_email_adress}?receiver_phone_number={$notifiable->receiver_phone_number}?sender_name={$senderName}?message={$notifiable->message}";
+
+        return (new VonageMessage)
+            ->clientReference(config('app.name'))
+            ->content("You've got a gift from {$notifiable->sender->first_name}, use the link to redeem your gift {$url}");
     }
 
     /**
