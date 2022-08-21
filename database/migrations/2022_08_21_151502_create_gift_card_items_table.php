@@ -14,7 +14,14 @@ class CreateGiftCardItemsTable extends Migration
     public function up()
     {
         Schema::create('gift_card_items', function (Blueprint $table) {
-            $table->id();
+            $table->id()->from(time());
+            $table->unsignedBigInteger('gift_card_id');
+            $table->longText('link');
+            $table->string('name');
+            $table->decimal('price', 15, 2);
+            $table->unsignedBigInteger('quantity');
+            $table->string('image_url');
+            $table->softDeletes();
             $table->timestamps();
         });
     }

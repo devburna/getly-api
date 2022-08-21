@@ -24,7 +24,12 @@ class StoreGiftCardItemRequest extends FormRequest
     public function rules()
     {
         return [
-            //
+            'gift_card_id' => 'required|exists:gift_cards,id',
+            'link' => 'required|url',
+            'name' => 'required|string',
+            'price' => 'required|numeric',
+            'quantity' => 'required|numeric',
+            'image_url' => 'required|url'
         ];
     }
 }

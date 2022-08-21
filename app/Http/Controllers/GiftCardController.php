@@ -3,9 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Enums\GiftCardStatus;
+use App\Http\Requests\StoreGiftCardItemRequest;
 use App\Http\Requests\StoreGiftCardRequest;
 use App\Http\Requests\UpdateGiftCardRequest;
 use App\Models\GiftCard;
+use Illuminate\Support\Facades\DB;
 
 class GiftCardController extends Controller
 {
@@ -27,13 +29,27 @@ class GiftCardController extends Controller
      */
     public function create(StoreGiftCardRequest $request)
     {
-        // set sender id
-        $request['sender_id'] = $request->user()->id;
+        return DB::transaction(function () use ($request) {
 
-        // store gift card
-        $giftCard = $this->store($request);
+            // set sender id
+            $request['sender_id'] = $request->user()->id;
 
-        return $this->show($giftCard, null, 201);
+            // store gift card
+            $giftCard = $this->store($request);
+
+            // store gift card items
+            foreach ($request->items as $item) {
+                $giftCardItem = new StoreGiftCardItemRequest($item);
+
+                // set gift card id
+                $giftCardItem['gift_card_id'] = $giftCard->id;
+
+                // store gift card item
+                (new GiftCardItemController())->store($giftCardItem);
+            }
+
+            return $this->show($giftCard, 'success', 201);
+        });
     }
 
     /**
@@ -67,6 +83,9 @@ class GiftCardController extends Controller
     {
         // add sender details data as wishes
         $giftCard->sender;
+
+        // add gift card items to data
+        $giftCard->items;
 
         return response()->json([
             'status' => true,
