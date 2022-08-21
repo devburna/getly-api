@@ -4,7 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-class CreateGetlistItemsTable extends Migration
+class CreateGiftCardsTable extends Migration
 {
     /**
      * Run the migrations.
@@ -13,14 +13,14 @@ class CreateGetlistItemsTable extends Migration
      */
     public function up()
     {
-        Schema::create('getlist_items', function (Blueprint $table) {
+        Schema::create('gift_cards', function (Blueprint $table) {
             $table->id()->from(time());
-            $table->unsignedBigInteger('getlist_id');
-            $table->string('name');
-            $table->decimal('price', 15, 2);
-            $table->unsignedBigInteger('quantity');
-            $table->longText('details');
-            $table->string('image_url');
+            $table->unsignedBigInteger('user_id')->nullable();
+            $table->unsignedBigInteger('sender_id');
+            $table->string('receiver_name');
+            $table->string('receiver_email_address');
+            $table->string('receiver_phone_number');
+            $table->longText('message');
             $table->string('status');
             $table->softDeletes();
             $table->timestamps();
@@ -34,6 +34,6 @@ class CreateGetlistItemsTable extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('getlist_items');
+        Schema::dropIfExists('gift_cards');
     }
 }

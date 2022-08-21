@@ -5,9 +5,10 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class GetlistItem extends Model
+class GiftCard extends Model
 {
     use HasFactory, SoftDeletes;
 
@@ -17,12 +18,12 @@ class GetlistItem extends Model
      * @var string[]
      */
     protected $fillable = [
-        'getlist_id',
-        'name',
-        'price',
-        'quantity',
-        'details',
-        'image_url',
+        'user_id',
+        'sender_id',
+        'receiver_name',
+        'receiver_email_address',
+        'receiver_phone_number',
+        'message',
         'status',
     ];
 
@@ -32,7 +33,8 @@ class GetlistItem extends Model
      * @var array
      */
     protected $hidden = [
-        'getlist_id',
+        'user_id',
+        'sender_id'
     ];
 
     /**
@@ -44,8 +46,18 @@ class GetlistItem extends Model
         //
     ];
 
-    public function getlist(): BelongsTo
+    public function user(): BelongsTo
     {
-        return $this->belongsTo(Getlist::class);
+        return $this->belongsTo(User::class, 'user_id', 'id');
+    }
+
+    public function sender(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'sender_id', 'id');
+    }
+
+    public function items(): HasMany
+    {
+        return $this->hasMany(GiftCardItem::class, 'gift_card_id');
     }
 }

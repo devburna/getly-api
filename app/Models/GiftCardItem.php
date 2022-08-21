@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class GetlistItem extends Model
+class GiftCardItem extends Model
 {
     use HasFactory, SoftDeletes;
 
@@ -17,13 +17,12 @@ class GetlistItem extends Model
      * @var string[]
      */
     protected $fillable = [
-        'getlist_id',
+        'gift_card_id',
+        'link',
         'name',
         'price',
         'quantity',
-        'details',
-        'image_url',
-        'status',
+        'image_url'
     ];
 
     /**
@@ -32,7 +31,7 @@ class GetlistItem extends Model
      * @var array
      */
     protected $hidden = [
-        'getlist_id',
+        'gift_card_id',
     ];
 
     /**
@@ -44,8 +43,8 @@ class GetlistItem extends Model
         //
     ];
 
-    public function getlist(): BelongsTo
+    public function giftcard(): BelongsTo
     {
-        return $this->belongsTo(Getlist::class);
+        return $this->belongsTo(GiftCard::class);
     }
 }

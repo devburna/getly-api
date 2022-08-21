@@ -26,7 +26,7 @@ class GetlistItemController extends Controller
             'resource_type' => 'image'
         ])['secure_url'];
 
-        $getlist = GetlistItem::create($request->only([
+        $getlistItem = GetlistItem::create($request->only([
             'getlist_id',
             'name',
             'price',
@@ -35,7 +35,7 @@ class GetlistItemController extends Controller
             'image_url'
         ]));
 
-        return $this->show($getlist);
+        return $this->show($getlistItem, null, 201);
     }
 
     /**

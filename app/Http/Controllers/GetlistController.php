@@ -69,7 +69,7 @@ class GetlistController extends Controller
             'image_url',
         ]));
 
-        return $this->show($getlist);
+        return $this->show($getlist, null, 201);
     }
 
     /**

@@ -101,5 +101,27 @@ Route::prefix('v1')->group(function () {
                 Route::delete('', [\App\Http\Controllers\GetlistItemController::class, 'destroy'])->withTrashed()->can('delete', 'getlistItem')->can('restore', 'getlistItem')->can('forceDelete', 'getlistItem');
             });
         });
+
+        # gift cards
+        Route::prefix('gift-cards')->middleware(['ability:authenticate'])->group(function () {
+
+            # create
+            Route::post('', [\App\Http\Controllers\GiftCardController::class, 'create']);
+
+            # all
+            Route::get('', [\App\Http\Controllers\GiftCardController::class, 'index']);
+
+            Route::prefix('{giftCard}')->group(function () {
+
+                # details
+                Route::get('', [\App\Http\Controllers\GiftCardController::class, 'show']);
+
+                # update details
+                Route::post('', [\App\Http\Controllers\GiftCardController::class, 'update']);
+
+                # toggle
+                Route::delete('', [\App\Http\Controllers\GiftCardController::class, 'destroy']);
+            });
+        });
     });
 });
