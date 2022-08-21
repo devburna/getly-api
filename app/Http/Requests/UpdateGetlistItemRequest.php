@@ -4,7 +4,7 @@ namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class UpdateGetlistRequest extends FormRequest
+class UpdateGetlistItemRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -24,10 +24,10 @@ class UpdateGetlistRequest extends FormRequest
     public function rules()
     {
         return [
-            'title' => 'string',
-            'event_date' => 'date|before:30 minutes',
-            'message' => 'string',
-            'privacy' => 'boolean',
+            'name' => 'string',
+            'price' => 'numeric',
+            'quantity' => 'numeric',
+            'details' => 'string',
             'image' => 'mimes:jpeg,jpeg,png,webp|max:3000'
         ];
     }

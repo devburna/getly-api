@@ -5,10 +5,9 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class Getlist extends Model
+class GetlistItem extends Model
 {
     use HasFactory, SoftDeletes;
 
@@ -18,11 +17,11 @@ class Getlist extends Model
      * @var string[]
      */
     protected $fillable = [
-        'user_id',
-        'title',
-        'event_date',
-        'message',
-        'privacy',
+        'getlist_id',
+        'name',
+        'price',
+        'quantity',
+        'details',
         'image_url'
     ];
 
@@ -32,8 +31,7 @@ class Getlist extends Model
      * @var array
      */
     protected $hidden = [
-        'user_id',
-        'user'
+        'getlist_id',
     ];
 
     /**
@@ -42,17 +40,11 @@ class Getlist extends Model
      * @var array
      */
     protected $casts = [
-        'event_date' => 'date',
-        'privacy' => 'boolean'
+        //
     ];
 
-    public function user(): BelongsTo
+    public function getlist(): BelongsTo
     {
-        return $this->belongsTo(User::class);
-    }
-
-    public function items(): HasMany
-    {
-        return $this->hasMany(GetlistItem::class, 'getlist_id');
+        return $this->belongsTo(Getlist::class);
     }
 }

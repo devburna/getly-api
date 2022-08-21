@@ -4,7 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-class CreateGetlistsTable extends Migration
+class CreateGetlistItemsTable extends Migration
 {
     /**
      * Run the migrations.
@@ -13,13 +13,13 @@ class CreateGetlistsTable extends Migration
      */
     public function up()
     {
-        Schema::create('getlists', function (Blueprint $table) {
+        Schema::create('getlist_items', function (Blueprint $table) {
             $table->id()->from(time());
-            $table->unsignedBigInteger('user_id');
-            $table->string('title');
-            $table->date('event_date');
-            $table->longText('message')->nullable();
-            $table->boolean('privacy')->default(false);
+            $table->unsignedBigInteger('getlist_id');
+            $table->string('name');
+            $table->decimal('price', 15, 2);
+            $table->unsignedBigInteger('quantity');
+            $table->longText('details');
             $table->string('image_url');
             $table->softDeletes();
             $table->timestamps();
@@ -33,6 +33,6 @@ class CreateGetlistsTable extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('getlists');
+        Schema::dropIfExists('getlist_items');
     }
 }

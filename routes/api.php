@@ -67,28 +67,38 @@ Route::prefix('v1')->group(function () {
             # all
             Route::get('', [\App\Http\Controllers\GetlistController::class, 'index']);
 
-            Route::prefix('{getlist}')->middleware(['ability:authenticate'])->group(function () {
+            Route::prefix('{getlist}')->group(function () {
 
                 # details
-                Route::get('', [\App\Http\Controllers\GetlistController::class, 'show'])->can('view', 'getlist')->missing(function () {
-                    return response()->json([
-                        'status' => false,
-                        'data' => null,
-                        'message' => 'Not found',
-                    ], 404);
-                });
+                Route::get('', [\App\Http\Controllers\GetlistController::class, 'show'])->can('view', 'getlist');
 
                 # update details
-                Route::patch('', [\App\Http\Controllers\GetlistController::class, 'update'])->can('view', 'getlist')->missing(function () {
-                    return response()->json([
-                        'status' => false,
-                        'data' => null,
-                        'message' => 'Not found',
-                    ], 404);
-                });
+                Route::post('', [\App\Http\Controllers\GetlistController::class, 'update'])->can('update', 'getlist');
 
                 # toggle
                 Route::delete('', [\App\Http\Controllers\GetlistController::class, 'destroy'])->withTrashed()->can('delete', 'getlist')->can('restore', 'getlist')->can('forceDelete', 'getlist');
+            });
+        });
+
+        # gifts
+        Route::prefix('gifts')->middleware(['ability:authenticate'])->group(function () {
+
+            # create
+            Route::post('', [\App\Http\Controllers\GetlistItemController::class, 'store']);
+
+            # all
+            Route::get('', [\App\Http\Controllers\GetlistItemController::class, 'index']);
+
+            Route::prefix('{getlistItem}')->group(function () {
+
+                # details
+                Route::get('', [\App\Http\Controllers\GetlistItemController::class, 'show'])->can('view', 'getlistItem');
+
+                # update details
+                Route::post('', [\App\Http\Controllers\GetlistItemController::class, 'update'])->can('update', 'getlistItem');
+
+                # toggle
+                Route::delete('', [\App\Http\Controllers\GetlistItemController::class, 'destroy'])->withTrashed()->can('delete', 'getlistItem')->can('restore', 'getlistItem')->can('forceDelete', 'getlistItem');
             });
         });
     });

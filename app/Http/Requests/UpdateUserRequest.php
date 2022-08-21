@@ -36,7 +36,7 @@ class UpdateUserRequest extends FormRequest
                 }
             }],
             'password' => 'required_with:current_password|confirmed',
-            'avatar' => 'mimes:jpg,jpeg,png|max:3000',
+            'avatar' => 'mimes:jpg,jpeg,png,webp|max:3000',
         ];
     }
 }
