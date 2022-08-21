@@ -68,7 +68,8 @@ class GiftCard extends Notification implements ShouldQueue
 
         return (new VonageMessage)
             ->clientReference(config('app.name'))
-            ->content("You've got a gift from {$notifiable->sender->first_name}, use the link to redeem your gift {$url}");
+            ->content("You've got a gift from {$notifiable->sender->first_name}, use the link to redeem your gift {$url}")
+            ->unicode();
     }
 
     /**
