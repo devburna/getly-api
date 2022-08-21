@@ -13,6 +13,7 @@ use App\Notifications\EmailVerification;
 use App\Notifications\ForgotPassword;
 use App\Notifications\PhoneVerification;
 use App\Notifications\ResetPassword;
+use App\Notifications\Welcome;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -82,6 +83,9 @@ class AuthController extends Controller
         $request->user()->update([
             'email_address_verified_at' => now()
         ]);
+
+        // welcome user
+        $request->user()->notify(new Welcome());
 
         // delete email verification token
         $request->user()->currentAccessToken()->delete();

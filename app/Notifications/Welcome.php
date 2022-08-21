@@ -7,20 +7,18 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
-class ForgotPassword extends Notification implements ShouldQueue
+class Welcome extends Notification implements ShouldQueue
 {
     use Queueable;
-
-    private $token;
 
     /**
      * Create a new notification instance.
      *
      * @return void
      */
-    public function __construct($token)
+    public function __construct()
     {
-        $this->token = $token;
+        //
     }
 
     /**
@@ -43,10 +41,11 @@ class ForgotPassword extends Notification implements ShouldQueue
     public function toMail($notifiable)
     {
         return (new MailMessage)
-            ->subject('Forgot Password')
+            ->subject('Welcome to ' . config('app.name'))
             ->greeting("Hi, {$notifiable->first_name}")
-            ->line('Kindly click on the button below to reset your password.')
-            ->action('Reset Password', url("/reset-password?token={$this->token}"))
+            ->line('Welcome to ' . config('app.name') . '!')
+            ->line("We are glad to have you on board and can't wait for you to start working with all the amazing features we offer.")
+            ->action('Get Started', url('/'))
             ->line('Thank you for using ' . config('app.name') . '!');
     }
 
