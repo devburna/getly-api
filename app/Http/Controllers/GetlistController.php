@@ -8,8 +8,6 @@ use App\Models\Getlist;
 use Illuminate\Http\Request;
 use Cloudinary\Api\Upload\UploadApi;
 
-use function PHPUnit\Framework\isFalse;
-
 class GetlistController extends Controller
 {
     /**
@@ -30,9 +28,6 @@ class GetlistController extends Controller
         foreach ($getlists as $getlist) {
             // add item count to data as wishes
             $getlist->wishes = $getlist->items->count();
-
-            // remove items from
-            unset($getlist->items);
         }
 
         return response()->json([

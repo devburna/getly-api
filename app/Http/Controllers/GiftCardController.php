@@ -77,7 +77,7 @@ class GiftCardController extends Controller
             }
 
             // notify receiver via email, whatsapp or sms
-            $giftCard->notify(new NotificationsGiftCard());
+            $giftCard->notify(new NotificationsGiftCard($giftCard->createToken('redeem-gift-card', ['redeem-gift-card'])->plainTextToken));
 
             return $this->show($giftCard, 'success', 201);
         });
@@ -126,17 +126,6 @@ class GiftCardController extends Controller
     }
 
     /**
-     * Show the form for editing the specified resource.
-     *
-     * @param  \App\Models\GiftCard  $giftCard
-     * @return \Illuminate\Http\Response
-     */
-    public function edit(GiftCard $giftCard)
-    {
-        //
-    }
-
-    /**
      * Update the specified resource in storage.
      *
      * @param  \App\Http\Requests\UpdateGiftCardRequest  $request
@@ -156,6 +145,13 @@ class GiftCardController extends Controller
      */
     public function destroy(GiftCard $giftCard)
     {
-        //
+        // restore gift card if trashed or deleted it
+        if ($giftCard->trashed()) {
+            $giftCard->restore();
+        } else {
+            $giftCard->delete();
+        }
+
+        return $this->show($giftCard);
     }
 }

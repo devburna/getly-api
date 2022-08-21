@@ -123,5 +123,11 @@ Route::prefix('v1')->group(function () {
                 Route::delete('', [\App\Http\Controllers\GiftCardController::class, 'destroy']);
             });
         });
+
+        # redeem gift
+        Route::prefix('redeem-gift')->middleware(['ability:authenticate', 'ability:redeem-gift-card'])->group(function () {
+
+            Route::get('', [\App\Http\Controllers\GiftCardController::class, 'previewGift']);
+        });
     });
 });

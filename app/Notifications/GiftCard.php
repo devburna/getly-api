@@ -12,14 +12,16 @@ class GiftCard extends Notification implements ShouldQueue
 {
     use Queueable;
 
+    private $url;
+
     /**
      * Create a new notification instance.
      *
      * @return void
      */
-    public function __construct()
+    public function __construct($token)
     {
-        //
+        $this->url = "/redeem-gift/{$token}";
     }
 
     /**
@@ -45,14 +47,11 @@ class GiftCard extends Notification implements ShouldQueue
      */
     public function toMail($notifiable)
     {
-        $senderName = $notifiable->sender->first_name . ' ' . $notifiable->sender->last_name;
-        $url = "/redeem?gift={$notifiable->id}?receiver_name={$notifiable->receiver_name}?receiver_email_adress={$notifiable->receiver_email_adress}?receiver_phone_number={$notifiable->receiver_phone_number}?sender_name={$senderName}?message={$notifiable->message}";
-
         return (new MailMessage)
             ->subject("Gift Card From {$notifiable->sender->first_name}")
             ->greeting("Hi, {$notifiable->receiver_name}")
             ->line("You've got a gift from {$notifiable->sender->first_name}, use the button below to redeem your gift.")
-            ->action('Redeem Gift', url($url))
+            ->action('Redeem Gift', url($this->url))
             ->line('Thank you for using ' . config('app.name') . '!');
     }
 
@@ -64,11 +63,9 @@ class GiftCard extends Notification implements ShouldQueue
      */
     public function toVonage($notifiable)
     {
-        $url = "/redeem?gift={$notifiable->id}?receiver_name={$notifiable->receiver_name}?receiver_email_adress={$notifiable->receiver_email_adress}?receiver_phone_number={$notifiable->receiver_phone_number}?sender_name={$senderName}?message={$notifiable->message}";
-
         return (new VonageMessage)
             ->clientReference(config('app.name'))
-            ->content("You've got a gift from {$notifiable->sender->first_name}, use the link to redeem your gift {$url}")
+            ->content("You've got a gift from {$notifiable->sender->first_name}, use the link to redeem your gift " . url($this->url))
             ->unicode();
     }
 
@@ -86,7 +83,7 @@ class GiftCard extends Notification implements ShouldQueue
             'user_id' => $notifiable->user_id,
             'body' => "You just got a gift from {$senderName}.",
             'action' => 'Check it out now.',
-            'link' => url("/dashboard/gifts-cards?gift={$notifiable->id}"),
+            'link' => url($this->url),
         ];
     }
 }
