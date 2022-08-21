@@ -74,7 +74,6 @@ class WalletController extends Controller
         // store wallet
         $this->store($storeWalletRequest);
 
-
         return (new UserController())->index($request->user());
     }
 
