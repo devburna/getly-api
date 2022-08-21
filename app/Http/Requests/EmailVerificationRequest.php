@@ -4,7 +4,7 @@ namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class SigninRequest extends FormRequest
+class EmailVerificationRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -25,7 +25,6 @@ class SigninRequest extends FormRequest
     {
         return [
             'email_address' => 'required|email',
-            'password' => 'required',
         ];
     }
 }

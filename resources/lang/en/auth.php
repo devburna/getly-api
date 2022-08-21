@@ -18,7 +18,7 @@ return [
     'throttle' => 'Too many login attempts. Please try again in :seconds seconds.',
     'signin' => 'Signin was successfull.',
     'signup' => 'Signup was successfull.',
-    'email-verified' => 'Email verified successfully.',
-    'email-unverified' => 'Email not verified, kindly check your mail for instructions.',
+    'email_verified' => 'Email address has already been verified.',
+    'phone_verified' => 'Phone number has already been verified.',
 
 ];

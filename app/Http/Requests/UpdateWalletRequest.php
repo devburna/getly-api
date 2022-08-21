@@ -4,7 +4,7 @@ namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class SigninRequest extends FormRequest
+class UpdateWalletRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -24,8 +24,8 @@ class SigninRequest extends FormRequest
     public function rules()
     {
         return [
-            'email_address' => 'required|email',
-            'password' => 'required',
+            'current_balance' => 'required',
+            'previous_balance' => 'required',
         ];
     }
 }

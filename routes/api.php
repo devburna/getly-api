@@ -21,141 +21,38 @@ Route::prefix('v1')->group(function () {
     # signin
     Route::post('signin', [\App\Http\Controllers\AuthController::class, 'login']);
 
-    # verify-email
-    Route::post('verify-email', [\App\Http\Controllers\AuthController::class, 'verifyEmail']);
-
     # forgot-password
-    Route::post('forgot-password', [\App\Http\Controllers\AuthController::class, 'forgotPwd']);
+    Route::post('forgot-password', [\App\Http\Controllers\AuthController::class, 'forgotPassword']);
 
-    # reset-password
-    Route::post('reset-password', [\App\Http\Controllers\AuthController::class, 'resetPwd']);
+    # resend email verification link
+    Route::get('verify-email-address', [\App\Http\Controllers\AuthController::class, 'resendEmailVerificationLink']);
 
-    #authenticated
-    Route::middleware(['auth:sanctum', 'email_verified'])->group(function () {
+    # resend phone verification link
+    Route::get('verify-phone-number', [\App\Http\Controllers\AuthController::class, 'resendPhoneVerificationLink']);
 
-        # set-pin
-        Route::post('set-pin', [\App\Http\Controllers\AuthController::class, 'setPin']);
+    # authenticated
+    Route::middleware(['auth:sanctum'])->group(function () {
 
-        # verify-pin
-        Route::post('verify-pin', [\App\Http\Controllers\AuthController::class, 'verifyPin']);
+        # reset-password
+        Route::post('reset-password', [\App\Http\Controllers\AuthController::class, 'resetPassword'])->middleware(['ability:reset-password']);
+
+        # email address verification
+        Route::post('verify-email-address', [\App\Http\Controllers\AuthController::class, 'emailVerification'])->middleware(['ability:verify-email-address']);
+
+        # phone number verification
+        Route::post('verify-phone-number', [\App\Http\Controllers\AuthController::class, 'phoneVerification'])->middleware(['ability:verify-phone-number']);
 
         # logout
-        Route::post('logout', [\App\Http\Controllers\AuthController::class, 'logout']);
+        Route::delete('logout', [\App\Http\Controllers\AuthController::class, 'logout'])->middleware(['ability:authenticate']);
 
-        #profile
-        Route::prefix('profile')->group(function () {
-            # me
-            Route::get('', [\App\Http\Controllers\ProfileController::class, 'index']);
-
-            # update profile
-            Route::put('', [\App\Http\Controllers\ProfileController::class, 'update']);
-
-            # update avatar
-            Route::post('update-avatar', [\App\Http\Controllers\ProfileController::class, 'updateAvatar']);
-
-            # update pin
-            Route::post('update-pin', [\App\Http\Controllers\ProfileController::class, 'updatePin']);
-
-            # update password
-            Route::post('update-password', [\App\Http\Controllers\ProfileController::class, 'updatePassword']);
-        });
-
-        #getlists
-        Route::prefix('getlists')->group(function () {
-            # list
-            Route::get('', [\App\Http\Controllers\GetlistController::class, 'index']);
-
-            # create
-            Route::post('', [\App\Http\Controllers\GetlistController::class, 'store']);
-
-            #getlist
-            Route::prefix('{getlist}')->group(function () {
-
-                # getlist
-                Route::get('', [\App\Http\Controllers\GetlistController::class, 'show']);
-
-                # update
-                Route::put('', [\App\Http\Controllers\GetlistController::class, 'update']);
-
-                # update image
-                Route::post('image', [\App\Http\Controllers\GetlistController::class, 'updateImage']);
-
-                # delete
-                Route::delete('', [\App\Http\Controllers\GetlistController::class, 'delete']);
-            });
-        });
-
-        #gifts
-        Route::prefix('gifts')->group(function () {
-
-            # send gift
-            Route::post('', [\App\Http\Controllers\GiftController::class, 'send']);
-
-            # received
-            Route::get('', [\App\Http\Controllers\GiftController::class, 'index']);
-
-            # create
-            Route::post('{getlist}', [\App\Http\Controllers\GiftController::class, 'create']);
-
-            #getlist
-            Route::prefix('{gift}')->group(function () {
-
-                # fullfill
-                Route::post('fullfill', [\App\Http\Controllers\ContributorController::class, 'fullfill']);
-
-                # update
-                Route::post('update', [\App\Http\Controllers\GiftController::class, 'update']);
-
-                # delete
-                Route::delete('', [\App\Http\Controllers\GiftController::class, 'delete']);
-            });
-        });
-
-        #wallet
-        Route::prefix('wallet')->group(function () {
+        # user
+        Route::prefix('user')->group(function () {
 
             # details
-            Route::get('', [\App\Http\Controllers\WalletController::class, 'details']);
+            Route::get('', [\App\Http\Controllers\UserController::class, 'index']);
 
-            # deposit
-            Route::put('', [\App\Http\Controllers\WalletController::class, 'deposit']);
-
-            # withdraw
-            Route::post('', [\App\Http\Controllers\WalletController::class, 'withdraw']);
-        });
-
-        #card
-        Route::prefix('card')->group(function () {
-
-            # create
-            Route::post('', [\App\Http\Controllers\VirtualCardController::class, 'create']);
-
-            # card
-            Route::get('', [\App\Http\Controllers\VirtualCardController::class, 'details']);
-
-            # topup
-            Route::put('', [\App\Http\Controllers\VirtualCardController::class, 'topup']);
-
-            # withdraw
-            Route::patch('', [\App\Http\Controllers\VirtualCardController::class, 'withdraw']);
-
-            # transactions
-            Route::get('transactions', [\App\Http\Controllers\VirtualCardController::class, 'transactions']);
-        });
-
-        #transactions
-        Route::prefix('transactions')->group(function () {
-
-            # details
-            Route::get('', [\App\Http\Controllers\TransactionController::class, 'index']);
-        });
-
-        # notifications
-        Route::prefix('notifications')->middleware(['auth:sanctum'])->group(function () {
-            Route::post('', [\App\Http\Controllers\PushNotificationController::class, 'store']);
-            Route::post('send', [\App\Http\Controllers\PushNotificationController::class, 'send']);
+            # update
+            Route::patch('', [\App\Http\Controllers\UserController::class, 'update']);
         });
     });
-
-    Route::post('glade', [\App\Http\Controllers\GladeController::class, 'notify']);
 });

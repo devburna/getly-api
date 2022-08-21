@@ -2,7 +2,6 @@
 
 namespace App\Http\Requests;
 
-use App\Models\Profile;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Http\Request;
 
@@ -26,17 +25,13 @@ class SignupRequest extends FormRequest
     public function rules(Request $request)
     {
         return [
-            'full_name' => 'required|string|max:50|unique:users,name',
-            'email' => 'required|email|unique:users,email',
-            'phone_code' => 'required|integer',
-            'phone' => ['required', 'digits:10', function ($attribute, $value, $fail) use ($request) {
-                if (Profile::where('phone', $request->phone_code . $request->phone)->first()) {
-                    return $fail(__('Phone number has already been taken.'));
-                }
-            }],
-            'birthday' => 'required|date|before:today',
+            'first_name' => 'required|string|max:50',
+            'last_name' => 'required|string|max:50',
+            'username' => 'required|string|max:50|unique:users,username',
+            'email_address' => 'required|email|unique:users,email_address',
+            'phone_number' => 'required|string|unique:users,phone_number',
+            'date_of_birth' => 'required|date|before:18 years ago',
             'password' => 'required',
-            'device_name' => 'required',
         ];
     }
 }
