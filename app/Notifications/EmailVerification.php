@@ -47,7 +47,7 @@ class EmailVerification extends Notification implements ShouldQueue
             ->greeting('Verify Your Email Address')
             ->line('Thank you for creating a ' . config('app.name') . ' account.')
             ->line('Verify your email below to complete your setup.')
-            ->action('Yes, I Confirm This Is My Email Address', url("/verify-email?token={$this->token}"))
+            ->action('Yes, I Confirm This Is My Email Address', url("/verify-email/{$this->token}"))
             ->line('Thank you for using ' . config('app.name') . '!');
     }
 

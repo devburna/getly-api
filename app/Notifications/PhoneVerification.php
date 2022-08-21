@@ -11,7 +11,7 @@ class PhoneVerification extends Notification implements ShouldQueue
 {
     use Queueable;
 
-    private $token, $builder;
+    private $token;
 
     /**
      * Create a new notification instance.
@@ -21,7 +21,6 @@ class PhoneVerification extends Notification implements ShouldQueue
     public function __construct($token)
     {
         $this->token = $token;
-        $this->builder = new \AshAllenDesign\ShortURL\Classes\Builder();
     }
 
     /**
@@ -45,7 +44,7 @@ class PhoneVerification extends Notification implements ShouldQueue
     {
         return (new VonageMessage)
             ->clientReference(config('app.name'))
-            ->content("Your phone verification is: {$this->builder->destinationUrl(url("/verify-phone?token={$this->token}"))->make()->default_short_url}");
+            ->content('Your phone verification link is: ' . url("/verify-phone/{$this->token}"));
     }
 
     /**

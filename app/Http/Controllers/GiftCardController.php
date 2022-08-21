@@ -7,6 +7,7 @@ use App\Http\Requests\StoreGiftCardItemRequest;
 use App\Http\Requests\StoreGiftCardRequest;
 use App\Http\Requests\UpdateGiftCardRequest;
 use App\Models\GiftCard;
+use App\Notifications\GiftCard as NotificationsGiftCard;
 use Illuminate\Support\Facades\DB;
 
 class GiftCardController extends Controller
@@ -47,6 +48,9 @@ class GiftCardController extends Controller
                 // store gift card item
                 (new GiftCardItemController())->store($giftCardItem);
             }
+
+            // notify receiver via email, whatsapp or sms
+            $giftCard->notify(new NotificationsGiftCard());
 
             return $this->show($giftCard, 'success', 201);
         });
