@@ -1,3 +1,0 @@
-<template>
-    {{print($data)}}
-</template>

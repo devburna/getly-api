@@ -4,8 +4,6 @@ namespace App\Models;
 
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
@@ -20,9 +18,13 @@ class User extends Authenticatable
      * @var string[]
      */
     protected $fillable = [
-        'name',
+        'first_name',
+        'last_name',
+        'username',
         'email',
         'email_verified_at',
+        'phone',
+        'phone_verified_at',
         'password',
     ];
 
@@ -34,7 +36,6 @@ class User extends Authenticatable
     protected $hidden = [
         'password',
         'remember_token',
-        'updated_at',
     ];
 
     /**
@@ -44,40 +45,6 @@ class User extends Authenticatable
      */
     protected $casts = [
         'email_verified_at' => 'datetime',
+        'phone_verified_at' => 'datetime',
     ];
-
-    public function profile(): HasOne
-    {
-        return $this->hasOne(Profile::class);
-    }
-
-    public function pushToken(): HasOne
-    {
-        return $this->hasOne(PushNotification::class);
-    }
-
-    public function wallet(): HasOne
-    {
-        return $this->hasOne(Wallet::class);
-    }
-
-    public function virtualCard(): HasOne
-    {
-        return $this->hasOne(VirtualCard::class, 'user_id');
-    }
-
-    public function getlists(): HasMany
-    {
-        return $this->hasMany(Getlist::class, 'user_id');
-    }
-
-    public function gifts(): HasMany
-    {
-        return $this->hasMany(Gift::class, 'user_id');
-    }
-
-    public function transactions(): HasMany
-    {
-        return $this->hasMany(Transaction::class, 'user_id');
-    }
 }
