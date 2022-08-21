@@ -125,7 +125,7 @@ Route::prefix('v1')->group(function () {
         });
 
         # redeem gift
-        Route::prefix('redeem-gift')->middleware(['abilities:authenticate,redeem-gift-card'])->group(function () {
+        Route::prefix('redeem-gift')->middleware(['ability:redeem-gift-card'])->group(function () {
 
             # preview
             Route::get('', [\App\Http\Controllers\GiftCardController::class, 'preview']);
