@@ -57,5 +57,39 @@ Route::prefix('v1')->group(function () {
             # update avatar
             Route::post('', [\App\Http\Controllers\UserController::class, 'update']);
         });
+
+        # getlists
+        Route::prefix('getlists')->middleware(['ability:authenticate'])->group(function () {
+
+            # create
+            Route::post('', [\App\Http\Controllers\GetlistController::class, 'store']);
+
+            # all
+            Route::get('', [\App\Http\Controllers\GetlistController::class, 'index']);
+
+            Route::prefix('{getlist}')->middleware(['ability:authenticate'])->group(function () {
+
+                # details
+                Route::get('', [\App\Http\Controllers\GetlistController::class, 'show'])->can('view', 'getlist')->missing(function () {
+                    return response()->json([
+                        'status' => false,
+                        'data' => null,
+                        'message' => 'Not found',
+                    ], 404);
+                });
+
+                # update details
+                Route::patch('', [\App\Http\Controllers\GetlistController::class, 'update'])->can('view', 'getlist')->missing(function () {
+                    return response()->json([
+                        'status' => false,
+                        'data' => null,
+                        'message' => 'Not found',
+                    ], 404);
+                });
+
+                # toggle
+                Route::delete('', [\App\Http\Controllers\GetlistController::class, 'destroy'])->withTrashed()->can('delete', 'getlist')->can('restore', 'getlist')->can('forceDelete', 'getlist');
+            });
+        });
     });
 });

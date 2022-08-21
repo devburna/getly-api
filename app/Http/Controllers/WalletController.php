@@ -9,16 +9,6 @@ use App\Models\Wallet;
 class WalletController extends Controller
 {
     /**
-     * Display a listing of the resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function index()
-    {
-        //
-    }
-
-    /**
      * Store a newly created resource in storage.
      *
      * @param  \App\Http\Requests\StoreWalletRequest  $request
@@ -35,28 +25,6 @@ class WalletController extends Controller
     }
 
     /**
-     * Display the specified resource.
-     *
-     * @param  \App\Models\Wallet  $wallet
-     * @return \Illuminate\Http\Response
-     */
-    public function show(Wallet $wallet)
-    {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     *
-     * @param  \App\Models\Wallet  $wallet
-     * @return \Illuminate\Http\Response
-     */
-    public function edit(Wallet $wallet)
-    {
-        //
-    }
-
-    /**
      * Update the specified resource in storage.
      *
      * @param  \App\Http\Requests\UpdateWalletRequest  $request
@@ -64,17 +32,6 @@ class WalletController extends Controller
      * @return \Illuminate\Http\Response
      */
     public function update(UpdateWalletRequest $request, Wallet $wallet)
-    {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     *
-     * @param  \App\Models\Wallet  $wallet
-     * @return \Illuminate\Http\Response
-     */
-    public function destroy(Wallet $wallet)
     {
         //
     }

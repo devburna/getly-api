@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class Wallet extends Model
+class Getlist extends Model
 {
     use HasFactory, SoftDeletes;
 
@@ -18,11 +18,10 @@ class Wallet extends Model
      */
     protected $fillable = [
         'user_id',
-        'current_balance',
-        'previous_balance',
-        'currency',
-        'short',
-        'symbol',
+        'title',
+        'event_date',
+        'message',
+        'privacy'
     ];
 
     /**
@@ -31,11 +30,7 @@ class Wallet extends Model
      * @var array
      */
     protected $hidden = [
-        'id',
         'user_id',
-        'deleted_at',
-        'created_at',
-        'updated_at'
     ];
 
     /**
@@ -44,7 +39,8 @@ class Wallet extends Model
      * @var array
      */
     protected $casts = [
-        //
+        'event_date' => 'date',
+        'privacy' => 'boolean'
     ];
 
     public function user(): BelongsTo
