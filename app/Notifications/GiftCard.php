@@ -29,6 +29,10 @@ class GiftCard extends Notification implements ShouldQueue
      */
     public function via($notifiable)
     {
+        if ($notifiable->user_id) {
+            return ['mail', 'database'];
+        }
+
         return ['mail'];
     }
 
@@ -40,10 +44,15 @@ class GiftCard extends Notification implements ShouldQueue
      */
     public function toMail($notifiable)
     {
+        $senderName = $notifiable->sender->first_name . ' ' . $notifiable->sender->last_name;
+        $url = "/redeem?gift={$notifiable->id}?receiver_name={$notifiable->receiver_name}?receiver_email_adress={$notifiable->receiver_email_adress}?receiver_phone_number={$notifiable->receiver_phone_number}?sender_name={$senderName}?message={$notifiable->message}";
+
         return (new MailMessage)
-                    ->line('The introduction to the notification.')
-                    ->action('Notification Action', url('/'))
-                    ->line('Thank you for using our application!');
+            ->subject("Gift Card From {$notifiable->sender->first_name}")
+            ->greeting("Hi, {$notifiable->receiver_name}")
+            ->line("You've got a gift from {$notifiable->sender->first_name}, use the button below to redeem your gift.")
+            ->action('Redeem Gift', url($url))
+            ->line('Thank you for using ' . config('app.name') . '!');
     }
 
     /**
@@ -54,8 +63,13 @@ class GiftCard extends Notification implements ShouldQueue
      */
     public function toArray($notifiable)
     {
+        $senderName = $notifiable->sender->first_name . ' ' . $notifiable->sender->last_name;
+
         return [
-            //
+            'user_id' => $notifiable->user_id,
+            'body' => "You just got a gift from {$senderName}.",
+            'action' => 'Check it out now.',
+            'link' => url("/dashboard/gifts-cards?gift={$notifiable->id}"),
         ];
     }
 }

@@ -88,4 +88,19 @@ class User extends Authenticatable
     {
         return $this->hasMany(Getlist::class, 'user_id');
     }
+
+    public function notifications(): HasMany
+    {
+        return $this->hasMany(Notification::class, 'user_id');
+    }
+
+    public function giftsSent(): HasMany
+    {
+        return $this->hasMany(GiftCard::class, 'sender_id');
+    }
+
+    public function giftsReceived(): HasMany
+    {
+        return $this->hasMany(GiftCard::class, 'user_id');
+    }
 }

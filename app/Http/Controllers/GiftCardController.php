@@ -7,6 +7,7 @@ use App\Http\Requests\StoreGiftCardItemRequest;
 use App\Http\Requests\StoreGiftCardRequest;
 use App\Http\Requests\UpdateGiftCardRequest;
 use App\Models\GiftCard;
+use App\Models\User;
 use App\Notifications\GiftCard as NotificationsGiftCard;
 use Illuminate\Support\Facades\DB;
 
@@ -34,6 +35,11 @@ class GiftCardController extends Controller
 
             // set sender id
             $request['sender_id'] = $request->user()->id;
+
+            // set user id if exists
+            if ($user = User::where('email_address', $request->receiver_email_address)->orWhere('phone_number', $request->receiver_phone_number)->first()) {
+                $request['user_id'] = $user->id;
+            }
 
             // store gift card
             $giftCard = $this->store($request);
