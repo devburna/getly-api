@@ -15,12 +15,9 @@ class CreateWalletsTable extends Migration
     {
         Schema::create('wallets', function (Blueprint $table) {
             $table->id()->from(time());
-            $table->unsignedBigInteger('user_id')->unique();
-            $table->decimal('current_balance', 15, 2)->default(0);
-            $table->decimal('previous_balance', 15, 2)->default(0);
-            $table->string('currency');
-            $table->string('short');
-            $table->string('symbol');
+            $table->unsignedBigInteger('user_id');
+            $table->string('identity')->unique();
+            $table->string('provider');
             $table->softDeletes();
             $table->timestamps();
         });

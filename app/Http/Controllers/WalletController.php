@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreWalletRequest;
 use App\Http\Requests\UpdateWalletRequest;
 use App\Models\Wallet;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 
 class WalletController extends Controller
@@ -24,11 +25,8 @@ class WalletController extends Controller
     {
         return Wallet::create($request->only([
             'user_id',
-            'reference',
             'identity',
-            'bank_name',
-            'account_number',
-            'account_name'
+            'provider'
         ]));
     }
 
@@ -39,6 +37,14 @@ class WalletController extends Controller
      */
     public function create(StoreWalletRequest $request)
     {
+        if ($request->user()->wallet) {
+            return response()->json([
+                'status' => false,
+                'data' => null,
+                'message' => 'Please contact support.',
+            ], 405);
+        }
+
         // send request to flutterwave.com
         $response = Http::withHeaders([
             'Content-Type' => 'application/json',
@@ -46,7 +52,7 @@ class WalletController extends Controller
         ])->post(env('FLUTTERWAVE_URL') . '/virtual-account-numbers', [
             'email' => $request->user()->email_address,
             'is_permanent' => true,
-            'bvn' => $request->bvn,
+            'bvn' => 22418085857,
             'tx_ref' => str_shuffle($request->user()->id . config('app.name')),
             'phonenumber' => $request->user()->phone_number,
             'firstname' => $request->user()->first_name,
@@ -58,23 +64,57 @@ class WalletController extends Controller
             return response()->json([
                 'status' => false,
                 'data' => null,
-                'message' => "Can't create wallet at the moment.",
+                'message' => $response->json(),
             ], 422);
         }
 
-        // new store wallet request instance
-        $storeWalletRequest = new StoreWalletRequest($response->json()['data']);
-
         // set user id
-        $storeWalletRequest['user_id'] = $request->user()->id;
+        $request['user_id'] = $request->user()->id;
 
-        // set account name
-        $storeWalletRequest['account_name'] = "{$request->user()->first_name} {$request->user()->last_name}";
+        // set wallet data
+        $request['identity'] = $response->json()['data']['order_ref'];
+        $request['provider'] = 'flutterwave';
 
         // store wallet
-        $this->store($storeWalletRequest);
+        $request->user()->wallet = $this->store($request);
 
-        return (new UserController())->index($request->user());
+        return $this->show($request);
+    }
+
+    /**
+     * Display the specified resource.
+     *
+     * @param  \App\Http\Requests\Request  $request
+     * @return \Illuminate\Http\Response
+     */
+    public function show(Request $request)
+    {
+        // send request to flutterwave.com
+        $response = Http::withHeaders([
+            'Content-Type' => 'application/json',
+            'Authorization' => "Bearer {$this->flutterwaveSecKey}",
+        ])->get(env('FLUTTERWAVE_URL') . "/virtual-account-numbers/{$request->user()->wallet->identity}");
+
+        if (!$response->ok()) {
+            return response()->json([
+                'status' => false,
+                'data' => null,
+                'message' => $response->json(),
+            ], 422);
+        }
+
+        // set data
+        $data = $response->json()['data'];
+        $data['account_name'] = "{$request->user()->first_name} {$request->user()->last_name}";
+        unset($data['response_code']);
+        unset($data['order_ref']);
+        unset($data['response_message']);
+
+        return response()->json([
+            'status' => true,
+            'data' => $data,
+            'message' => 'success',
+        ]);
     }
 
     /**

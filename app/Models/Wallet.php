@@ -18,11 +18,8 @@ class Wallet extends Model
      */
     protected $fillable = [
         'user_id',
-        'current_balance',
-        'previous_balance',
-        'currency',
-        'short',
-        'symbol',
+        'identity',
+        'provider'
     ];
 
     /**
@@ -31,11 +28,7 @@ class Wallet extends Model
      * @var array
      */
     protected $hidden = [
-        'id',
         'user_id',
-        'deleted_at',
-        'created_at',
-        'updated_at'
     ];
 
     /**
