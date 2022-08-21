@@ -137,11 +137,11 @@ Route::prefix('v1')->group(function () {
         # wallet
         Route::prefix('wallet')->middleware(['ability:authenticate'])->group(function () {
 
-            # fund
-            Route::patch('', [\App\Http\Controllers\WalletController::class, 'fund']);
+            # create
+            Route::post('', [\App\Http\Controllers\WalletController::class, 'create']);
 
             # withdraw
-            Route::post('', [\App\Http\Controllers\WalletController::class, 'withdraw']);
+            Route::patch('', [\App\Http\Controllers\WalletController::class, 'withdraw']);
         });
 
         # virtual cards

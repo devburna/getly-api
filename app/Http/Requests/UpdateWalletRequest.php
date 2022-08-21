@@ -24,7 +24,7 @@ class UpdateWalletRequest extends FormRequest
     public function rules()
     {
         return [
-            'amount' => 'required|numeric',
+            'amount' => 'required|numeric|gt:1000',
             'meta' => 'required',
         ];
     }

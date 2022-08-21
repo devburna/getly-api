@@ -24,7 +24,8 @@ class StoreWalletRequest extends FormRequest
     public function rules()
     {
         return [
-            'amount' => 'required|numeric'
+            'type' => 'required|string|in:bvn',
+            'identity' => 'required'
         ];
     }
 }
