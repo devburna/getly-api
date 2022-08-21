@@ -79,7 +79,7 @@ class GiftCardController extends Controller
 
             // notify receiver via email, whatsapp or sms
             $giftCard['id'] = $giftCard->id;
-            $giftCard->notify(new NotificationsGiftCard($giftCard->createToken('redeem-gift-card', ['redeem-gift-card'])->plainTextToken));
+            $giftCard->notify(new NotificationsGiftCard($giftCard->createToken('redeem-gift-card', ['redeem-gift-card', 'authenticate'])->plainTextToken));
 
             return $this->show($giftCard, 'success', 201);
         });
