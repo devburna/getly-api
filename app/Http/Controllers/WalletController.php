@@ -16,6 +16,7 @@ class WalletController extends Controller
     {
         $this->flutterwaveSecKey = env('FLUTTERWAVE_SEC_KEY');
     }
+
     /**
      * Store a newly created resource in storage.
      *
@@ -37,12 +38,22 @@ class WalletController extends Controller
      */
     public function create(StoreWalletRequest $request)
     {
+        // checks duplicate wallet
         if ($request->user()->wallet) {
             return response()->json([
                 'status' => false,
                 'data' => null,
                 'message' => 'Please contact support.',
             ], 405);
+        }
+
+        // checks if bvn was approved
+        if (!$request->approved) {
+            return response()->json([
+                'status' => false,
+                'data' => null,
+                'message' => 'Please verify your BVN.',
+            ], 422);
         }
 
         // send request to flutterwave.com

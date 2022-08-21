@@ -168,5 +168,12 @@ Route::prefix('v1')->group(function () {
                 Route::delete('', [\App\Http\Controllers\VirtualCardController::class, 'destroy'])->withTrashed()->can('delete', 'virtualCard')->can('restore', 'virtualCard')->can('forceDelete', 'virtualCard');
             });
         });
+
+        # kyc
+        Route::prefix('kyc')->middleware(['ability:authenticate'])->group(function () {
+
+            # bvn
+            Route::get('bvn', [\App\Http\Controllers\KYCController::class, 'bvn']);
+        });
     });
 });

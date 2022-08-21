@@ -4,7 +4,7 @@ namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class StoreWalletRequest extends FormRequest
+class KYCRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -19,14 +19,13 @@ class StoreWalletRequest extends FormRequest
     /**
      * Get the validation rules that apply to the request.
      *
-     * @return array
+     * @return array<string, mixed>
      */
     public function rules()
     {
         return [
-            'type' => 'required|string|in:bvn',
-            'identity' => 'required',
-            'approved' => 'required|boolean'
+            "document" => "required|string|in:bvn",
+            "bvn" => "required_if:document,bvn"
         ];
     }
 }
