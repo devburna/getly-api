@@ -7,7 +7,7 @@
     "require": {
         "php": "^7.3|^8.0",
         "ashallendesign/short-url": "^7.1",
-        "cloudinary/cloudinary_php": "^2.4",
+        "cloudinary/cloudinary_php": "^2.7",
         "fruitcake/laravel-cors": "^2.0",
         "guzzlehttp/guzzle": "^7.0.1",
         "laravel/framework": "^8.65",

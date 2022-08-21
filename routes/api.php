@@ -46,13 +46,16 @@ Route::prefix('v1')->group(function () {
         Route::delete('logout', [\App\Http\Controllers\AuthController::class, 'logout'])->middleware(['ability:authenticate']);
 
         # user
-        Route::prefix('user')->group(function () {
+        Route::prefix('user')->middleware(['ability:authenticate'])->group(function () {
 
             # details
             Route::get('', [\App\Http\Controllers\UserController::class, 'index']);
 
-            # update
+            # update details
             Route::patch('', [\App\Http\Controllers\UserController::class, 'update']);
+
+            # update avatar
+            Route::post('', [\App\Http\Controllers\UserController::class, 'update']);
         });
     });
 });
