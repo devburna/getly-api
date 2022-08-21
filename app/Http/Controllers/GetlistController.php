@@ -8,6 +8,8 @@ use App\Models\Getlist;
 use Illuminate\Http\Request;
 use Cloudinary\Api\Upload\UploadApi;
 
+use function PHPUnit\Framework\isFalse;
+
 class GetlistController extends Controller
 {
     /**
@@ -17,7 +19,7 @@ class GetlistController extends Controller
      */
     public function index(Request $request)
     {
-        if ($request->public) {
+        if (!$request->privacy) {
             // public getlists
             $getlists = Getlist::where('privacy', false)->orderByDesc('created_at')->paginate(20);
         } else {

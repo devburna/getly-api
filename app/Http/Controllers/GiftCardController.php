@@ -9,6 +9,7 @@ use App\Http\Requests\UpdateGiftCardRequest;
 use App\Models\GiftCard;
 use App\Models\User;
 use App\Notifications\GiftCard as NotificationsGiftCard;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class GiftCardController extends Controller
@@ -18,9 +19,29 @@ class GiftCardController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function index()
+    public function index(Request $request)
     {
-        //
+        if ($request->received) {
+            // received gifts
+            $giftcards = $request->user()->giftsReceived()->orderByDesc('created_at')->paginate(20);
+        } else {
+            // sent gifts
+            $giftcards = $request->user()->giftsSent()->orderByDesc('created_at')->paginate(20);
+        }
+
+        foreach ($giftcards as $giftcard) {
+            // add item count to data as wishes
+            $giftcard->gift_links = $giftcard->items->count();
+
+            // remove items from
+            unset($giftcard->items);
+        }
+
+        return response()->json([
+            'status' => true,
+            'data' => $giftcards,
+            'message' => 'success',
+        ]);
     }
 
     /**
