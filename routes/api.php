@@ -144,29 +144,23 @@ Route::prefix('v1')->group(function () {
             Route::get('', [\App\Http\Controllers\WalletController::class, 'show']);
 
             # withdraw
-            Route::patch('', [\App\Http\Controllers\WalletController::class, 'withdraw']);
+            Route::post('withdraw', [\App\Http\Controllers\WalletController::class, 'withdraw']);
         });
 
-        # virtual cards
+        # virtual card
         Route::prefix('virtual-card')->middleware(['ability:authenticate'])->group(function () {
 
             # create
             Route::post('', [\App\Http\Controllers\VirtualCardController::class, 'create']);
 
-            # all
-            Route::get('', [\App\Http\Controllers\VirtualCardController::class, 'index']);
+            # details
+            Route::get('', [\App\Http\Controllers\VirtualCardController::class, 'show']);
 
-            Route::prefix('{virtualCard}')->group(function () {
+            # fund
+            Route::post('fund', [\App\Http\Controllers\VirtualCardController::class, 'fund']);
 
-                # details
-                Route::get('', [\App\Http\Controllers\VirtualCardController::class, 'show'])->can('view', 'virtualCard');
-
-                # update details
-                Route::patch('', [\App\Http\Controllers\VirtualCardController::class, 'update'])->can('update', 'virtualCard');
-
-                # toggle
-                Route::delete('', [\App\Http\Controllers\VirtualCardController::class, 'destroy'])->withTrashed()->can('delete', 'virtualCard')->can('restore', 'virtualCard')->can('forceDelete', 'virtualCard');
-            });
+            # withdraw
+            Route::post('withdraw', [\App\Http\Controllers\VirtualCardController::class, 'withdraw']);
         });
 
         # virtual account
@@ -175,8 +169,6 @@ Route::prefix('v1')->group(function () {
             # create
             Route::post('', [\App\Http\Controllers\VirtualAccountController::class, 'create']);
 
-            # details
-            Route::get('', [\App\Http\Controllers\VirtualAccountController::class, 'show']);
             # details
             Route::get('', [\App\Http\Controllers\VirtualAccountController::class, 'show']);
         });

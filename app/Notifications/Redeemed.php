@@ -42,7 +42,6 @@ class Redeemed extends Notification implements ShouldQueue
     public function toMail($notifiable)
     {
         return (new MailMessage)
-        ->error()
             ->subject("{$notifiable->receiver_name} Has Received Your Gift 😇")
             ->greeting("Hi, {$notifiable->sender->first_name}")
             ->line("Your gift was received by {$notifiable->receiver_name}.")

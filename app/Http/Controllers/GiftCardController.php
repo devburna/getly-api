@@ -12,6 +12,7 @@ use App\Notifications\GiftCard as NotificationsGiftCard;
 use App\Notifications\Redeemed;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 
 class GiftCardController extends Controller
 {
@@ -56,12 +57,10 @@ class GiftCardController extends Controller
         return DB::transaction(function () use ($request) {
 
             // checks if sender can fund gift
-            if ($request->user()->wallet->current_balance < array_sum(array_column($request->items, 'price'))) {
-                return response()->json([
-                    'status' => false,
-                    'data' => null,
-                    'message' => 'Insufficient funds, please fund wallet and try again.',
-                ], 422);
+            if (!$request->user()->hasFunds(array_sum(array_column($request->items, 'price')))) {
+                throw ValidationException::withMessages([
+                    'amount' => 'Insufficient funds, please fund wallet and try again.'
+                ]);
             }
 
             // set sender id
@@ -87,13 +86,7 @@ class GiftCardController extends Controller
             }
 
             // debit sender wallet
-            $current_balance = ((int)$request->user()->wallet->current_balance - (int)array_sum(array_column($request->items, 'price')));
-            $previous_balance = $request->user()->wallet->current_balance;
-
-            $request->user()->wallet->update([
-                'previous_balance' => $previous_balance < 0 ? 0.00 : $previous_balance,
-                'current_balance' => $current_balance < 0 ? 0.00 : $current_balance,
-            ]);
+            $request->user()->debit(array_sum(array_column($request->items, 'price')));
 
             // notify receiver via email, whatsapp or sms
             $giftCard['id'] = $giftCard->id;
@@ -191,47 +184,46 @@ class GiftCardController extends Controller
      */
     public function redeem(Request $request)
     {
-        // retrive gift card
-        $giftCard = $request->user();
-        $giftCard->sender;
-        $giftCard->items;
+        return DB::transaction(function () use ($request) {
+            // retrive gift card
+            $giftCard = $request->user();
+            $giftCard->sender;
+            $giftCard->items;
 
-        // checks if receiver has registered
-        if (!$user = User::where('email_address', $giftCard->receiver_email_address)->orWhere('phone_number',    $giftCard->receiver_phone_number)->first()) {
+            // checks if receiver has registered
+            if (!User::where('email_address', $giftCard->receiver_email_address)->orWhere('phone_number',    $giftCard->receiver_phone_number)->first()) {
+                return response()->json([
+                    'status' => false,
+                    'data' => $giftCard,
+                    'message' => 'You must create an account to redeem gift card.',
+                ], 422);
+            }
+
+            // checks if gift card has been redeemed
+            if (!$giftCard->status->is(GiftCardStatus::REDEEMABLE())) {
+                return response()->json([
+                    'status' => false,
+                    'data' => $giftCard,
+                    'message' => 'This gift card has already been ' . GiftCardStatus::CLAIMED() . '.',
+                ], 422);
+            }
+
+            // update gift card status
+            $giftCard->update([
+                'status' => GiftCardStatus::CLAIMED()
+            ]);
+
+            // credit receiver wallet
+            $giftCard->user->credit($giftCard->items->sum('price'));
+
+            // notify sender via email, whatsapp or sms
+            $giftCard->notify(new Redeemed());
+
             return response()->json([
-                'status' => false,
+                'status' => true,
                 'data' => $giftCard,
-                'message' => 'You must create an account to redeem gift card.',
-            ], 422);
-        }
-
-        // checks if gift card has been redeemed
-        if (!$giftCard->status->is(GiftCardStatus::REDEEMABLE())) {
-            return response()->json([
-                'status' => false,
-                'data' => $giftCard,
-                'message' => 'This gift card has already been ' . GiftCardStatus::CLAIMED() . '.',
-            ], 422);
-        }
-
-        // update gift card status
-        $giftCard->update([
-            'status' => GiftCardStatus::CLAIMED()
-        ]);
-
-        // credit receiver
-        $user->wallet->update([
-            'previous_balance' => $user->wallet->current_balance,
-            'current_balance' => ((int)$user->wallet->current_balance + (int)$giftCard->items->sum('price')),
-        ]);
-
-        // notify sender via email, whatsapp or sms
-        $giftCard->notify(new Redeemed());
-
-        return response()->json([
-            'status' => true,
-            'data' => $giftCard,
-            'message' => 'success',
-        ]);
+                'message' => 'success',
+            ]);
+        });
     }
 }

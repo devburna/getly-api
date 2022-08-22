@@ -113,4 +113,32 @@ class User extends Authenticatable
     {
         return $this->hasOne(virtualAccount::class);
     }
+
+    public function debit($amount)
+    {
+        $current_balance = ((int)$this->wallet->current_balance - (int)$amount);
+        $previous_balance = $this->wallet->current_balance;
+
+        $this->wallet->update([
+            'previous_balance' => $previous_balance < 0 ? 0.00 : $previous_balance,
+            'current_balance' => $current_balance < 0 ? 0.00 : $current_balance,
+        ]);
+    }
+
+    public function credit($amount)
+    {
+        $this->wallet->update([
+            'previous_balance' => $this->wallet->current_balance,
+            'current_balance' => $this->wallet->current_balance + $amount,
+        ]);
+    }
+
+    public function hasFunds($amount)
+    {
+        if ($amount > $this->wallet->current_balance) {
+            return false;
+        }
+
+        return true;
+    }
 }

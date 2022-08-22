@@ -31,7 +31,7 @@ class VirtualCardController extends Controller
         }
 
         // checks if sender can fund virtual card
-        if ($request->amount > $request->user()->wallet->current_balance) {
+        if (!$request->user()->hasFunds($request->amount)) {
             throw ValidationException::withMessages([
                 'amount' => 'Insufficient funds, please fund wallet and try again.'
             ]);
@@ -70,7 +70,7 @@ class VirtualCardController extends Controller
         // store virtual account
         $request->user()->virtualCard = $this->store($storeVirtualCardRequest);
 
-        return $this->show($request);
+        return $this->show($request, $response->json()['message'], 201);
     }
 
     /**
@@ -108,13 +108,21 @@ class VirtualCardController extends Controller
      * @param  \App\Http\Requests  $request
      * @return \Illuminate\Http\Response
      */
-    public function show(Request $request)
+    public function show(Request $request, $message = 'success', $code = 200)
     {
+        if (!$request->user()->virtualCard) {
+            return response()->json([
+                'status' => false,
+                'data' => null,
+                'message' => 'No virtual card found for this account.',
+            ], 404);
+        }
+
         return response()->json([
             'status' => true,
-            'data' => $request->user()->virtualAccount,
-            'message' => 'success',
-        ]);
+            'data' => $request->user()->virtualCard,
+            'message' => $message,
+        ], $code);
     }
 
     /**
@@ -126,6 +134,57 @@ class VirtualCardController extends Controller
      */
     public function update(UpdateVirtualCardRequest $request, VirtualCard $virtualCard)
     {
-        //
+        if (!$request->user()->virtualCard) {
+            return response()->json([
+                'status' => false,
+                'data' => null,
+                'message' => 'No virtual card found for this account.',
+            ], 404);
+        }
+    }
+
+    public function fund(StoreVirtualCardRequest $request)
+    {
+        // checks if sender can fund virtual card
+        if (!$request->user()->hasFunds($request->amount)) {
+            throw ValidationException::withMessages([
+                'amount' => 'Insufficient funds, please fund wallet and try again.'
+            ]);
+        }
+
+        if (!$request->user()->virtualCard) {
+            return response()->json([
+                'status' => false,
+                'data' => null,
+                'message' => 'No virtual card found for this account.',
+            ], 404);
+        }
+
+        // send request to flutterwave.com
+        $response = Http::withHeaders([
+            'Content-Type' => 'application/json',
+            'Authorization' => "Bearer {$this->flutterwaveSecKey}",
+        ])->post(env('FLUTTERWAVE_URL') . "/virtual-cards/{$request->user()->virtualCard->identity}/fund", [
+            'debit_currency' => 'USD',
+            'amount' => $request->amount,
+        ]);
+
+        if (!$response->ok()) {
+            return response()->json([
+                'status' => false,
+                'data' => null,
+                'message' => $response->json()['message'],
+            ], 422);
+        }
+
+        // debit user
+        $request->user()->debit(array_sum(array_column($request->items, 'price')));
+
+        return $this->show($request, $response->json()['message']);
+    }
+
+    public function withdraw(StoreVirtualCardRequest $request)
+    {
+        return $this->show($request);
     }
 }
