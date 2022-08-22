@@ -74,7 +74,7 @@ class FlutterwaveController extends Controller
         return Http::withHeaders([
             'Content-Type' => 'application/json',
             'Authorization' => "Bearer {$this->flutterwaveSecKey}",
-        ])->get(env('FLUTTERWAVE_URL') . "/kyc/bvns/{$data['bvn']}");
+        ])->get(env('FLUTTERWAVE_URL') . "/kyc/bvns/{$data}");
     }
 
     public function fundVirtualCard($data)
@@ -112,5 +112,13 @@ class FlutterwaveController extends Controller
             'Content-Type' => 'application/json',
             'Authorization' => "Bearer {$this->flutterwaveSecKey}",
         ])->put(env('FLUTTERWAVE_URL') . "/virtual-cards/{$data['card']}/status/{$data['action']}");
+    }
+
+    public function verifyTransaction($data)
+    {
+        return Http::withHeaders([
+            'Content-Type' => 'application/json',
+            'Authorization' => "Bearer {$this->flutterwaveSecKey}",
+        ])->get(env('FLUTTERWAVE_URL') . "/transactions/{$data}/verify");
     }
 }

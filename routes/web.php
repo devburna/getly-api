@@ -25,6 +25,6 @@ Route::prefix('gifts/{getlistItem}')->group(function () {
     # contribute
     Route::prefix('contribute')->group(function () {
         # verify payment
-        Route::get('', [\App\Http\Controllers\GetlistItemController::class, 'contribution']);
+        Route::get('', [\App\Http\Controllers\GetlistItemController::class, 'contribution'])->name('contribution');
     });
 });

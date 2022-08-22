@@ -33,41 +33,29 @@ class VirtualAccountController extends Controller
             }
 
             // get bvn info
-            $data = [];
-            $data['bvn'] = $request->identity;
-            $bvn = (new FlutterwaveController())->verifyBvn($data);
-
-            // check if not status 200
-            if (!$bvn->ok()) {
-                throw ValidationException::withMessages([
-                    'bvn' => $bvn['message']
-                ]);
-            }
+            $bvn = (new FlutterwaveController())->verifyBvn($request->identity)->json()['data'];
 
             // generate virtual card
-            $bvn = $bvn->json()['data'];
-            $data = [];
-            $request['id'] = $request->user()->id;
-            $data['bvn'] = $bvn['bvn'];
-            $data['first_name'] = $bvn['first_name'];
-            $data['last_name'] = $bvn['last_name'];
-            $data['email_address'] = $request->user()->email_address;
-            $data['phone_number'] = $bvn['phone_number'];
+            $bvn['id'] = $request->user()->id;
+            $bvn['bvn'] = $bvn['bvn'];
+            $bvn['first_name'] = $bvn['first_name'];
+            $bvn['last_name'] = $bvn['last_name'];
+            $bvn['email_address'] = $request->user()->email_address;
+            $bvn['phone_number'] = $bvn['phone_number'];
 
-            $virtualAccount = (new FlutterwaveController())->createVirtualAccount($data);
+            $virtualAccount = (new FlutterwaveController())->createVirtualAccount($bvn)->json()['data'];
 
             // set user id
             $request['user_id'] = $request->user()->id;
 
             // set virtual account data
-            $data = $virtualAccount->json()['data'];
-            $data['user_id'] = $request->user()->id;
-            $data['identity'] = $data['order_ref'];
-            $data['account_name'] = "{$request->user()->first_name} {$request->user()->last_name}";
-            $data['provider'] = 'flutterwave';
+            $virtualAccount['user_id'] = $request->user()->id;
+            $virtualAccount['identity'] = $virtualAccount['order_ref'];
+            $virtualAccount['account_name'] = "{$request->user()->first_name} {$request->user()->last_name}";
+            $virtualAccount['provider'] = 'flutterwave';
 
             // new request instance
-            $storeVirtualAccountRequest = new StoreVirtualAccountRequest($data);
+            $storeVirtualAccountRequest = new StoreVirtualAccountRequest($virtualAccount);
 
             // store virtual account
             $request->user()->virtualAccount = $this->store($storeVirtualAccountRequest);

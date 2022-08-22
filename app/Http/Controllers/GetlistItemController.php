@@ -151,18 +151,12 @@ class GetlistItemController extends Controller
                 $data['email'] = $request->email_address;
                 $data['phone_number'] = $request->phone_number;
                 $data['amount'] = $amount;
-                $data['redirect_url'] = url("/?gift={$getlistItem->id}&type={$request->type}");
+                $data['redirect_url'] = route('contribution', ['getlistItem' => $getlistItem->id, 'type' => $request->type]);
 
-                $link = (new FlutterwaveController())->generatePaymentLink($data);
-
-                if (!$link->ok()) {
-                    throw ValidationException::withMessages([
-                        'message' => $link['message']
-                    ]);
-                }
+                $link = (new FlutterwaveController())->generatePaymentLink($data)->json()['data'];
 
                 // set payment link
-                $getlistItem->payment_link = $link->json()['data']['link'];
+                $getlistItem->payment_link = $link['link'];
 
                 return $this->show($getlistItem);
             });
@@ -175,6 +169,14 @@ class GetlistItemController extends Controller
 
     public function contribution(Request $request)
     {
-        return $request->all();
+        try {
+            $response = (new FlutterwaveController())->verifyTransaction($request->transaction_id)->json()['data'];
+
+            dd($response);
+        } catch (\Throwable $th) {
+            throw ValidationException::withMessages([
+                'message' => $th->getMessage()
+            ]);
+        }
     }
 }
