@@ -83,7 +83,7 @@ class WalletController extends Controller
         $data['amount'] = $request->amount;
         $data['meta'] = [
             "consumer_id" => $request->user()->wallet->id,
-            "consumer_mac" => 'fund-wallet',
+            "consumer_mac" => TransactionChannel::CARD_TOP_UP(),
         ];
         $data['redirect_url'] = route('flw-webhook');
 

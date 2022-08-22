@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\TransactionChannel;
 use App\Http\Requests\StoreTransactionRequest;
 use App\Models\Transaction;
 use App\Models\VirtualAccount;
@@ -35,10 +36,6 @@ class TransactionController extends Controller
     public function create(Request $request)
     {
         try {
-            // verify hash
-            if (!$request->header('verif-hash') || !$request->header('verif-hash') === env('APP_KEY')) {
-                return response()->json(['data' => $request->header('verif-hash')], 401);
-            }
 
             // verify transaction
             $response = (new FlutterwaveController())->verifyTransaction($request->transaction_id)->json();
@@ -53,17 +50,19 @@ class TransactionController extends Controller
                 return response()->json([], 422);
             }
 
-            if ($response['event'] && $response['event'] === 'charge.completed') {
+            // check for virtual account transaction
+            if (array_key_exists('event', $response) && $response['event'] === 'charge.completed') {
                 return (new VirtualAccount())->chargeCompleted($response['data']);
             }
 
-            if ($response['data']['meta'] && $response['data']['meta']['consumer_mac'] === 'fund-wallet') {
+            // check for card-top-up  transaction
+            if (array_key_exists('meta', $response['data']) && $response['data']['meta']['consumer_mac'] === TransactionChannel::CARD_TOP_UP()) {
                 return (new WalletController())->chargeCompleted($response['data']);
             }
 
             return response()->json([], 422);
         } catch (\Throwable $th) {
-            return response()->json([], 401);
+            return response()->json([], 422);
         }
     }
 
