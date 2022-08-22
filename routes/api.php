@@ -140,8 +140,11 @@ Route::prefix('v1')->group(function () {
             # details
             Route::get('', [\App\Http\Controllers\WalletController::class, 'show']);
 
+            # fund
+            Route::put('', [\App\Http\Controllers\WalletController::class, 'fund']);
+
             # withdraw
-            Route::post('withdraw', [\App\Http\Controllers\WalletController::class, 'withdraw']);
+            Route::post('', [\App\Http\Controllers\WalletController::class, 'withdraw']);
         });
 
         # virtual card
@@ -154,10 +157,10 @@ Route::prefix('v1')->group(function () {
             Route::get('', [\App\Http\Controllers\VirtualCardController::class, 'show']);
 
             # fund
-            Route::post('fund', [\App\Http\Controllers\VirtualCardController::class, 'fund']);
+            Route::put('', [\App\Http\Controllers\VirtualCardController::class, 'fund']);
 
             # withdraw
-            Route::post('withdraw', [\App\Http\Controllers\VirtualCardController::class, 'withdraw']);
+            Route::patch('', [\App\Http\Controllers\VirtualCardController::class, 'withdraw']);
 
             # transactions
             Route::get('transactions', [\App\Http\Controllers\VirtualCardController::class, 'transactions']);
