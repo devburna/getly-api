@@ -28,7 +28,7 @@ class Contribution extends Notification implements ShouldQueue
         $this->getlistItemContributor = $getlistItemContributor;
 
         // set subject
-        if ($this->getlistItemContributor->is(GetlistItemContributionType::BUY())) {
+        if ($this->getlistItemContributor->type->is(GetlistItemContributionType::BUY())) {
             $this->subject = "{$this->getlistItemContributor->full_name} Bought Your Gift 😇";
         } else {
             $this->subject = "{$this->getlistItemContributor->full_name} Contributed To Your Gift 😇";

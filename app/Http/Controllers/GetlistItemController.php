@@ -9,6 +9,7 @@ use App\Http\Requests\StoreGetlistItemRequest;
 use App\Http\Requests\UpdateGetlistItemRequest;
 use App\Models\GetlistItem;
 use App\Models\GetlistItemContributor;
+use App\Notifications\Contribution;
 use Cloudinary\Api\Upload\UploadApi;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -157,7 +158,7 @@ class GetlistItemController extends Controller
                     "consumer_id" => $getlistItem->id,
                     "consumer_mac" => $request->type,
                 ];
-                $data['redirect_url'] = route('contribution', ['getlistItem' => $getlistItem->id, 'type' => $request->type]);
+                $data['redirect_url'] = route('contribution', ['getlistItem' => $getlistItem->id]);
 
                 $link = (new FlutterwaveController())->generatePaymentLink($data)->json()['data'];
 
@@ -187,7 +188,7 @@ class GetlistItemController extends Controller
             }
 
             // checks duplicate entry
-            if (GetlistItemContributor::where('reference', $response['data']['transaction_id'])->first()) {
+            if (GetlistItemContributor::where('reference', $response['data']['id'])->first()) {
                 throw ValidationException::withMessages([
                     'message' => 'Transaction has already been verified.'
                 ]);
@@ -196,7 +197,7 @@ class GetlistItemController extends Controller
             // set contributor details
             if ($response['data']['status'] === 'successful') {
                 $response['getlist_item_id'] = $response['data']['meta']['consumer_id'];
-                $response['reference'] = $response['data']['transaction_id'];
+                $response['reference'] = $response['data']['id'];
                 $response['full_name'] = $response['data']['customer']['name'];
                 $response['email_address'] = $response['data']['customer']['email'];
                 $response['phone_number'] = $response['data']['customer']['phone_number'];
@@ -206,25 +207,22 @@ class GetlistItemController extends Controller
 
                 // store contributor details
                 $storeGetlistItemContributorRequest = (new StoreGetlistItemContributorRequest($response));
-                (new GetlistItemContributorController())->store($storeGetlistItemContributorRequest);
+                $contributor = (new GetlistItemContributorController())->store($storeGetlistItemContributorRequest);
 
-                switch ($response['type']) {
-                    case GetlistItemContributionType::BUY():
-
-                        // update getlist status
-                        $getlistItem->update([
-                            'status' => GetlistItemStatus::REDEEMABLE()
-                        ]);
-
-                        return $this->show($getlistItem);
-
-                        break;
-
-                    default:
-
-                        return $this->show($getlistItem);
-                        break;
+                // update getlist status
+                if ($response['type'] === GetlistItemContributionType::BUY()) {
+                    $getlistItem->update([
+                        'status' => GetlistItemStatus::REDEEMABLE()
+                    ]);
                 }
+
+                // credit gift owner
+                $getlistItem->getlist->user->credit($response['amount']);
+
+                // notify gift owner
+                $getlistItem->getlist->user->notify(new Contribution($getlistItem, $contributor));
+
+                return $this->show($getlistItem);
             }
 
             throw ValidationException::withMessages([
