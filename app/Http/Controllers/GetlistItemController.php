@@ -82,8 +82,6 @@ class GetlistItemController extends Controller
         // update details
         $getlistItem->update($request->only([
             'name',
-            'price',
-            'quantity',
             'details',
             'image_url'
         ]));

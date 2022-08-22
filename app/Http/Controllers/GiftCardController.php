@@ -92,7 +92,7 @@ class GiftCardController extends Controller
             $giftCard['id'] = $giftCard->id;
             $giftCard->notify(new NotificationsGiftCard($giftCard->createToken('redeem-gift-card', ['redeem-gift-card', 'authenticate'])->plainTextToken));
 
-            return $this->show($giftCard, 'success', 201);
+            return $this->show($giftCard, "You’ve just sent your gift card to {$request->receiver_name}", 201);
         });
     }
 

@@ -28,6 +28,7 @@ class GetlistController extends Controller
         foreach ($getlists as $getlist) {
             // add item count to data as wishes
             $getlist->wishes = $getlist->items->count();
+            unset($getlist->items);
         }
 
         return response()->json([

@@ -25,8 +25,6 @@ class UpdateGetlistItemRequest extends FormRequest
     {
         return [
             'name' => 'string',
-            'price' => 'numeric',
-            'quantity' => 'numeric',
             'details' => 'string',
             'image' => 'mimes:jpeg,jpeg,png,webp|max:3000'
         ];
