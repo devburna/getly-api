@@ -2,14 +2,13 @@
 
 namespace App\Models;
 
-use App\Enums\GetlistItemStatus;
+use App\Enums\GetlistItemContributionType;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class GetlistItem extends Model
+class GetlistItemContributor extends Model
 {
     use HasFactory, SoftDeletes;
 
@@ -19,13 +18,13 @@ class GetlistItem extends Model
      * @var string[]
      */
     protected $fillable = [
-        'getlist_id',
-        'name',
-        'price',
-        'quantity',
-        'details',
-        'image_url',
-        'status',
+        'getlist_item_id',
+        'full_name',
+        'email_address',
+        'phone_number',
+        'type',
+        'amount',
+        'meta'
     ];
 
     /**
@@ -34,7 +33,7 @@ class GetlistItem extends Model
      * @var array
      */
     protected $hidden = [
-        'getlist_id',
+        'getlist_item_id'
     ];
 
     /**
@@ -43,16 +42,11 @@ class GetlistItem extends Model
      * @var array
      */
     protected $casts = [
-        'status' => GetlistItemStatus::class
+        'type' => GetlistItemContributionType::class
     ];
 
-    public function getlist(): BelongsTo
+    public function gift(): BelongsTo
     {
-        return $this->belongsTo(Getlist::class);
-    }
-
-    public function contributors(): HasMany
-    {
-        return $this->hasMany(GetlistItemContributor::class, 'getlist_item_id');
+        return $this->belongsTo(GetlistItem::class);
     }
 }

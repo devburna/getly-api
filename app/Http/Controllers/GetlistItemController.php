@@ -2,11 +2,16 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\GetlistItemContributionType;
 use App\Enums\GetlistItemStatus;
+use App\Http\Requests\StoreGetlistItemContributorRequest;
 use App\Http\Requests\StoreGetlistItemRequest;
 use App\Http\Requests\UpdateGetlistItemRequest;
 use App\Models\GetlistItem;
+use App\Notifications\Contribution;
 use Cloudinary\Api\Upload\UploadApi;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 
 class GetlistItemController extends Controller
 {
@@ -105,5 +110,61 @@ class GetlistItemController extends Controller
         }
 
         return $this->show($getlistItem);
+    }
+
+    /**
+     * Update the specified resource in storage.
+     *
+     * @param  \App\Http\Requests\StoreGetlistItemContributorRequest  $request
+     * @param  \App\Models\GetlistItem  $getlistItem
+     * @return \Illuminate\Http\Response
+     */
+    public function contribute(StoreGetlistItemContributorRequest $request, GetlistItem $getlistItem)
+    {
+        return DB::transaction(function () use ($request, $getlistItem) {
+
+            // checks if user has funds
+            if (!$request->user()->hasFunds($request->meta['contribute']['amount'])) {
+                throw ValidationException::withMessages([
+                    'amount' => 'Insufficient funds, please fund wallet and try again.'
+                ]);
+            }
+
+            // checks if unfufilled
+            if (!$getlistItem->status->is(GetlistItemStatus::UNFULFILLED())) {
+                throw ValidationException::withMessages([
+                    'amount' => 'This gift is either ' . GetlistItemStatus::REDEEMABLE() . ' or has already been ' . GetlistItemStatus::CLAIMED() . '.',
+                ]);
+            }
+
+            // get amount
+            if ($request->type->is(GetlistItemContributionType::CONTRIBUTE())) {
+                $amount = $request->meta->contribute->amount;
+            } else {
+                $amount = $request->meta->contribute->amount;
+
+                // update status to fulfilled
+                $getlistItem->update([
+                    'status' => GetlistItemStatus::REDEEMABLE(),
+                ]);
+            }
+
+            return $request->all();
+
+            // store contributor
+            $request['getlist_item_id'] = $getlistItem->id;
+            (new GetlistItemContributorController())->store($request);
+
+            // credit gift owner
+            $getlistItem->getlist->user->credit($amount);
+
+            // debit contributor
+            $request->user()->debit($amount);
+
+            // notify gift owner
+            $getlistItem->getlist->user->notify(new Contribution($getlistItem));
+
+            return $this->show($getlistItem);
+        });
     }
 }

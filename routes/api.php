@@ -91,6 +91,9 @@ Route::prefix('v1')->group(function () {
 
             Route::prefix('{getlistItem}')->group(function () {
 
+                # contribute
+                Route::patch('', [\App\Http\Controllers\GetlistItemController::class, 'contribute']);
+
                 # details
                 Route::get('', [\App\Http\Controllers\GetlistItemController::class, 'show'])->can('view', 'getlistItem');
 
