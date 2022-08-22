@@ -142,18 +142,25 @@ class GetlistItemController extends Controller
                 $amount = $request->meta->contribute->amount;
             } else {
                 $amount = $request->meta->contribute->amount;
-
-                // update status to fulfilled
-                $getlistItem->update([
-                    'status' => GetlistItemStatus::REDEEMABLE(),
-                ]);
             }
 
-            return $request->all();
+            // generate payment link
+            $data = [];
+            $data['name'] = $request->full_name;
+            $data['email'] = $request->email_address;
+            $data['amount'] = $amount;
+
+            $link = (new FlutterwaveController())->generatePaymentLink($data);
+
+            if($link->ok()){
+
+            }
+
+            return $this->show($getlistItem);
 
             // store contributor
             $request['getlist_item_id'] = $getlistItem->id;
-            (new GetlistItemContributorController())->store($request);
+            $contributor = (new GetlistItemContributorController())->store($request);
 
             // credit gift owner
             $getlistItem->getlist->user->credit($amount);
@@ -162,9 +169,7 @@ class GetlistItemController extends Controller
             $request->user()->debit($amount);
 
             // notify gift owner
-            $getlistItem->getlist->user->notify(new Contribution($getlistItem));
-
-            return $this->show($getlistItem);
+            $getlistItem->getlist->user->notify(new Contribution($getlistItem, $contributor));
         });
     }
 }

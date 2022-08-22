@@ -5,17 +5,9 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreWalletRequest;
 use App\Models\Wallet;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Http;
 
 class WalletController extends Controller
 {
-    private $flutterwaveSecKey;
-
-    public function __construct()
-    {
-        $this->flutterwaveSecKey = env('FLUTTERWAVE_SEC_KEY');
-    }
-
     /**
      * Store a newly created resource in storage.
      *

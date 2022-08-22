@@ -5,17 +5,10 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreVirtualAccountRequest;
 use App\Models\VirtualAccount;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Http;
+use Illuminate\Validation\ValidationException;
 
 class VirtualAccountController extends Controller
 {
-    private $flutterwaveSecKey;
-
-    public function __construct()
-    {
-        $this->flutterwaveSecKey = env('FLUTTERWAVE_SEC_KEY');
-    }
-
     /**
      * Show the form for creating a new resource.
      *
@@ -38,34 +31,42 @@ class VirtualAccountController extends Controller
             return $this->show($request);
         }
 
-        // send request to flutterwave.com
-        $response = Http::withHeaders([
-            'Content-Type' => 'application/json',
-            'Authorization' => "Bearer {$this->flutterwaveSecKey}",
-        ])->post(env('FLUTTERWAVE_URL') . '/virtual-account-numbers', [
-            'email' => $request->user()->email_address,
-            'is_permanent' => true,
-            'bvn' => 22418085857,
-            'tx_ref' => str_shuffle($request->user()->id . config('app.name')),
-            'phonenumber' => $request->user()->phone_number,
-            'firstname' => $request->user()->first_name,
-            'lastname' => $request->user()->last_name,
-            'narration' => "{$request->user()->first_name} {$request->user()->last_name}"
-        ]);
+        // get bvn info
+        $data = [];
+        $data['bvn'] = $request->identity;
+        $bvn = (new FlutterwaveController())->verifyBvn($data);
 
-        if (!$response->ok()) {
-            return response()->json([
-                'status' => false,
-                'data' => null,
-                'message' => $response->json(),
-            ], 422);
+        // check if not status 200
+        if (!$bvn->ok()) {
+            throw ValidationException::withMessages([
+                'bvn' => $bvn['message']
+            ]);
+        }
+
+        // generate virtual card
+        $bvn = $bvn->json()['data'];
+        $data = [];
+        $request['id'] = $request->user()->id;
+        $data['bvn'] = $bvn['bvn'];
+        $data['first_name'] = $bvn['first_name'];
+        $data['last_name'] = $bvn['last_name'];
+        $data['email_address'] = $request->user()->email_address;
+        $data['phone_number'] = $bvn['phone_number'];
+
+        $virtualAccount = (new FlutterwaveController())->createVirtualAccount($data);
+
+        // catch error
+        if (!$virtualAccount->ok()) {
+            throw ValidationException::withMessages([
+                'message' => $bvn['message']
+            ]);
         }
 
         // set user id
         $request['user_id'] = $request->user()->id;
 
         // set virtual account data
-        $data = $response->json()['data'];
+        $data = $virtualAccount->json()['data'];
         $data['user_id'] = $request->user()->id;
         $data['identity'] = $data['order_ref'];
         $data['account_name'] = "{$request->user()->first_name} {$request->user()->last_name}";

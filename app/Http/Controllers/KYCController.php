@@ -3,37 +3,28 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\KYCRequest;
-use Illuminate\Support\Facades\Http;
+use Illuminate\Validation\ValidationException;
 
 class KYCController extends Controller
 {
-    private $flutterwaveSecKey;
-
-    public function __construct()
-    {
-        $this->flutterwaveSecKey = env('FLUTTERWAVE_SEC_KEY');
-    }
-
     // bvn
     public function bvn(KYCRequest $request)
     {
-        // send request to flutterwave.com
-        $response = Http::withHeaders([
-            'Content-Type' => 'application/json',
-            'Authorization' => "Bearer {$this->flutterwaveSecKey}",
-        ])->get(env('FLUTTERWAVE_URL') . "/kyc/bvns/{$request->bvn}");
+        // get bvn info
+        $data = [];
+        $data['bvn'] = $request->identity;
+        $bvn = (new FlutterwaveController())->verifyBvn($data);
 
-        if (!$response->ok()) {
-            return response()->json([
-                'status' => false,
-                'data' => null,
-                'message' => "Error occured, please contact support.",
-            ], 422);
+        // check if not status 200
+        if (!$bvn->ok()) {
+            throw ValidationException::withMessages([
+                'bvn' => $bvn['message']
+            ]);
         }
 
         return response()->json([
             'status' => true,
-            'data' => $response->json(),
+            'data' => $bvn['data'],
             'message' => 'success',
         ]);
     }
