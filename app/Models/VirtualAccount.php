@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class Wallet extends Model
+class VirtualAccount extends Model
 {
     use HasFactory, SoftDeletes;
 
@@ -18,11 +18,11 @@ class Wallet extends Model
      */
     protected $fillable = [
         'user_id',
-        'current_balance',
-        'previous_balance',
-        'currency',
-        'short',
-        'symbol',
+        'identity',
+        'bank_name',
+        'account_number',
+        'account_name',
+        'provider'
     ];
 
     /**
@@ -33,9 +33,8 @@ class Wallet extends Model
     protected $hidden = [
         'id',
         'user_id',
-        'deleted_at',
-        'created_at',
-        'updated_at'
+        'identity',
+        'provider'
     ];
 
     /**

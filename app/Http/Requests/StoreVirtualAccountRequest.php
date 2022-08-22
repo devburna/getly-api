@@ -4,7 +4,7 @@ namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class StoreVirtualCardRequest extends FormRequest
+class StoreVirtualAccountRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -19,12 +19,14 @@ class StoreVirtualCardRequest extends FormRequest
     /**
      * Get the validation rules that apply to the request.
      *
-     * @return array<string, mixed>
+     * @return array
      */
     public function rules()
     {
         return [
-            'amount' => 'required|numeric',
+            'type' => 'required|string|in:bvn',
+            'identity' => 'required',
+            'approved' => 'required|boolean'
         ];
     }
 }

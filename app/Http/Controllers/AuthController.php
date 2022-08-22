@@ -32,6 +32,9 @@ class AuthController extends Controller
             // store new user
             $user = (new UserController())->store($request);
 
+            // store user wallet
+            (new WalletController())->store(new StoreWalletRequest(array($user)));
+
             // send email verification link to user
             $user->notify(new EmailVerification($user->createToken('email-verification', ['verify-email-address'])->plainTextToken));
 

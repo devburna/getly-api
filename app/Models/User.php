@@ -108,4 +108,9 @@ class User extends Authenticatable
     {
         return $this->hasOne(VirtualCard::class);
     }
+
+    public function virtualAccount(): HasOne
+    {
+        return $this->hasOne(virtualAccount::class);
+    }
 }

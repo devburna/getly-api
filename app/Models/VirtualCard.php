@@ -18,11 +18,23 @@ class VirtualCard extends Model
      */
     protected $fillable = [
         'user_id',
-        'current_balance',
-        'previous_balance',
+        'identity',
+        'account_id',
         'currency',
-        'short',
-        'symbol',
+        'card_hash',
+        'card_pan',
+        'masked_pan',
+        'name_on_card',
+        'expiration',
+        'cvv',
+        'address_1',
+        'address_2',
+        'city',
+        'state',
+        'zip_code',
+        'callback_url',
+        'is_active',
+        'provider',
     ];
 
     /**
@@ -33,6 +45,11 @@ class VirtualCard extends Model
     protected $hidden = [
         'id',
         'user_id',
+        'callback_url',
+        'identity',
+        'account_id',
+        'card_hash',
+        'provider',
     ];
 
     /**

@@ -148,7 +148,7 @@ Route::prefix('v1')->group(function () {
         });
 
         # virtual cards
-        Route::prefix('virtual-cards')->middleware(['ability:authenticate'])->group(function () {
+        Route::prefix('virtual-card')->middleware(['ability:authenticate'])->group(function () {
 
             # create
             Route::post('', [\App\Http\Controllers\VirtualCardController::class, 'create']);
@@ -167,6 +167,18 @@ Route::prefix('v1')->group(function () {
                 # toggle
                 Route::delete('', [\App\Http\Controllers\VirtualCardController::class, 'destroy'])->withTrashed()->can('delete', 'virtualCard')->can('restore', 'virtualCard')->can('forceDelete', 'virtualCard');
             });
+        });
+
+        # virtual account
+        Route::prefix('virtual-account')->middleware(['ability:authenticate'])->group(function () {
+
+            # create
+            Route::post('', [\App\Http\Controllers\VirtualAccountController::class, 'create']);
+
+            # details
+            Route::get('', [\App\Http\Controllers\VirtualAccountController::class, 'show']);
+            # details
+            Route::get('', [\App\Http\Controllers\VirtualAccountController::class, 'show']);
         });
 
         # kyc

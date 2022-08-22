@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreWalletRequest;
-use App\Http\Requests\UpdateWalletRequest;
 use App\Models\Wallet;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
@@ -24,16 +23,24 @@ class WalletController extends Controller
      */
     public function store(StoreWalletRequest $request)
     {
+        // set user id
+        $request['user_id'] = $request[0]->id;
+        $request['currency'] = 'Nigerian Naira';
+        $request['short'] = 'NGN';
+        $request['symbol'] = '₦';
+
         return Wallet::create($request->only([
             'user_id',
-            'identity',
-            'provider'
+            'currency',
+            'short',
+            'symbol',
         ]));
     }
 
     /**
      * Show the form for creating a new resource.
      *
+     * @param  \App\Http\Requests\StoreWalletRequest  $request
      * @return \Illuminate\Http\Response
      */
     public function create(StoreWalletRequest $request)
