@@ -137,9 +137,6 @@ Route::prefix('v1')->group(function () {
         # wallet
         Route::prefix('wallet')->middleware(['ability:authenticate'])->group(function () {
 
-            # create
-            Route::post('', [\App\Http\Controllers\WalletController::class, 'create']);
-
             # details
             Route::get('', [\App\Http\Controllers\WalletController::class, 'show']);
 
