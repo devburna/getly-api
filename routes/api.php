@@ -179,6 +179,19 @@ Route::prefix('v1')->group(function () {
             # bvn
             Route::get('bvn', [\App\Http\Controllers\KYCController::class, 'bvn']);
         });
+
+        # transactions
+        Route::prefix('transactions')->middleware(['ability:authenticate'])->group(function () {
+
+            # all
+            Route::get('', [\App\Http\Controllers\TransactionController::class, 'index']);
+
+            Route::prefix('{transaction}')->group(function () {
+
+                # details
+                Route::post('', [\App\Http\Controllers\TransactionController::class, 'show']);
+            });
+        });
     });
 
     # gifts
@@ -187,19 +200,6 @@ Route::prefix('v1')->group(function () {
         Route::prefix('contribute')->group(function () {
             # get payment link
             Route::post('', [\App\Http\Controllers\GetlistItemController::class, 'contribute']);
-        });
-    });
-
-    # transactions
-    Route::prefix('transactions')->middleware(['ability:authenticate'])->group(function () {
-
-        # all
-        Route::get('', [\App\Http\Controllers\TransactionController::class, 'index']);
-
-        Route::prefix('{transaction}')->group(function () {
-            
-            # details
-            Route::post('', [\App\Http\Controllers\TransactionController::class, 'show']);
         });
     });
 });

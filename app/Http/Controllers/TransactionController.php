@@ -16,7 +16,7 @@ class TransactionController extends Controller
      */
     public function index(Request $request)
     {
-        $transactions = $request->user()->transactions->sortByDesc('created_at')->paginate();
+        $transactions = $request->user()->transactions()->orderByDesc('created_at')->paginate();
 
         return response()->json([
             'status' => true,

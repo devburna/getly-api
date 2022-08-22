@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\GetlistItemContributionType;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -51,5 +52,12 @@ class GetlistItemContributor extends Model
     public function gift(): BelongsTo
     {
         return $this->belongsTo(GetlistItem::class);
+    }
+
+    protected function meta(): Attribute
+    {
+        return Attribute::make(
+            get: fn ($value, $attributes) => json_decode($value),
+        );
     }
 }
