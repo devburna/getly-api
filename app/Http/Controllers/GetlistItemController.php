@@ -9,6 +9,7 @@ use App\Http\Requests\StoreGetlistItemRequest;
 use App\Http\Requests\UpdateGetlistItemRequest;
 use App\Models\GetlistItem;
 use Cloudinary\Api\Upload\UploadApi;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
@@ -125,7 +126,6 @@ class GetlistItemController extends Controller
     {
         try {
             return DB::transaction(function () use ($request, $getlistItem) {
-
                 // checks if unfufilled
                 if (!$getlistItem->status->is(GetlistItemStatus::UNFULFILLED())) {
                     throw ValidationException::withMessages([
@@ -146,11 +146,12 @@ class GetlistItemController extends Controller
 
                 // generate payment link
                 $data = [];
+                $data['tx_ref'] = "{$getlistItem->id}-{$request->type}-" . str_shuffle($getlistItem->getlist->user->id . $getlistItem->getlist->id . $request->type);
                 $data['name'] = $request->full_name;
                 $data['email'] = $request->email_address;
                 $data['phone_number'] = $request->phone_number;
                 $data['amount'] = $amount;
-                $data['redirect_url'] = $request->url();
+                $data['redirect_url'] = url("/?gift={$getlistItem->id}&type={$request->type}");
 
                 $link = (new FlutterwaveController())->generatePaymentLink($data);
 
@@ -170,5 +171,10 @@ class GetlistItemController extends Controller
                 'message' => $th->getMessage()
             ]);
         }
+    }
+
+    public function contribution(Request $request)
+    {
+        return $request->all();
     }
 }

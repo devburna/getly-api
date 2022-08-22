@@ -20,6 +20,11 @@ Route::get('/', function () {
     ]);
 });
 
-Route::get('payment', [\App\Http\Controllers\TransactionController::class, 'verify']);
-
-Route::get('flw-webhook', [\App\Http\Controllers\FWController::class, 'webHook'])->name('flw-webhook');
+# gifts
+Route::prefix('gifts/{getlistItem}')->group(function () {
+    # contribute
+    Route::prefix('contribute')->group(function () {
+        # verify payment
+        Route::get('', [\App\Http\Controllers\GetlistItemController::class, 'contribution']);
+    });
+});

@@ -91,9 +91,6 @@ Route::prefix('v1')->group(function () {
 
             Route::prefix('{getlistItem}')->group(function () {
 
-                # contribute
-                Route::patch('', [\App\Http\Controllers\GetlistItemController::class, 'contribute']);
-
                 # details
                 Route::get('', [\App\Http\Controllers\GetlistItemController::class, 'show'])->can('view', 'getlistItem');
 
@@ -181,6 +178,15 @@ Route::prefix('v1')->group(function () {
 
             # bvn
             Route::get('bvn', [\App\Http\Controllers\KYCController::class, 'bvn']);
+        });
+    });
+
+    # gifts
+    Route::prefix('gifts/{getlistItem}')->group(function () {
+        # contribute
+        Route::prefix('contribute')->group(function () {
+            # get payment link
+            Route::post('', [\App\Http\Controllers\GetlistItemController::class, 'contribute']);
         });
     });
 });
