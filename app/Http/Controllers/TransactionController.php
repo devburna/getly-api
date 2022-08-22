@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Enums\TransactionChannel;
 use App\Http\Requests\StoreTransactionRequest;
 use App\Models\Transaction;
 use App\Models\VirtualAccount;
@@ -56,7 +55,7 @@ class TransactionController extends Controller
             }
 
             // check for card-top-up  transaction
-            if (array_key_exists('meta', $response['data']) && $response['data']['meta']['consumer_mac'] === TransactionChannel::CARD_TOP_UP()) {
+            if (array_key_exists('meta', $response['data']) && $response['data']['meta']['consumer_mac'] === 'card-top-up') {
                 return (new WalletController())->chargeCompleted($response['data']);
             }
 
