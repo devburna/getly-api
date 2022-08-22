@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use App\Enums\GiftCardStatus;
 use App\Http\Requests\StoreGiftCardItemRequest;
 use App\Http\Requests\StoreGiftCardRequest;
-use App\Http\Requests\UpdateGiftCardRequest;
+use App\Http\Requests\RedeemGiftCardRequest;
 use App\Models\GiftCard;
 use App\Models\User;
 use App\Notifications\GiftCard as NotificationsGiftCard;
@@ -182,7 +182,7 @@ class GiftCardController extends Controller
      * @param  \App\Http\Requests\Request  $request
      * @return \Illuminate\Http\Response
      */
-    public function redeem(Request $request)
+    public function redeem(RedeemGiftCardRequest $request)
     {
         return DB::transaction(function () use ($request) {
             // retrive gift card

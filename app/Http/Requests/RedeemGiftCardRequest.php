@@ -4,7 +4,7 @@ namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class UpdateWalletRequest extends FormRequest
+class RedeemGiftCardRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -19,12 +19,11 @@ class UpdateWalletRequest extends FormRequest
     /**
      * Get the validation rules that apply to the request.
      *
-     * @return array
+     * @return array<string, mixed>
      */
     public function rules()
     {
         return [
-            'amount' => 'required|numeric|gt:1000',
             'channel' => 'required|in:bank-transfer',
             'bank' => 'required_if:channel,bank-transfer'
         ];
