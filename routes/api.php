@@ -161,6 +161,9 @@ Route::prefix('v1')->group(function () {
 
             # withdraw
             Route::post('withdraw', [\App\Http\Controllers\VirtualCardController::class, 'withdraw']);
+
+            # transactions
+            Route::get('transactions', [\App\Http\Controllers\VirtualCardController::class, 'transactions']);
         });
 
         # virtual account
