@@ -2,11 +2,17 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\TransactionChannel;
+use App\Enums\TransactionStatus;
+use App\Enums\TransactionType;
+use App\Http\Requests\StoreTransactionRequest;
 use App\Http\Requests\StoreVirtualCardRequest;
 use App\Http\Requests\UpdateVirtualCardRequest;
 use App\Models\VirtualCard;
+use App\Notifications\Transaction;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
 class VirtualCardController extends Controller
@@ -58,6 +64,21 @@ class VirtualCardController extends Controller
 
                 // debit user wallet
                 $request->user()->debit($request->amount);
+
+                // store transaction
+                $transactionRequest = new StoreTransactionRequest();
+                $transactionRequest['user_id'] = $request->user()->id;
+                $transactionRequest['identity'] = Str::uuid();
+                $transactionRequest['reference'] = Str::uuid();
+                $transactionRequest['type'] = TransactionType::DEBIT();
+                $transactionRequest['channel'] = TransactionChannel::WALLET();
+                $transactionRequest['amount'] = $request->amount;
+                $transactionRequest['narration'] = 'New virtual card';
+                $transactionRequest['status'] = TransactionStatus::SUCCESS();
+                $transaction = (new TransactionController())->store($transactionRequest);
+
+                // notify user of transaction
+                $request->user()->notify(new Transaction($transaction));
 
                 return $this->show($request, $virtualCard->json()['message'], 201);
             });
@@ -177,6 +198,21 @@ class VirtualCardController extends Controller
                 // debit user wallet
                 $request->user()->debit($request->amount);
 
+                // store transaction
+                $transactionRequest = new StoreTransactionRequest();
+                $transactionRequest['user_id'] = $request->user()->id;
+                $transactionRequest['identity'] = Str::uuid();
+                $transactionRequest['reference'] = Str::uuid();
+                $transactionRequest['type'] = TransactionType::DEBIT();
+                $transactionRequest['channel'] = TransactionChannel::WALLET();
+                $transactionRequest['amount'] = $request->amount;
+                $transactionRequest['narration'] = 'Virtual card top up';
+                $transactionRequest['status'] = TransactionStatus::SUCCESS();
+                $transaction = (new TransactionController())->store($transactionRequest);
+
+                // notify user of transaction
+                $request->user()->notify(new Transaction($transaction));
+
                 return $this->show($request, $virtualCard->json()['message']);
             });
         } catch (\Throwable $th) {
@@ -206,6 +242,21 @@ class VirtualCardController extends Controller
 
                 // credit user wallet
                 $request->user()->credit($request->amount);
+
+                // store transaction
+                $transactionRequest = new StoreTransactionRequest();
+                $transactionRequest['user_id'] = $request->user()->id;
+                $transactionRequest['identity'] = Str::uuid();
+                $transactionRequest['reference'] = Str::uuid();
+                $transactionRequest['type'] = TransactionType::CREDIT();
+                $transactionRequest['channel'] = TransactionChannel::VIRTUAL_CARD();
+                $transactionRequest['amount'] = $request->amount;
+                $transactionRequest['narration'] = 'Virtual card withdrawal';
+                $transactionRequest['status'] = TransactionStatus::SUCCESS();
+                $transaction = (new TransactionController())->store($transactionRequest);
+
+                // notify user of transaction
+                $request->user()->notify(new Transaction($transaction));
 
                 return $this->show($request, $virtualCard->json()['message']);
             });

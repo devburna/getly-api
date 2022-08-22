@@ -144,7 +144,7 @@ class VirtualAccountController extends Controller
         $transactionRequest['meta'] = json_encode($request->all());
         $transaction = (new TransactionController())->store($transactionRequest);
 
-        // notify user
+        // notify user of transaction
         $virtualAccount->user->notify(new NotificationsTransaction($transaction));
 
         return response()->json([]);

@@ -3,17 +3,23 @@
 namespace App\Http\Controllers;
 
 use App\Enums\GiftCardStatus;
+use App\Enums\TransactionChannel;
+use App\Enums\TransactionStatus;
+use App\Enums\TransactionType;
 use App\Http\Requests\StoreGiftCardItemRequest;
 use App\Http\Requests\StoreGiftCardRequest;
 use App\Http\Requests\RedeemGiftCardRequest;
+use App\Http\Requests\StoreTransactionRequest;
 use App\Models\GiftCard;
 use App\Models\User;
 use App\Notifications\GiftCard as NotificationsGiftCard;
 use App\Notifications\Redeemed;
+use App\Notifications\Transaction;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 use Cloudinary\Api\Upload\UploadApi;
+use Illuminate\Support\Str;
 
 class GiftCardController extends Controller
 {
@@ -100,6 +106,23 @@ class GiftCardController extends Controller
 
             // debit sender wallet
             $request->user()->debit(array_sum(array_column($request->items, 'price')));
+
+            // store transaction
+            $transactionRequest = new StoreTransactionRequest();
+            $transactionRequest['user_id'] = $request->user()->id;
+            $transactionRequest['identity'] = Str::uuid();
+            $transactionRequest['reference'] = Str::uuid();
+            $transactionRequest['type'] = TransactionType::DEBIT();
+            $transactionRequest['channel'] = TransactionChannel::WALLET();
+            $transactionRequest['amount'] = array_sum(array_column($request->items, 'price'));
+            $transactionRequest['narration'] = 'Sent gift card';
+            $transactionRequest['status'] = TransactionStatus::SUCCESS();
+            $transactionRequest['meta'] = json_encode($request->all());
+            $transaction = (new TransactionController())->store($transactionRequest);
+
+            // notify user of transaction
+            $request->user()->notify(new Transaction($transaction));
+
 
             // notify receiver via email, whatsapp or sms
             $giftCard['id'] = $giftCard->id;
@@ -228,6 +251,22 @@ class GiftCardController extends Controller
 
             // credit receiver wallet
             $giftCard->user->credit($giftCard->items->sum('price'));
+
+            // store transaction
+            $transactionRequest = new StoreTransactionRequest();
+            $transactionRequest['user_id'] = $giftCard->user->id;
+            $transactionRequest['identity'] = Str::uuid();
+            $transactionRequest['reference'] = Str::uuid();
+            $transactionRequest['type'] = TransactionType::CREDIT();
+            $transactionRequest['channel'] = TransactionChannel::WALLET();
+            $transactionRequest['amount'] = array_sum($giftCard->items->sum('price'));
+            $transactionRequest['narration'] = 'Received gift card';
+            $transactionRequest['status'] = TransactionStatus::SUCCESS();
+            $transactionRequest['meta'] = json_encode($giftCard);
+            $transaction = (new TransactionController())->store($transactionRequest);
+
+            // notify user of transaction
+            $giftCard->user->notify(new Transaction($transaction));
 
             // notify sender via email, whatsapp or sms
             $giftCard->notify(new Redeemed());
