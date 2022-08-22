@@ -13,6 +13,7 @@ use App\Notifications\Redeemed;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
+use Cloudinary\Api\Upload\UploadApi;
 
 class GiftCardController extends Controller
 {
@@ -75,11 +76,23 @@ class GiftCardController extends Controller
             $giftCard = $this->store($request);
 
             // store gift card items
-            foreach ($request->items as $item) {
+            foreach ($request->items as $key => $item) {
+
                 $giftCardItem = new StoreGiftCardItemRequest($item);
 
                 // set gift card id
                 $giftCardItem['gift_card_id'] = $giftCard->id;
+
+                // upload image
+                // $request['image_url'] = (new UploadApi())->upload($request->image->path(), [
+                //     'folder' => config('app.name') . '/gifts-cards/',
+                //     'public_id' => $giftCard->id . $key,
+                //     'overwrite' => true,
+                //     // 'notification_url' => '',
+                //     'resource_type' => 'image'
+                // ])['secure_url'];
+
+                $request['image_url'] = $request->image;
 
                 // store gift card item
                 (new GiftCardItemController())->store($giftCardItem);

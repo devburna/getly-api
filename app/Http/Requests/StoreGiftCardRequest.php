@@ -33,7 +33,7 @@ class StoreGiftCardRequest extends FormRequest
             'items.*.name' => 'required|string',
             'items.*.price' => 'required|numeric',
             'items.*.quantity' => 'required|numeric',
-            'items.*.image_url' => 'required|url',
+            'items.*.image' => 'required',
         ];
     }
 }
