@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreTransactionRequest;
 use App\Models\Transaction;
+use App\Models\VirtualAccount;
 use Illuminate\Http\Request;
 
 class TransactionController extends Controller
@@ -34,6 +35,10 @@ class TransactionController extends Controller
     public function create(Request $request)
     {
         if ($request->has('event') && $request->event === 'charge.completed') {
+            return (new VirtualAccount())->chargeCompleted();
+        }
+
+        if ($request['data']['meta'] && $request['data']['meta']['consumer_mac'] === 'fund-wallet') {
             return (new WalletController())->chargeCompleted();
         }
     }

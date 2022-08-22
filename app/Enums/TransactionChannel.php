@@ -11,6 +11,7 @@ use BenSampo\Enum\Enum;
  * @method static static VIRTUAL_CARD()
  * @method static static BANK_TRANSFER()
  * @method static static VIRTUAL_ACCOUNT()
+ * @method static static CARD_TOP_UP()
  */
 final class TransactionChannel extends Enum
 {
@@ -18,4 +19,5 @@ final class TransactionChannel extends Enum
     const VIRTUAL_CARD = 'virtual-card';
     const BANK_TRANSFER = 'bak-transfer';
     const VIRTUAL_ACCOUNT = 'virtual-account';
+    const CARD_TOP_UP = 'card-top-up';
 }

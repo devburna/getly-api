@@ -3,9 +3,14 @@
 namespace App\Http\Controllers;
 
 use App\Enums\TransactionChannel;
+use App\Enums\TransactionStatus;
+use App\Enums\TransactionType;
 use App\Http\Requests\FundWalletRequest;
+use App\Http\Requests\StoreTransactionRequest;
 use App\Http\Requests\StoreWalletRequest;
+use App\Models\Transaction;
 use App\Models\Wallet;
+use App\Notifications\Transaction as NotificationsTransaction;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 
@@ -91,5 +96,53 @@ class WalletController extends Controller
             ],
             'message' => 'success',
         ]);
+    }
+
+    public function chargeCompleted(Request $request)
+    {
+        // verify hash
+        if (!$request->header('verif-hash') === env('APP_KEY')) {
+            return response()->json([], 401);
+        }
+
+        // find virtual account
+        if (!$wallet = Wallet::where('id', $request['data']['meta']['consumer_id'])->first()) {
+            return response()->json([], 422);
+        }
+
+        // check for duplicate transaction
+        if (Transaction::where('identity', $request['data']['id'])->first()) {
+            return response()->json([], 422);
+        }
+
+        // verify status
+        if (!$request['data']['status'] === 'successful') {
+            return response()->json([], 422);
+        }
+
+        // credit user wallet
+        $wallet->user->credit($request['data']['amount']);
+
+        // store transaction
+        $transactionRequest = new StoreTransactionRequest();
+        $transactionRequest['user_id'] = $wallet->user->id;
+        $transactionRequest['identity'] = $request['data']['id'];
+        $transactionRequest['reference'] = $request['data']['flw_ref'];
+        $transactionRequest['type'] = TransactionType::CREDIT();
+        $transactionRequest['channel'] = TransactionChannel::CARD_TOP_UP();
+        $transactionRequest['amount'] = $request['data']['amount'];
+        $transactionRequest['narration'] = $request['data']['narration'];
+        $transactionRequest['status'] = TransactionStatus::SUCCESS();
+        $transactionRequest['meta'] = json_encode($request->all());
+        $transaction = (new TransactionController())->store($transactionRequest);
+
+        // notify user of transaction
+        $wallet->user->notify(new NotificationsTransaction($transaction));
+
+        return response()->json([
+            'status' => true,
+            'data' => $transaction,
+            'message' => 'success',
+        ], 200);
     }
 }
