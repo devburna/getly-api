@@ -24,10 +24,7 @@ class FlutterwaveController extends Controller
             'amount' => $data['amount'],
             'currency' => 'NGN',
             'redirect_url' => $data['redirect_url'],
-            'meta' => [
-                'consumer_id' => 23,
-                'consumer_mac' => "92a3-912ba-1192a",
-            ],
+            'meta' => $data['meta'],
             'customer' => [
                 'name' => $data['name'],
                 'email' => $data['email'],

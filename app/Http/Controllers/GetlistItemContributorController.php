@@ -20,6 +20,7 @@ class GetlistItemContributorController extends Controller
 
         return GetlistItemContributor::create($request->only([
             'getlist_item_id',
+            'reference',
             'full_name',
             'email_address',
             'phone_number',

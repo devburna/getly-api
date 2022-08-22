@@ -19,6 +19,7 @@ class GetlistItemContributor extends Model
      */
     protected $fillable = [
         'getlist_item_id',
+        'reference',
         'full_name',
         'email_address',
         'phone_number',
@@ -33,7 +34,9 @@ class GetlistItemContributor extends Model
      * @var array
      */
     protected $hidden = [
-        'getlist_item_id'
+        'getlist_item_id',
+        'reference',
+        'meta'
     ];
 
     /**

@@ -151,6 +151,10 @@ class GetlistItemController extends Controller
                 $data['email'] = $request->email_address;
                 $data['phone_number'] = $request->phone_number;
                 $data['amount'] = $amount;
+                $data['meta'] = [
+                    "consumer_id" => $getlistItem->id,
+                    "consumer_mac" => $request->type,
+                ];
                 $data['redirect_url'] = route('contribution', ['getlistItem' => $getlistItem->id, 'type' => $request->type]);
 
                 $link = (new FlutterwaveController())->generatePaymentLink($data)->json()['data'];
@@ -170,9 +174,54 @@ class GetlistItemController extends Controller
     public function contribution(Request $request)
     {
         try {
-            $response = (new FlutterwaveController())->verifyTransaction($request->transaction_id)->json()['data'];
+            // verify transaction
+            $response = (new FlutterwaveController())->verifyTransaction($request->transaction_id)->json();
 
-            dd($response);
+            // find getlist
+            if (!$getlistItem = GetlistItem::find($response['data']['meta']['consumer_id'])) {
+                return $response;
+                throw ValidationException::withMessages([
+                    'message' => 'Error occured, please contact support.'
+                ]);
+            }
+
+            // set contributor details
+            if ($response['data']['status'] === 'successful') {
+                $response['getlist_item_id'] = $response['data']['meta']['consumer_id'];
+                $response['reference'] = $response['data']['transaction_id'];
+                $response['full_name'] = $response['data']['customer']['name'];
+                $response['email_address'] = $response['data']['customer']['email'];
+                $response['phone_number'] = $response['data']['customer']['phone_number'];
+                $response['type'] =  $response['data']['meta']['consumer_mac'];
+                $response['amount'] = $response['data']['amount'];
+                $response['meta'] = json_encode($response);
+
+                // store contributor details
+                $storeGetlistItemContributorRequest = (new StoreGetlistItemContributorRequest($response));
+                (new GetlistItemContributorController())->store($storeGetlistItemContributorRequest);
+
+                switch ($response['type']) {
+                    case GetlistItemContributionType::BUY():
+
+                        // update getlist status
+                        $getlistItem->update([
+                            'status' => GetlistItemStatus::REDEEMABLE()
+                        ]);
+
+                        return $this->show($getlistItem);
+
+                        break;
+
+                    default:
+
+                        return $this->show($getlistItem);
+                        break;
+                }
+            }
+
+            throw ValidationException::withMessages([
+                'message' => $response['message']
+            ]);
         } catch (\Throwable $th) {
             throw ValidationException::withMessages([
                 'message' => $th->getMessage()

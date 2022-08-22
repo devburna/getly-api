@@ -16,6 +16,7 @@ return new class extends Migration
         Schema::create('getlist_item_contributors', function (Blueprint $table) {
             $table->id()->from(time());
             $table->unsignedBigInteger('getlist_item_id');
+            $table->string('reference')->unique();
             $table->string('full_name');
             $table->string('email_address');
             $table->string('phone_number');
