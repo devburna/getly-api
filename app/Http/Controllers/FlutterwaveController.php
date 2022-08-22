@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Str;
 
 class FlutterwaveController extends Controller
 {
@@ -19,6 +20,7 @@ class FlutterwaveController extends Controller
             'Content-Type' => 'application/json',
             'Authorization' => "Bearer {$this->flutterwaveSecKey}",
         ])->post(env('FLUTTERWAVE_URL') . '/payments', [
+            'tx_ref' => Str::uuid(),
             'amount' => $data['amount'],
             'currency' => 'NGN',
             'redirect_url' => $data['redirect_url'],

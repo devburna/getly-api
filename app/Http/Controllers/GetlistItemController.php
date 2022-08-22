@@ -8,7 +8,6 @@ use App\Http\Requests\StoreGetlistItemContributorRequest;
 use App\Http\Requests\StoreGetlistItemRequest;
 use App\Http\Requests\UpdateGetlistItemRequest;
 use App\Models\GetlistItem;
-use App\Notifications\Contribution;
 use Cloudinary\Api\Upload\UploadApi;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -121,55 +120,52 @@ class GetlistItemController extends Controller
      */
     public function contribute(StoreGetlistItemContributorRequest $request, GetlistItem $getlistItem)
     {
-        return DB::transaction(function () use ($request, $getlistItem) {
+        try {
+            return DB::transaction(function () use ($request, $getlistItem) {
 
-            // checks if user has funds
-            if (!$request->user()->hasFunds($request->meta['contribute']['amount'])) {
-                throw ValidationException::withMessages([
-                    'amount' => 'Insufficient funds, please fund wallet and try again.'
-                ]);
-            }
+                // checks if unfufilled
+                if (!$getlistItem->status->is(GetlistItemStatus::UNFULFILLED())) {
+                    throw ValidationException::withMessages([
+                        'amount' => 'This gift is either ' . GetlistItemStatus::REDEEMABLE() . ' or has already been ' . GetlistItemStatus::CLAIMED() . '.',
+                    ]);
+                }
 
-            // checks if unfufilled
-            if (!$getlistItem->status->is(GetlistItemStatus::UNFULFILLED())) {
-                throw ValidationException::withMessages([
-                    'amount' => 'This gift is either ' . GetlistItemStatus::REDEEMABLE() . ' or has already been ' . GetlistItemStatus::CLAIMED() . '.',
-                ]);
-            }
+                // get amount
+                switch ($request->type) {
+                    case GetlistItemContributionType::CONTRIBUTE():
+                        $amount = $request->meta['contribute']['amount'];
+                        break;
 
-            // get amount
-            if ($request->type->is(GetlistItemContributionType::CONTRIBUTE())) {
-                $amount = $request->meta->contribute->amount;
-            } else {
-                $amount = $request->meta->contribute->amount;
-            }
+                    default:
+                        $amount = $getlistItem->price - $getlistItem->contributors->sum('amount');
+                        break;
+                }
 
-            // generate payment link
-            $data = [];
-            $data['name'] = $request->full_name;
-            $data['email'] = $request->email_address;
-            $data['amount'] = $amount;
+                // generate payment link
+                $data = [];
+                $data['name'] = $request->full_name;
+                $data['email'] = $request->email_address;
+                $data['phone_number'] = $request->phone_number;
+                $data['amount'] = $amount;
+                $data['redirect_url'] = $request->url();
 
-            $link = (new FlutterwaveController())->generatePaymentLink($data);
+                $link = (new FlutterwaveController())->generatePaymentLink($data);
 
-            if($link->ok()){
+                if (!$link->ok()) {
+                    throw ValidationException::withMessages([
+                        'message' => $link['message']
+                    ]);
+                }
 
-            }
+                // set payment link
+                $getlistItem->payment_link = $link->json()['data']['link'];
 
-            return $this->show($getlistItem);
-
-            // store contributor
-            $request['getlist_item_id'] = $getlistItem->id;
-            $contributor = (new GetlistItemContributorController())->store($request);
-
-            // credit gift owner
-            $getlistItem->getlist->user->credit($amount);
-
-            // debit contributor
-            $request->user()->debit($amount);
-
-            // notify gift owner
-            $getlistItem->getlist->user->notify(new Contribution($getlistItem, $contributor));
-        });
+                return $this->show($getlistItem);
+            });
+        } catch (\Throwable $th) {
+            throw ValidationException::withMessages([
+                'message' => $th->getMessage()
+            ]);
+        }
     }
 }
