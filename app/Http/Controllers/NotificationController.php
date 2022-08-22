@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\UpdateNotificationRequest;
 use App\Models\Notification;
+use Illuminate\Http\Request;
 
 class NotificationController extends Controller
 {
@@ -12,41 +12,24 @@ class NotificationController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function index()
+    public function index(Request $request)
     {
-        //
-    }
-    /**
-     * Display the specified resource.
-     *
-     * @param  \App\Models\Notification  $notification
-     * @return \Illuminate\Http\Response
-     */
-    public function show(Notification $notification)
-    {
-        //
-    }
+        $notifications = Notification::orderByDesc('created_at')->get();
 
-    /**
-     * Update the specified resource in storage.
-     *
-     * @param  \App\Http\Requests\UpdateNotificationRequest  $request
-     * @param  \App\Models\Notification  $notification
-     * @return \Illuminate\Http\Response
-     */
-    public function update(UpdateNotificationRequest $request, Notification $notification)
-    {
-        //
-    }
+        // sort user's notifications
+        $userNotifications = [];
 
-    /**
-     * Remove the specified resource from storage.
-     *
-     * @param  \App\Models\Notification  $notification
-     * @return \Illuminate\Http\Response
-     */
-    public function destroy(Notification $notification)
-    {
-        //
+        foreach ($notifications as $notification) {
+            if ($notification->data->user_id === $request->user()->id) {
+                unset($notification->data->user_id);
+                array_push($userNotifications, $notification->data);
+            }
+        }
+
+        return response()->json([
+            'status' => true,
+            'data' => $userNotifications,
+            'message' => 'success',
+        ]);
     }
 }

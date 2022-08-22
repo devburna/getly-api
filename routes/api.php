@@ -192,6 +192,9 @@ Route::prefix('v1')->group(function () {
                 Route::post('', [\App\Http\Controllers\TransactionController::class, 'show']);
             });
         });
+
+        # notifications
+        Route::get('notifications', [\App\Http\Controllers\NotificationController::class, 'index']);
     });
 
     # gifts

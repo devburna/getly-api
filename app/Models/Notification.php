@@ -48,7 +48,7 @@ class Notification extends Model
         return $this->belongsTo(User::class);
     }
 
-    protected function meta(): Attribute
+    protected function data(): Attribute
     {
         return Attribute::make(
             get: fn ($value, $attributes) => json_decode($value),
