@@ -34,12 +34,36 @@ class TransactionController extends Controller
      */
     public function create(Request $request)
     {
-        if ($request->has('event') && $request->event === 'charge.completed') {
-            return (new VirtualAccount())->chargeCompleted();
-        }
+        try {
+            // verify hash
+            if (!$request->header('verif-hash') || !$request->header('verif-hash') === env('APP_KEY')) {
+                return response()->json(['data' => $request->header('verif-hash')], 401);
+            }
 
-        if ($request['data']['meta'] && $request['data']['meta']['consumer_mac'] === 'fund-wallet') {
-            return (new WalletController())->chargeCompleted();
+            // verify transaction
+            $response = (new FlutterwaveController())->verifyTransaction($request->transaction_id)->json();
+
+            // check for duplicate transaction
+            if (Transaction::where('identity', $response['data']['id'])->first()) {
+                return response()->json([], 422);
+            }
+
+            // verify status
+            if (!$response['data']['status'] === 'successful') {
+                return response()->json([], 422);
+            }
+
+            if ($response['event'] && $response['event'] === 'charge.completed') {
+                return (new VirtualAccount())->chargeCompleted($response['data']);
+            }
+
+            if ($response['data']['meta'] && $response['data']['meta']['consumer_mac'] === 'fund-wallet') {
+                return (new WalletController())->chargeCompleted($response['data']);
+            }
+
+            return response()->json([], 422);
+        } catch (\Throwable $th) {
+            return response()->json([], 401);
         }
     }
 

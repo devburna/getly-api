@@ -29,6 +29,6 @@ Route::prefix('gifts/{getlistItem}')->group(function () {
     });
 });
 
-Route::prefix('flw-webhook')->group(function () {
+Route::prefix('payment')->group(function () {
     Route::get('', [\App\Http\Controllers\TransactionController::class, 'create'])->name('flw-webhook');
 });

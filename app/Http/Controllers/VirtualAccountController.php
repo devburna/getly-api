@@ -106,42 +106,27 @@ class VirtualAccountController extends Controller
         ]);
     }
 
-    public function chargeCompleted(Request $request)
+    public function chargeCompleted($data)
     {
-        // verify hash
-        if (!$request->header('verif-hash') === env('APP_KEY')) {
-            return response()->json([], 401);
-        }
-
         // find virtual account
-        if (!$virtualAccount = VirtualAccount::where('identity', $request['data']['tx_ref'])->first()) {
-            return response()->json([], 422);
-        }
-
-        // check for duplicate transaction
-        if (Transaction::where('identity', $request['data']['id'])->first()) {
-            return response()->json([], 422);
-        }
-
-        // verify status
-        if (!$request['data']['status'] === 'successful') {
+        if (!$virtualAccount = VirtualAccount::where('identity', $data['tx_ref'])->first()) {
             return response()->json([], 422);
         }
 
         // credit user wallet
-        $virtualAccount->user->credit($request['data']['amount']);
+        $virtualAccount->user->credit($data['amount']);
 
         // store transaction
         $transactionRequest = new StoreTransactionRequest();
         $transactionRequest['user_id'] = $virtualAccount->user->id;
-        $transactionRequest['identity'] = $request['data']['id'];
-        $transactionRequest['reference'] = $request['data']['flw_ref'];
+        $transactionRequest['identity'] = $data['id'];
+        $transactionRequest['reference'] = $data['flw_ref'];
         $transactionRequest['type'] = TransactionType::CREDIT();
         $transactionRequest['channel'] = TransactionChannel::VIRTUAL_ACCOUNT();
-        $transactionRequest['amount'] = $request['data']['amount'];
-        $transactionRequest['narration'] = $request['data']['narration'];
+        $transactionRequest['amount'] = $data['amount'];
+        $transactionRequest['narration'] = $data['narration'];
         $transactionRequest['status'] = TransactionStatus::SUCCESS();
-        $transactionRequest['meta'] = json_encode($request->all());
+        $transactionRequest['meta'] = json_encode($data);
         $transaction = (new TransactionController())->store($transactionRequest);
 
         // notify user of transaction
