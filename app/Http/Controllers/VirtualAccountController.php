@@ -2,8 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\TransactionChannel;
+use App\Enums\TransactionStatus;
+use App\Enums\TransactionType;
+use App\Http\Requests\StoreTransactionRequest;
 use App\Http\Requests\StoreVirtualAccountRequest;
+use App\Models\Transaction;
 use App\Models\VirtualAccount;
+use App\Notifications\Transaction as NotificationsTransaction;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
 
@@ -98,5 +104,49 @@ class VirtualAccountController extends Controller
             'data' => $request->user()->virtualAccount,
             'message' => 'success',
         ]);
+    }
+
+    public function chargeCompleted(Request $request)
+    {
+        // verify hash
+        if (!$request->header('verif-hash') === env('APP_KEY')) {
+            return response()->json([], 401);
+        }
+
+        // find virtual account
+        if (!$virtualAccount = VirtualAccount::where('identity', $request['data']['tx_ref'])->first()) {
+            return response()->json([], 422);
+        }
+
+        // check for duplicate transaction
+        if (Transaction::where('identity', $request['data']['id'])->first()) {
+            return response()->json([], 422);
+        }
+
+        // verify status
+        if (!$request['data']['status'] === 'successful') {
+            return response()->json([], 422);
+        }
+
+        // credit user wallet
+        $virtualAccount->user->credit($request['data']['amount']);
+
+        // store transaction
+        $transactionRequest = new StoreTransactionRequest();
+        $transactionRequest['user_id'] = $virtualAccount->user->id;
+        $transactionRequest['identity'] = $request['data']['id'];
+        $transactionRequest['reference'] = $request['data']['flw_ref'];
+        $transactionRequest['type'] = TransactionType::CREDIT();
+        $transactionRequest['channel'] = TransactionChannel::VIRTUAL_ACCOUNT();
+        $transactionRequest['amount'] = $request['data']['amount'];
+        $transactionRequest['narration'] = $request['data']['narration'];
+        $transactionRequest['status'] = TransactionStatus::SUCCESS();
+        $transactionRequest['meta'] = json_encode($request->all());
+        $transaction = (new TransactionController())->store($transactionRequest);
+
+        // notify user
+        $virtualAccount->user->notify(new NotificationsTransaction($transaction));
+
+        return response()->json([]);
     }
 }
