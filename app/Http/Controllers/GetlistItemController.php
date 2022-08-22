@@ -8,10 +8,12 @@ use App\Http\Requests\StoreGetlistItemContributorRequest;
 use App\Http\Requests\StoreGetlistItemRequest;
 use App\Http\Requests\UpdateGetlistItemRequest;
 use App\Models\GetlistItem;
+use App\Models\GetlistItemContributor;
 use Cloudinary\Api\Upload\UploadApi;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
+use Illuminate\Support\Str;
 
 class GetlistItemController extends Controller
 {
@@ -146,7 +148,7 @@ class GetlistItemController extends Controller
 
                 // generate payment link
                 $data = [];
-                $data['tx_ref'] = "{$getlistItem->id}-{$request->type}-" . str_shuffle($getlistItem->getlist->user->id . $getlistItem->getlist->id . $request->type);
+                $data['tx_ref'] = Str::uuid();
                 $data['name'] = $request->full_name;
                 $data['email'] = $request->email_address;
                 $data['phone_number'] = $request->phone_number;
@@ -179,9 +181,15 @@ class GetlistItemController extends Controller
 
             // find getlist
             if (!$getlistItem = GetlistItem::find($response['data']['meta']['consumer_id'])) {
-                return $response;
                 throw ValidationException::withMessages([
                     'message' => 'Error occured, please contact support.'
+                ]);
+            }
+
+            // checks duplicate entry
+            if (GetlistItemContributor::where('reference', $response['data']['transaction_id'])->first()) {
+                throw ValidationException::withMessages([
+                    'message' => 'Transaction has already been verified.'
                 ]);
             }
 
