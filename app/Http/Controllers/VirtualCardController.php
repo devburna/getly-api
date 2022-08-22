@@ -6,6 +6,7 @@ use App\Http\Requests\StoreVirtualCardRequest;
 use App\Http\Requests\UpdateVirtualCardRequest;
 use App\Models\VirtualCard;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Validation\ValidationException;
 
@@ -25,52 +26,58 @@ class VirtualCardController extends Controller
      */
     public function create(StoreVirtualCardRequest $request)
     {
-        // checks duplicate wallet
-        if ($request->user()->virtualCard) {
-            return $this->show($request);
-        }
+        return DB::transaction(function () use ($request) {
 
-        // checks if sender can fund virtual card
-        if (!$request->user()->hasFunds($request->amount)) {
-            throw ValidationException::withMessages([
-                'amount' => 'Insufficient funds, please fund wallet and try again.'
+            // checks duplicate wallet
+            if ($request->user()->virtualCard) {
+                return $this->show($request);
+            }
+
+            // checks if sender can fund virtual card
+            if (!$request->user()->hasFunds($request->amount)) {
+                throw ValidationException::withMessages([
+                    'amount' => 'Insufficient funds, please fund wallet and try again.'
+                ]);
+            }
+
+            // send request to flutterwave.com
+            $response = Http::withHeaders([
+                'Content-Type' => 'application/json',
+                'Authorization' => "Bearer {$this->flutterwaveSecKey}",
+            ])->post(env('FLUTTERWAVE_URL') . '/virtual-cards', [
+                'currency' => 'USD',
+                'amount' => 5,
+                'billing_name' => "{$request->user()->first_name} {$request->user()->last_name}",
             ]);
-        }
 
-        // send request to flutterwave.com
-        $response = Http::withHeaders([
-            'Content-Type' => 'application/json',
-            'Authorization' => "Bearer {$this->flutterwaveSecKey}",
-        ])->post(env('FLUTTERWAVE_URL') . '/virtual-cards', [
-            'currency' => 'USD',
-            'amount' => 5,
-            'billing_name' => "{$request->user()->first_name} {$request->user()->last_name}",
-        ]);
+            if (!$response->ok()) {
+                return response()->json([
+                    'status' => false,
+                    'data' => null,
+                    'message' => $response->json(),
+                ], 422);
+            }
 
-        if (!$response->ok()) {
-            return response()->json([
-                'status' => false,
-                'data' => null,
-                'message' => $response->json(),
-            ], 422);
-        }
+            // set user id
+            $request['user_id'] = $request->user()->id;
 
-        // set user id
-        $request['user_id'] = $request->user()->id;
+            // set virtual card data
+            $data = $response->json()['data'];
+            $data['user_id'] = $request->user()->id;
+            $data['identity'] = $data['id'];
+            $data['provider'] = 'flutterwave';
 
-        // set virtual card data
-        $data = $response->json()['data'];
-        $data['user_id'] = $request->user()->id;
-        $data['identity'] = $data['id'];
-        $data['provider'] = 'flutterwave';
+            // new request instance
+            $storeVirtualCardRequest = new StoreVirtualCardRequest($data);
 
-        // new request instance
-        $storeVirtualCardRequest = new StoreVirtualCardRequest($data);
+            // store virtual card
+            $request->user()->virtualCard = $this->store($storeVirtualCardRequest);
 
-        // store virtual account
-        $request->user()->virtualCard = $this->store($storeVirtualCardRequest);
+            // debit user wallet
+            $request->user()->debit($request->amount);
 
-        return $this->show($request, $response->json()['message'], 201);
+            return $this->show($request, $response->json()['message'], 201);
+        });
     }
 
     /**
@@ -145,46 +152,77 @@ class VirtualCardController extends Controller
 
     public function fund(StoreVirtualCardRequest $request)
     {
-        // checks if sender can fund virtual card
-        if (!$request->user()->hasFunds($request->amount)) {
-            throw ValidationException::withMessages([
-                'amount' => 'Insufficient funds, please fund wallet and try again.'
+        return DB::transaction(function () use ($request) {
+            // checks if sender can fund virtual card
+            if (!$request->user()->hasFunds($request->amount)) {
+                throw ValidationException::withMessages([
+                    'amount' => 'Insufficient funds, please fund wallet and try again.'
+                ]);
+            }
+
+            if (!$request->user()->virtualCard) {
+                return response()->json([
+                    'status' => false,
+                    'data' => null,
+                    'message' => 'No virtual card found for this account.',
+                ], 404);
+            }
+
+            // send request to flutterwave.com
+            $response = Http::withHeaders([
+                'Content-Type' => 'application/json',
+                'Authorization' => "Bearer {$this->flutterwaveSecKey}",
+            ])->post(env('FLUTTERWAVE_URL') . "/virtual-cards/{$request->user()->virtualCard->identity}/fund", [
+                'debit_currency' => 'USD',
+                'amount' => $request->amount,
             ]);
-        }
 
-        if (!$request->user()->virtualCard) {
-            return response()->json([
-                'status' => false,
-                'data' => null,
-                'message' => 'No virtual card found for this account.',
-            ], 404);
-        }
+            if (!$response->ok()) {
+                return response()->json([
+                    'status' => false,
+                    'data' => null,
+                    'message' => $response->json()['message'],
+                ], 422);
+            }
 
-        // send request to flutterwave.com
-        $response = Http::withHeaders([
-            'Content-Type' => 'application/json',
-            'Authorization' => "Bearer {$this->flutterwaveSecKey}",
-        ])->post(env('FLUTTERWAVE_URL') . "/virtual-cards/{$request->user()->virtualCard->identity}/fund", [
-            'debit_currency' => 'USD',
-            'amount' => $request->amount,
-        ]);
+            // debit user wallet
+            $request->user()->debit($request->amount);
 
-        if (!$response->ok()) {
-            return response()->json([
-                'status' => false,
-                'data' => null,
-                'message' => $response->json()['message'],
-            ], 422);
-        }
-
-        // debit user
-        $request->user()->debit(array_sum(array_column($request->items, 'price')));
-
-        return $this->show($request, $response->json()['message']);
+            return $this->show($request, $response->json()['message']);
+        });
     }
 
     public function withdraw(StoreVirtualCardRequest $request)
     {
-        return $this->show($request);
+        return DB::transaction(function () use ($request) {
+            if (!$request->user()->virtualCard) {
+                return response()->json([
+                    'status' => false,
+                    'data' => null,
+                    'message' => 'No virtual card found for this account.',
+                ], 404);
+            }
+
+            // send request to flutterwave.com
+            $response = Http::withHeaders([
+                'Content-Type' => 'application/json',
+                'Authorization' => "Bearer {$this->flutterwaveSecKey}",
+            ])->post(env('FLUTTERWAVE_URL') . "/virtual-cards/{$request->user()->virtualCard->identity}/withdraw", [
+                'amount' => $request->amount,
+            ]);
+
+            if (!$response->ok()) {
+                return response()->json([
+                    'status' => false,
+                    'data' => null,
+                    'message' => $response->json()['message'],
+                ], 422);
+            }
+
+            // credit user wallet
+            $request->user()->debit(array_sum(array_column($request->items, 'price')));
+
+            return $this->show($request, $response->json()['message']);
+        });
     }
 }
