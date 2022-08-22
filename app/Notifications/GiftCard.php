@@ -36,7 +36,7 @@ class GiftCard extends Notification implements ShouldQueue
             return ['mail', 'database'];
         }
 
-        return ['mail', 'vonage'];
+        return ['mail'];
     }
 
     /**

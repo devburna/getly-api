@@ -189,4 +189,17 @@ Route::prefix('v1')->group(function () {
             Route::post('', [\App\Http\Controllers\GetlistItemController::class, 'contribute']);
         });
     });
+
+    # transactions
+    Route::prefix('transactions')->middleware(['ability:authenticate'])->group(function () {
+
+        # all
+        Route::get('', [\App\Http\Controllers\TransactionController::class, 'index']);
+
+        Route::prefix('{transaction}')->group(function () {
+            
+            # details
+            Route::post('', [\App\Http\Controllers\TransactionController::class, 'show']);
+        });
+    });
 });

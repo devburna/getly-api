@@ -98,7 +98,7 @@ class GiftCardController extends Controller
                 //     'resource_type' => 'image'
                 // ])['secure_url'];
 
-                $request['image_url'] = $request->image;
+                $giftCardItem['image_url'] = $item['image'];
 
                 // store gift card item
                 (new GiftCardItemController())->store($giftCardItem);
@@ -122,7 +122,6 @@ class GiftCardController extends Controller
 
             // notify user of transaction
             $request->user()->notify(new Transaction($transaction));
-
 
             // notify receiver via email, whatsapp or sms
             $giftCard['id'] = $giftCard->id;

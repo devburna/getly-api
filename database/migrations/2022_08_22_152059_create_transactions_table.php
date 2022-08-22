@@ -14,7 +14,17 @@ return new class extends Migration
     public function up()
     {
         Schema::create('transactions', function (Blueprint $table) {
-            $table->id();
+            $table->id()->from(time());
+            $table->unsignedBigInteger('user_id');
+            $table->string('identity')->unique();
+            $table->string('reference')->unique();
+            $table->string('type');
+            $table->string('channel');
+            $table->decimal('amount', 15, 2);
+            $table->string('narration');
+            $table->string('status');
+            $table->longText('meta');
+            $table->softDeletes();
             $table->timestamps();
         });
     }

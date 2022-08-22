@@ -43,7 +43,7 @@ class Contribution extends Notification implements ShouldQueue
      */
     public function via($notifiable)
     {
-        return ['mail', 'vonage', 'database'];
+        return ['mail', 'database'];
     }
 
     /**

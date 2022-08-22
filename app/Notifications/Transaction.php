@@ -33,7 +33,7 @@ class Transaction extends Notification implements ShouldQueue
      */
     public function via($notifiable)
     {
-        return ['mail', 'vonage', 'database'];
+        return ['mail'];
     }
 
     /**
@@ -47,7 +47,7 @@ class Transaction extends Notification implements ShouldQueue
         return (new MailMessage)
             ->greeting("{$notifiable->first_name}")
             ->line('Below are details of a transaction made to your account today.')
-            ->line("{$this->transaction}")
+            ->line(json_encode($this->transaction))
             ->line('Thank you for using ' . config('app.name') . '!');
     }
 
@@ -74,7 +74,7 @@ class Transaction extends Notification implements ShouldQueue
     {
         return [
             'user_id' => $notifiable->id,
-            'body' => $this->transaction
+            'body' => json_encode($this->transaction)
         ];
     }
 }
