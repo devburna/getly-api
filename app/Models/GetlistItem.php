@@ -35,6 +35,7 @@ class GetlistItem extends Model
      */
     protected $hidden = [
         'getlist_id',
+        'getlist'
     ];
 
     /**

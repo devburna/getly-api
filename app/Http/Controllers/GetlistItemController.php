@@ -56,6 +56,9 @@ class GetlistItemController extends Controller
      */
     public function show(GetlistItem $getlistItem, $message = 'success', $code = 200)
     {
+        // add contributos to data
+        $getlistItem->contributors;
+
         return response()->json([
             'status' => true,
             'data' => $getlistItem,
