@@ -43,7 +43,6 @@ class VirtualCard extends Model
      * @var array
      */
     protected $hidden = [
-        'id',
         'user_id',
         'callback_url',
         'identity',

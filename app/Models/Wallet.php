@@ -31,7 +31,6 @@ class Wallet extends Model
      * @var array
      */
     protected $hidden = [
-        'id',
         'user_id',
         'deleted_at',
         'created_at',

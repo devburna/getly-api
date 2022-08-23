@@ -256,7 +256,7 @@ class VirtualCardController extends Controller
             $data['to'] = $request->to;
             $data['index'] = $request->index;
             $data['size'] = $request->size;
-            $virtualCard->transactions = (new FlutterwaveController())->virtualCardTransactions($data);
+            $request->user()->virtualCard->transactions = (new FlutterwaveController())->virtualCardTransactions($data);
 
             return $this->show($request);
         } catch (\Throwable $th) {

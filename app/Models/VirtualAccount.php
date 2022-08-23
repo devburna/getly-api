@@ -31,7 +31,6 @@ class VirtualAccount extends Model
      * @var array
      */
     protected $hidden = [
-        'id',
         'user_id',
         'identity',
         'provider'
