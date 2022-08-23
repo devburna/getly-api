@@ -46,7 +46,7 @@ class FlutterwaveController extends Controller
 
             return $response['data'];
         } catch (\Throwable $th) {
-            throw ValidationException::withMessages([$th->getMessage()]);
+            throw ValidationException::withMessages(['Error occured, please contact support.']);
         }
     }
 
@@ -74,7 +74,7 @@ class FlutterwaveController extends Controller
 
             return $response['data'];
         } catch (\Throwable $th) {
-            throw ValidationException::withMessages([$th->getMessage()]);
+            throw ValidationException::withMessages(['Error occured, please contact support.']);
         }
     }
 
@@ -97,7 +97,7 @@ class FlutterwaveController extends Controller
 
             return $response['data'];
         } catch (\Throwable $th) {
-            throw ValidationException::withMessages([$th->getMessage()]);
+            throw ValidationException::withMessages(['Error occured, please contact support.']);
         }
     }
 
@@ -119,7 +119,7 @@ class FlutterwaveController extends Controller
 
             return $response['data'];
         } catch (\Throwable $th) {
-            throw ValidationException::withMessages([$th->getMessage()]);
+            throw ValidationException::withMessages(['Error occured, please contact support.']);
         }
     }
 
@@ -140,7 +140,7 @@ class FlutterwaveController extends Controller
 
             return $response['data'];
         } catch (\Throwable $th) {
-            throw ValidationException::withMessages([$th->getMessage()]);
+            throw ValidationException::withMessages(['Error occured, please contact support.']);
         }
     }
 
@@ -159,7 +159,7 @@ class FlutterwaveController extends Controller
 
             return $response['data'];
         } catch (\Throwable $th) {
-            throw ValidationException::withMessages([$th->getMessage()]);
+            throw ValidationException::withMessages(['Error occured, please contact support.']);
         }
     }
 
@@ -178,7 +178,7 @@ class FlutterwaveController extends Controller
 
             return $response['data'];
         } catch (\Throwable $th) {
-            throw ValidationException::withMessages([$th->getMessage()]);
+            throw ValidationException::withMessages(['Error occured, please contact support.']);
         }
     }
 
@@ -197,7 +197,7 @@ class FlutterwaveController extends Controller
 
             return $response['data'];
         } catch (\Throwable $th) {
-            throw ValidationException::withMessages([$th->getMessage()]);
+            throw ValidationException::withMessages(['Error occured, please contact support.']);
         }
     }
 
@@ -216,7 +216,7 @@ class FlutterwaveController extends Controller
 
             return $response['data'];
         } catch (\Throwable $th) {
-            throw ValidationException::withMessages([$th->getMessage()]);
+            throw ValidationException::withMessages(['Error occured, please contact support.']);
         }
     }
 
@@ -240,7 +240,7 @@ class FlutterwaveController extends Controller
 
             return $response['data'];
         } catch (\Throwable $th) {
-            throw ValidationException::withMessages([$th->getMessage()]);
+            throw ValidationException::withMessages(['Error occured, please contact support.']);
         }
     }
 
@@ -263,7 +263,7 @@ class FlutterwaveController extends Controller
 
             return $response['data'];
         } catch (\Throwable $th) {
-            throw ValidationException::withMessages([$th->getMessage()]);
+            throw ValidationException::withMessages(['Error occured, please contact support.']);
         }
     }
 
@@ -286,7 +286,7 @@ class FlutterwaveController extends Controller
 
             return $response['data'];
         } catch (\Throwable $th) {
-            throw ValidationException::withMessages([$th->getMessage()]);
+            throw ValidationException::withMessages(['Error occured, please contact support.']);
         }
     }
 
@@ -305,7 +305,7 @@ class FlutterwaveController extends Controller
 
             return $response['data'];
         } catch (\Throwable $th) {
-            throw ValidationException::withMessages([$th->getMessage()]);
+            throw ValidationException::withMessages(['Error occured, please contact support.']);
         }
     }
 }

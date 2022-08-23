@@ -80,7 +80,7 @@ class WalletController extends Controller
             $transactionRequest['type'] = TransactionType::DEBIT();
             $transactionRequest['channel'] = TransactionChannel::WALLET();
             $transactionRequest['amount'] = $transfer['amount'];
-            $transactionRequest['narration'] = "Transfer to {$transfer['fullname']}";
+            $transactionRequest['narration'] = "Transfer to {$transfer['full_name']}";
             $transactionRequest['status'] = TransactionStatus::NEW();
             $transactionRequest['meta'] = json_encode($transfer);
             $transaction = (new TransactionController())->store($transactionRequest);
