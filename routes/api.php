@@ -20,7 +20,7 @@ Route::prefix('v1')->group(function () {
     Route::get('/', function () {
         return response()->json([
             'status' => true,
-            'message' => 'Serve is up and running.'
+            'message' => 'Server is up and running.'
         ]);
     });
 
