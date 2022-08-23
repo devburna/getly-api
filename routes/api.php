@@ -265,4 +265,14 @@ Route::prefix('v1')->group(function () {
             });
         });
     });
+
+    # banks
+    Route::prefix('banks')->group(function () {
+
+        # all
+        Route::get('', [\App\Http\Controllers\FlutterwaveController::class, 'banks']);
+
+        # branches
+        Route::get('branches', [\App\Http\Controllers\FlutterwaveController::class, 'bankBranches']);
+    });
 });

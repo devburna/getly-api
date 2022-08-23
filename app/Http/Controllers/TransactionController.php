@@ -59,6 +59,11 @@ class TransactionController extends Controller
                 return (new VirtualAccount())->chargeCompleted($response);
             }
 
+            // check for transfer transaction
+            if (array_key_exists('event', $response) && $response['event'] === 'transfer.completed') {
+                return (new WalletController())->transferCompleted($response);
+            }
+
             // check for card-top-up  transaction
             if (array_key_exists('meta', $response) && $response['meta']['consumer_mac'] === 'card-top-up') {
                 return (new WalletController())->chargeCompleted($response);

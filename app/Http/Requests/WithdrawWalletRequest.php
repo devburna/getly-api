@@ -24,7 +24,12 @@ class WithdrawWalletRequest extends FormRequest
     public function rules()
     {
         return [
-            //
+            'currency' => 'required|string|in:ngn',
+            // ngn required paylaod
+            'ngn.account_bank' => 'required|numeric',
+            'ngn.account_number' => 'required',
+            'ngn.amount' => 'required|numeric',
+            'ngn.currency' => 'required|string',
         ];
     }
 }

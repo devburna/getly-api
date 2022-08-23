@@ -9,6 +9,7 @@ use App\Http\Requests\FundWalletRequest;
 use App\Http\Requests\StoreTransactionRequest;
 use App\Http\Requests\StoreWalletRequest;
 use App\Http\Requests\WithdrawWalletRequest;
+use App\Models\Transaction as ModelsTransaction;
 use App\Models\Wallet;
 use App\Notifications\Transaction;
 use Illuminate\Http\Request;
@@ -62,7 +63,32 @@ class WalletController extends Controller
     public function withdraw(WithdrawWalletRequest $request)
     {
         try {
-            return $request->all();
+
+            $transfer = match ($request->currency) {
+                'usd' => (new FlutterwaveController())->bankTransfer($request->ngn),
+                'ngn' => (new FlutterwaveController())->bankTransfer($request->ngn),
+            };
+
+            // debit user wallet
+            $request->user()->debit($request->amount);
+
+            // store transaction
+            $transactionRequest = new StoreTransactionRequest();
+            $transactionRequest['user_id'] = $request->user()->id;
+            $transactionRequest['identity'] = $transfer['id'];
+            $transactionRequest['reference'] = $transfer['reference'];
+            $transactionRequest['type'] = TransactionType::DEBIT();
+            $transactionRequest['channel'] = TransactionChannel::WALLET();
+            $transactionRequest['amount'] = $transfer['amount'];
+            $transactionRequest['narration'] = "Transfer to {$transfer['account_number']}";
+            $transactionRequest['status'] = TransactionStatus::NEW();
+            $transactionRequest['meta'] = json_encode($transfer);
+            $transaction = (new TransactionController())->store($transactionRequest);
+
+            // notify user of transaction
+            $request->user()->notify(new Transaction($transaction));
+
+            return $this->show($request);
         } catch (\Throwable $th) {
             throw ValidationException::withMessages([
                 'message' => $th->getMessage()
@@ -127,6 +153,55 @@ class WalletController extends Controller
 
         // notify user of transaction
         $wallet->user->notify(new Transaction($transaction));
+
+        return response()->json([]);
+    }
+
+    public function transferCompleted($data)
+    {
+        // find transaction
+        if (!$transaction = ModelsTransaction::where('reference', $data['reference'])->first()) {
+            return response()->json([], 422);
+        }
+
+        // verify transaction status
+        if ($transaction->status->is(TransactionStatus::SUCCESS()) || $transaction->status->is(TransactionStatus::FAILED())) {
+            return response()->json([], 422);
+        }
+
+        if (TransactionStatus::FAILED() === strtolower($data['status'])) {
+
+            // update transaction status to failed
+            $transaction->update([
+                'status' => strtolower($data['status'])
+            ]);
+
+            // store transaction
+            $transactionRequest = new StoreTransactionRequest();
+            $transactionRequest['user_id'] = $transaction->user->id;
+            $transactionRequest['identity'] = $data['id'];
+            $transactionRequest['reference'] = $data['reference'];
+            $transactionRequest['type'] = TransactionType::CREDIT();
+            $transactionRequest['channel'] = TransactionChannel::WALLET();
+            $transactionRequest['amount'] = $data['amount'];
+            $transactionRequest['narration'] = 'Transfer reversal';
+            $transactionRequest['status'] = TransactionStatus::SUCCESS();
+            $transactionRequest['meta'] = json_encode($data);
+            $transaction = (new TransactionController())->store($transactionRequest);
+
+            // credit user wallet
+            $transaction->user->credit($data['amount']);
+
+            return response()->json([]);
+        }
+
+        // update transaction status
+        $transaction->update([
+            'status' => strtolower($data['status'])
+        ]);
+
+        // notify user of transaction
+        $transaction->user->notify(new Transaction($transaction));
 
         return response()->json([]);
     }

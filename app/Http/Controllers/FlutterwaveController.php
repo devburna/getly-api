@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
@@ -222,10 +223,61 @@ class FlutterwaveController extends Controller
     public function bankTransfer($data)
     {
         try {
+            $data['debit_currency'] = "{$data['currency']}";
+            $data['reference'] = Str::uuid();
+            $data['narration'] = array_key_exists('narration', $data) ? $data['narration'] : null;
+            $data['callback_url'] = route('flw-webhook');
+
             $response =  Http::withHeaders([
                 'Content-Type' => 'application/json',
                 'Authorization' => "Bearer {$this->flutterwaveSecKey}",
             ])->post(env('FLUTTERWAVE_URL') . '/transfers', $data)->json();
+
+            // catch error
+            if ($response['status'] === 'error') {
+                throw ValidationException::withMessages([$response['message']]);
+            }
+
+            return $response['data'];
+        } catch (\Throwable $th) {
+            throw ValidationException::withMessages([$th->getMessage()]);
+        }
+    }
+
+    public function banks(Request $request)
+    {
+        try {
+            $request->validate([
+                'country' => 'required|in:ng,gh,ke,ug,za,tz'
+            ]);
+
+            $response =  Http::withHeaders([
+                'Content-Type' => 'application/json',
+                'Authorization' => "Bearer {$this->flutterwaveSecKey}",
+            ])->get(env('FLUTTERWAVE_URL') . "/banks/{$request->country}")->json();
+
+            // catch error
+            if ($response['status'] === 'error') {
+                throw ValidationException::withMessages([$response['message']]);
+            }
+
+            return $response['data'];
+        } catch (\Throwable $th) {
+            throw ValidationException::withMessages([$th->getMessage()]);
+        }
+    }
+
+    public function banksBranches(Request $request)
+    {
+        try {
+            $request->validate([
+                'bank_id' => 'required|int'
+            ]);
+
+            $response =  Http::withHeaders([
+                'Content-Type' => 'application/json',
+                'Authorization' => "Bearer {$this->flutterwaveSecKey}",
+            ])->get(env('FLUTTERWAVE_URL') . "/banks/{$request->bank_id}/branches")->json();
 
             // catch error
             if ($response['status'] === 'error') {
