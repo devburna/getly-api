@@ -60,7 +60,13 @@ class WalletController extends Controller
      */
     public function withdraw(StoreWalletRequest $request)
     {
-        return $this->show($request);
+        try {
+            return $this->show($request);
+        } catch (\Throwable $th) {
+            throw ValidationException::withMessages([
+                'message' => $th->getMessage()
+            ]);
+        }
     }
 
     /**

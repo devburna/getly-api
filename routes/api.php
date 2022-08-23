@@ -114,13 +114,13 @@ Route::prefix('v1')->group(function () {
             Route::prefix('{giftCard}')->group(function () {
 
                 # details
-                Route::get('', [\App\Http\Controllers\GiftCardController::class, 'show']);
+                Route::get('', [\App\Http\Controllers\GiftCardController::class, 'show'])->can('update', 'giftCard');
 
                 # update details
-                Route::post('', [\App\Http\Controllers\GiftCardController::class, 'update']);
+                Route::post('', [\App\Http\Controllers\GiftCardController::class, 'update'])->can('update', 'giftCard');
 
                 # toggle
-                Route::delete('', [\App\Http\Controllers\GiftCardController::class, 'destroy']);
+                Route::delete('', [\App\Http\Controllers\GiftCardController::class, 'destroy'])->can('update', 'giftCard');
             });
         });
 
@@ -143,10 +143,10 @@ Route::prefix('v1')->group(function () {
             Route::prefix('{virtualCard}')->group(function () {
 
                 # fund
-                Route::put('', [\App\Http\Controllers\WalletController::class, 'fund']);
+                Route::put('', [\App\Http\Controllers\WalletController::class, 'fund'])->can('update', 'wallet');
 
                 # withdraw
-                Route::post('', [\App\Http\Controllers\WalletController::class, 'withdraw']);
+                Route::post('', [\App\Http\Controllers\WalletController::class, 'withdraw'])->can('update', 'wallet');
             });
         });
 
@@ -198,7 +198,7 @@ Route::prefix('v1')->group(function () {
             Route::prefix('{transaction}')->group(function () {
 
                 # details
-                Route::post('', [\App\Http\Controllers\TransactionController::class, 'show']);
+                Route::post('', [\App\Http\Controllers\TransactionController::class, 'show'])->can('view', 'transaction');
             });
         });
 

@@ -218,4 +218,23 @@ class FlutterwaveController extends Controller
             throw ValidationException::withMessages([$th->getMessage()]);
         }
     }
+
+    public function bankTransfer($data)
+    {
+        try {
+            $response =  Http::withHeaders([
+                'Content-Type' => 'application/json',
+                'Authorization' => "Bearer {$this->flutterwaveSecKey}",
+            ])->post(env('FLUTTERWAVE_URL') . '/transfers', $data)->json();
+
+            // catch error
+            if ($response['status'] === 'error') {
+                throw ValidationException::withMessages([$response['message']]);
+            }
+
+            return $response['data'];
+        } catch (\Throwable $th) {
+            throw ValidationException::withMessages([$th->getMessage()]);
+        }
+    }
 }
