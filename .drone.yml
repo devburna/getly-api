@@ -67,9 +67,6 @@ steps:
         - php artisan migrate --force
         - php artisan key:generate
         - php artisan queue:restart
-        - php artisan config:clear
-        - php artisan cache:clear
-        - php artisan route:clear
     when:
       branch:
         - dev
