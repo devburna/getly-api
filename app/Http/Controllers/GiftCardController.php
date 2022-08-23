@@ -8,7 +8,6 @@ use App\Enums\TransactionStatus;
 use App\Enums\TransactionType;
 use App\Http\Requests\StoreGiftCardItemRequest;
 use App\Http\Requests\StoreGiftCardRequest;
-use App\Http\Requests\RedeemGiftCardRequest;
 use App\Http\Requests\StoreTransactionRequest;
 use App\Models\GiftCard;
 use App\Models\User;
@@ -204,11 +203,7 @@ class GiftCardController extends Controller
         $giftCard->sender;
         $giftCard->items;
 
-        return response()->json([
-            'status' => true,
-            'data' => $giftCard,
-            'message' => 'success',
-        ]);
+        return $this->show($giftCard);
     }
 
     /**
@@ -217,64 +212,59 @@ class GiftCardController extends Controller
      * @param  \App\Http\Requests\Request  $request
      * @return \Illuminate\Http\Response
      */
-    public function redeem(RedeemGiftCardRequest $request)
+    public function redeem(Request $request)
     {
-        return DB::transaction(function () use ($request) {
-            // retrive gift card
-            $giftCard = $request->user();
-            $giftCard->sender;
-            $giftCard->items;
+        try {
+            return DB::transaction(function () use ($request) {
+                // retrive gift card
+                $giftCard = $request->user();
+                $giftCard->sender;
+                $giftCard->items;
 
-            // checks if receiver has registered
-            if (!User::where('email_address', $giftCard->receiver_email_address)->orWhere('phone_number',    $giftCard->receiver_phone_number)->first()) {
-                return response()->json([
-                    'status' => false,
-                    'data' => $giftCard,
-                    'message' => 'You must create an account to redeem gift card.',
-                ], 422);
-            }
+                // checks if receiver has registered
+                if (!User::where('email_address', $giftCard->receiver_email_address)->orWhere('phone_number',    $giftCard->receiver_phone_number)->first()) {
+                    throw ValidationException::withMessages(['You must create an account to redeem gift card.']);
+                }
 
-            // checks if gift card has been redeemed
-            if (!$giftCard->status->is(GiftCardStatus::REDEEMABLE())) {
-                return response()->json([
-                    'status' => false,
-                    'data' => $giftCard,
-                    'message' => 'This gift card has already been ' . GiftCardStatus::CLAIMED() . '.',
-                ], 422);
-            }
+                // checks if gift card has been redeemed
+                if (!$giftCard->status->is(GiftCardStatus::REDEEMABLE())) {
+                    throw ValidationException::withMessages(['This gift card has already been ' . GiftCardStatus::CLAIMED() . '.']);
+                }
 
-            // update gift card status
-            $giftCard->update([
-                'status' => GiftCardStatus::CLAIMED()
+                // update gift card status
+                $giftCard->update([
+                    'user_id' => $giftCard->user->id,
+                    'status' => GiftCardStatus::CLAIMED()
+                ]);
+
+                // credit receiver wallet
+                $giftCard->user->credit($giftCard->items->sum('price'));
+
+                // store transaction
+                $transactionRequest = new StoreTransactionRequest();
+                $transactionRequest['user_id'] = $giftCard->user->id;
+                $transactionRequest['identity'] = Str::uuid();
+                $transactionRequest['reference'] = Str::uuid();
+                $transactionRequest['type'] = TransactionType::CREDIT();
+                $transactionRequest['channel'] = TransactionChannel::WALLET();
+                $transactionRequest['amount'] = $giftCard->items->sum('price');
+                $transactionRequest['narration'] = 'Received gift card';
+                $transactionRequest['status'] = TransactionStatus::SUCCESS();
+                $transactionRequest['meta'] = json_encode($giftCard);
+                $transaction = (new TransactionController())->store($transactionRequest);
+
+                // notify user of transaction
+                $giftCard->user->notify(new Transaction($transaction));
+
+                // notify sender via email, whatsapp or sms
+                $giftCard->notify(new Redeemed());
+
+                return $this->show($giftCard);
+            });
+        } catch (\Throwable $th) {
+            throw ValidationException::withMessages([
+                'message' => $th->getMessage()
             ]);
-
-            // credit receiver wallet
-            $giftCard->user->credit($giftCard->items->sum('price'));
-
-            // store transaction
-            $transactionRequest = new StoreTransactionRequest();
-            $transactionRequest['user_id'] = $giftCard->user->id;
-            $transactionRequest['identity'] = Str::uuid();
-            $transactionRequest['reference'] = Str::uuid();
-            $transactionRequest['type'] = TransactionType::CREDIT();
-            $transactionRequest['channel'] = TransactionChannel::WALLET();
-            $transactionRequest['amount'] = array_sum($giftCard->items->sum('price'));
-            $transactionRequest['narration'] = 'Received gift card';
-            $transactionRequest['status'] = TransactionStatus::SUCCESS();
-            $transactionRequest['meta'] = json_encode($giftCard);
-            $transaction = (new TransactionController())->store($transactionRequest);
-
-            // notify user of transaction
-            $giftCard->user->notify(new Transaction($transaction));
-
-            // notify sender via email, whatsapp or sms
-            $giftCard->notify(new Redeemed());
-
-            return response()->json([
-                'status' => true,
-                'data' => $giftCard,
-                'message' => 'success',
-            ]);
-        });
+        }
     }
 }
