@@ -131,7 +131,7 @@ class GetlistItemController extends Controller
                 // checks if unfufilled
                 if (!$getlistItem->status->is(GetlistItemStatus::UNFULFILLED())) {
                     throw ValidationException::withMessages([
-                        'amount' => 'This gift is either ' . GetlistItemStatus::REDEEMABLE() . ' or has already been ' . GetlistItemStatus::CLAIMED() . '.',
+                        'This gift is either ' . GetlistItemStatus::REDEEMABLE() . ' or has already been ' . GetlistItemStatus::CLAIMED() . '.'
                     ]);
                 }
 
@@ -212,6 +212,6 @@ class GetlistItemController extends Controller
         // notify gift owner
         $getlistItem->getlist->user->notify(new Contribution($getlistItem, $contributor));
 
-        return $this->show($getlistItem);
+        return response()->json([]);
     }
 }
