@@ -1,5 +1,6 @@
 <?php
 
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Validation\ValidationException;
 
@@ -17,9 +18,10 @@ use Illuminate\Validation\ValidationException;
 Route::prefix('v1')->group(function () {
 
     #status
-    Route::get('/', function () {
+    Route::get('/', function (Request $request) {
         return response()->json([
             'status' => true,
+            'data' => $request->server(),
             'message' => 'Server is up and running.'
         ]);
     });
