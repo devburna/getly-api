@@ -55,7 +55,7 @@ class VirtualAccountController extends Controller
             $request['provider'] = 'flutterwave';
             $virtualAccount = $this->store($request);
 
-            return $this->show($virtualAccount);
+            return $this->show($virtualAccount, 'success', 201);
         } catch (\Throwable $th) {
             throw ValidationException::withMessages([
                 'message' => $th->getMessage()
@@ -83,16 +83,17 @@ class VirtualAccountController extends Controller
     /**
      * Display the specified resource.
      *
+     * @param  \App\Models\VirtualAccount  $virtualAccount
      * @param  \App\Http\Requests  $request
      * @return \Illuminate\Http\Response
      */
-    public function show(Request $request)
+    public function show(VirtualAccount $virtualAccount, $message = 'success', $code = 200)
     {
         return response()->json([
             'status' => true,
-            'data' => $request->user()->virtualAccount,
-            'message' => 'success',
-        ]);
+            'data' => $virtualAccount,
+            'message' => $message,
+        ], $code);
     }
 
     public function chargeCompleted($data)
