@@ -8,6 +8,7 @@ use App\Enums\TransactionType;
 use App\Http\Requests\FundWalletRequest;
 use App\Http\Requests\StoreTransactionRequest;
 use App\Http\Requests\StoreWalletRequest;
+use App\Http\Requests\WithdrawWalletRequest;
 use App\Models\Wallet;
 use App\Notifications\Transaction;
 use Illuminate\Http\Request;
@@ -55,10 +56,10 @@ class WalletController extends Controller
     /**
      * Update the specified resource in storage.
      *
-     * @param  \App\Http\Requests\StoreWalletRequest  $request
+     * @param  \App\Http\Requests\WithdrawWalletRequest  $request
      * @return \Illuminate\Http\Response
      */
-    public function withdraw(StoreWalletRequest $request)
+    public function withdraw(WithdrawWalletRequest $request)
     {
         try {
             return $this->show($request);
@@ -72,11 +73,10 @@ class WalletController extends Controller
     /**
      * Update the specified resource in storage.
      *
-     * @param  \App\Models\Wallet  $wallet
      * @param  \App\Http\Requests\FundWalletRequest  $request
      * @return \Illuminate\Http\Response
      */
-    public function fund(Wallet $wallet, FundWalletRequest $request)
+    public function fund(FundWalletRequest $request)
     {
         try {
             // generate payment link
