@@ -156,17 +156,14 @@ Route::prefix('v1')->group(function () {
             # details
             Route::get('', [\App\Http\Controllers\VirtualCardController::class, 'show']);
 
-            Route::prefix('{virtualCard}')->group(function () {
+            # fund
+            Route::put('', [\App\Http\Controllers\VirtualCardController::class, 'fund'])->can('update', 'virtualCard');
 
-                # fund
-                Route::put('', [\App\Http\Controllers\VirtualCardController::class, 'fund'])->can('update', 'virtualCard');
+            # withdraw
+            Route::patch('', [\App\Http\Controllers\VirtualCardController::class, 'withdraw'])->can('update', 'virtualCard');
 
-                # withdraw
-                Route::patch('', [\App\Http\Controllers\VirtualCardController::class, 'withdraw'])->can('update', 'virtualCard');
-
-                # transactions
-                Route::get('transactions', [\App\Http\Controllers\VirtualCardController::class, 'transactions'])->can('view', 'virtualCard');
-            });
+            # transactions
+            Route::get('transactions', [\App\Http\Controllers\VirtualCardController::class, 'transactions'])->can('view', 'virtualCard');
         });
 
         # virtual account
