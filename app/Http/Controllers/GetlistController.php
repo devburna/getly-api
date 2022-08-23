@@ -25,6 +25,11 @@ class GetlistController extends Controller
             $getlists = $request->user()->getlists()->orderByDesc('created_at')->paginate(20);
         }
 
+        // filter result
+        if ($request->filter) {
+            $getlists = $getlists->where('status', $request->filter);
+        }
+
         foreach ($getlists as $getlist) {
             // add item count to data as wishes
             $getlist->wishes = $getlist->items->count();
