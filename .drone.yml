@@ -6,7 +6,7 @@ type: docker
 trigger:
   ref:
     - refs/heads/dev
-    - refs/heads/TAK-*
+    - refs/heads/GET-*
 
 steps:
   - name: install
