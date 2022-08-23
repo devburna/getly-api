@@ -269,7 +269,7 @@ class FlutterwaveController extends Controller
         }
     }
 
-    public function banksBranches(Request $request)
+    public function bankBranches(Request $request)
     {
         try {
             $request->validate([
