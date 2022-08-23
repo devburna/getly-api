@@ -7,9 +7,8 @@ use App\Enums\TransactionStatus;
 use App\Enums\TransactionType;
 use App\Http\Requests\StoreTransactionRequest;
 use App\Http\Requests\StoreVirtualAccountRequest;
-use App\Models\Transaction;
 use App\Models\VirtualAccount;
-use App\Notifications\Transaction as NotificationsTransaction;
+use App\Notifications\Transaction;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
 
@@ -26,20 +25,18 @@ class VirtualAccountController extends Controller
         try {
             // checks if bvn was approved
             if (!$request->approved) {
-                return response()->json([
-                    'status' => false,
-                    'data' => null,
-                    'message' => 'Please verify your BVN.',
-                ], 422);
+                throw ValidationException::withMessages([
+                    'message' => 'Please verify your BVN.'
+                ]);
             }
 
             // checks duplicate wallet
             if ($request->user()->virtualAccount) {
-                return $this->show($request);
+                return $this->show($request->user()->virtualAccount);
             }
 
             // get bvn info
-            $bvn = (new FlutterwaveController())->verifyBvn($request->identity)->json()['data'];
+            $bvn = (new FlutterwaveController())->verifyBvn($request->identity);
 
             // generate virtual card
             $bvn['id'] = $request->user()->id;
@@ -49,24 +46,16 @@ class VirtualAccountController extends Controller
             $bvn['email_address'] = $request->user()->email_address;
             $bvn['phone_number'] = $bvn['phone_number'];
 
-            $virtualAccount = (new FlutterwaveController())->createVirtualAccount($bvn)->json()['data'];
-
-            // set user id
-            $request['user_id'] = $request->user()->id;
-
-            // set virtual account data
-            $virtualAccount['user_id'] = $request->user()->id;
-            $virtualAccount['identity'] = $virtualAccount['order_ref'];
-            $virtualAccount['account_name'] = "{$request->user()->first_name} {$request->user()->last_name}";
-            $virtualAccount['provider'] = 'flutterwave';
-
-            // new request instance
-            $storeVirtualAccountRequest = new StoreVirtualAccountRequest($virtualAccount);
+            $virtualAccount = (new FlutterwaveController())->createVirtualAccount($bvn);
 
             // store virtual account
-            $request->user()->virtualAccount = $this->store($storeVirtualAccountRequest);
+            $request['user_id'] = $request->user()->id;
+            $request['identity'] = $virtualAccount['order_ref'];
+            $request['account_name'] = "{$request->user()->first_name} {$request->user()->last_name}";
+            $request['provider'] = 'flutterwave';
+            $virtualAccount = $this->store($request);
 
-            return $this->show($request);
+            return $this->show($virtualAccount);
         } catch (\Throwable $th) {
             throw ValidationException::withMessages([
                 'message' => $th->getMessage()
@@ -130,7 +119,7 @@ class VirtualAccountController extends Controller
         $transaction = (new TransactionController())->store($transactionRequest);
 
         // notify user of transaction
-        $virtualAccount->user->notify(new NotificationsTransaction($transaction));
+        $virtualAccount->user->notify(new Transaction($transaction));
 
         return response()->json([]);
     }

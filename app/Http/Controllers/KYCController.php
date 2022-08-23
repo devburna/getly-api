@@ -12,13 +12,11 @@ class KYCController extends Controller
     {
         try {
             // get bvn info
-            $data = [];
-            $data['bvn'] = $request->identity;
-            $bvn = (new FlutterwaveController())->verifyBvn($data);
+            $bvn = (new FlutterwaveController())->verifyBvn($request->bvn);
 
             return response()->json([
                 'status' => true,
-                'data' => $bvn['data'],
+                'data' => $bvn,
                 'message' => 'success',
             ]);
         } catch (\Throwable $th) {
