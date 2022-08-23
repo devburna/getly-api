@@ -18,9 +18,6 @@ class UserController extends Controller
      */
     public function index(Request $request)
     {
-        // add wallet to data
-        $request->user()->wallet;
-
         return response()->json([
             'status' => true,
             'data' => $request->user(),
