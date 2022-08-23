@@ -59,10 +59,17 @@ steps:
       script:
         - cp /var/www/envs/getly/.env.staging /var/www/getly/api.getly.app/.env
         - pushd /var/www/getly/api.getly.app
+        - sudo chown -R $USER:www-data storage
+        - sudo chown -R $USER:www-data bootstrap/cache
+        - chmod -R 775 storage
+        - chmod -R 775 bootstrap/cache
         - chown -R www-data:www-data ./storage/
         - php artisan migrate --force
         - php artisan key:generate
         - php artisan queue:restart
+        - php artisan config:clear
+        - php artisan cache:clear
+        - php artisan route:clear
     when:
       branch:
         - dev
