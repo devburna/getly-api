@@ -73,21 +73,21 @@ Route::prefix('v1')->group(function () {
                 # details
                 Route::get('', [\App\Http\Controllers\GetlistController::class, 'show'])->can('view', 'getlist')->missing(function () {
                     throw ValidationException::withMessages([
-                        'message' => "Resouce has been removed."
+                        'message' => "Resource has been removed."
                     ]);
                 });
 
                 # update details
                 Route::post('', [\App\Http\Controllers\GetlistController::class, 'update'])->can('update', 'getlist')->missing(function () {
                     throw ValidationException::withMessages([
-                        'message' => "Resouce has been removed."
+                        'message' => "Resource has been removed."
                     ]);
                 });
 
                 # toggle
                 Route::delete('', [\App\Http\Controllers\GetlistController::class, 'destroy'])->withTrashed()->can('delete', 'getlist')->can('restore', 'getlist')->can('forceDelete', 'getlist')->missing(function () {
                     throw ValidationException::withMessages([
-                        'message' => "Resouce has been removed."
+                        'message' => "Resource has been removed."
                     ]);
                 });
             });
@@ -107,21 +107,21 @@ Route::prefix('v1')->group(function () {
                 # details
                 Route::get('', [\App\Http\Controllers\GetlistItemController::class, 'show'])->can('view', 'getlistItem')->missing(function () {
                     throw ValidationException::withMessages([
-                        'message' => "Resouce has been removed."
+                        'message' => "Resource has been removed."
                     ]);
                 });
 
                 # update details
                 Route::post('', [\App\Http\Controllers\GetlistItemController::class, 'update'])->can('update', 'getlistItem')->missing(function () {
                     throw ValidationException::withMessages([
-                        'message' => "Resouce has been removed."
+                        'message' => "Resource has been removed."
                     ]);
                 });
 
                 # toggle
                 Route::delete('', [\App\Http\Controllers\GetlistItemController::class, 'destroy'])->withTrashed()->can('delete', 'getlistItem')->can('restore', 'getlistItem')->can('forceDelete', 'getlistItem')->missing(function () {
                     throw ValidationException::withMessages([
-                        'message' => "Resouce has been removed."
+                        'message' => "Resource has been removed."
                     ]);
                 });
             });
@@ -141,21 +141,21 @@ Route::prefix('v1')->group(function () {
                 # details
                 Route::get('', [\App\Http\Controllers\GiftCardController::class, 'show'])->can('update', 'giftCard')->missing(function () {
                     throw ValidationException::withMessages([
-                        'message' => "Resouce has been removed."
+                        'message' => "Resource has been removed."
                     ]);
                 });
 
                 # update details
                 Route::post('', [\App\Http\Controllers\GiftCardController::class, 'update'])->can('update', 'giftCard')->missing(function () {
                     throw ValidationException::withMessages([
-                        'message' => "Resouce has been removed."
+                        'message' => "Resource has been removed."
                     ]);
                 });
 
                 # toggle
                 Route::delete('', [\App\Http\Controllers\GiftCardController::class, 'destroy'])->can('update', 'giftCard')->missing(function () {
                     throw ValidationException::withMessages([
-                        'message' => "Resouce has been removed."
+                        'message' => "Resource has been removed."
                     ]);
                 });
             });
@@ -196,21 +196,21 @@ Route::prefix('v1')->group(function () {
             # fund
             Route::put('', [\App\Http\Controllers\VirtualCardController::class, 'fund'])->can('update', 'virtualCard')->missing(function () {
                 throw ValidationException::withMessages([
-                    'message' => "Resouce has been removed."
+                    'message' => "Resource has been removed."
                 ]);
             });
 
             # withdraw
             Route::patch('', [\App\Http\Controllers\VirtualCardController::class, 'withdraw'])->can('update', 'virtualCard')->missing(function () {
                 throw ValidationException::withMessages([
-                    'message' => "Resouce has been removed."
+                    'message' => "Resource has been removed."
                 ]);
             });
 
             # transactions
             Route::get('transactions', [\App\Http\Controllers\VirtualCardController::class, 'transactions'])->can('view', 'virtualCard')->missing(function () {
                 throw ValidationException::withMessages([
-                    'message' => "Resouce has been removed."
+                    'message' => "Resource has been removed."
                 ]);
             });
         });
@@ -243,7 +243,7 @@ Route::prefix('v1')->group(function () {
                 # details
                 Route::post('', [\App\Http\Controllers\TransactionController::class, 'show'])->can('view', 'transaction')->missing(function () {
                     throw ValidationException::withMessages([
-                        'message' => "Resouce has been removed."
+                        'message' => "Resource has been removed."
                     ]);
                 });
             });
@@ -260,7 +260,7 @@ Route::prefix('v1')->group(function () {
             # get payment link
             Route::post('', [\App\Http\Controllers\GetlistItemController::class, 'contribute'])->missing(function () {
                 throw ValidationException::withMessages([
-                    'message' => "Resouce has been removed."
+                    'message' => "Resource has been removed."
                 ]);
             });
         });
