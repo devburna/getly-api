@@ -36,7 +36,7 @@ class VirtualCardController extends Controller
                 // checks if sender can fund virtual card
                 if (!$request->user()->hasFunds($request->amount)) {
                     throw ValidationException::withMessages([
-                        'message' => 'Insufficient funds, please fund wallet and try again.'
+                        'Insufficient funds, please fund wallet and try again.'
                     ]);
                 }
 
@@ -154,7 +154,7 @@ class VirtualCardController extends Controller
                 // checks if sender can fund virtual card
                 if (!$request->user()->hasFunds($request->amount)) {
                     throw ValidationException::withMessages([
-                        'amount' => 'Insufficient funds, please fund wallet and try again.'
+                        'Insufficient funds, please fund wallet and try again.'
                     ]);
                 }
 
@@ -196,11 +196,6 @@ class VirtualCardController extends Controller
         try {
             // checks if user has virtaul card
             return DB::transaction(function () use ($request, $virtualCard) {
-                if (!$request->user()->virtualCard) {
-                    throw ValidationException::withMessages([
-                        'message' => 'No virtual card found for this account.',
-                    ]);
-                }
 
                 // withdraw virtual card
                 $data = [];

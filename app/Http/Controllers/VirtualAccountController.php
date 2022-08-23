@@ -26,7 +26,7 @@ class VirtualAccountController extends Controller
             // checks if bvn was approved
             if (!$request->approved) {
                 throw ValidationException::withMessages([
-                    'message' => 'Please verify your BVN.'
+                    'Please verify your BVN.'
                 ]);
             }
 
