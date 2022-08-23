@@ -9,10 +9,11 @@ use Illuminate\Validation\ValidationException;
 
 class FlutterwaveController extends Controller
 {
-    private $flutterwaveSecKey;
+    private  $flutterwaveUrl, $flutterwaveSecKey;
 
     public function __construct()
     {
+        $this->flutterwaveUrl = env('FLUTTERWAVE_URL');
         $this->flutterwaveSecKey = env('FLUTTERWAVE_SEC_KEY');
     }
 
@@ -22,7 +23,7 @@ class FlutterwaveController extends Controller
             $response = Http::withHeaders([
                 'Content-Type' => 'application/json',
                 'Authorization' => "Bearer {$this->flutterwaveSecKey}",
-            ])->post(env('FLUTTERWAVE_URL') . '/payments', [
+            ])->post("{$this->flutterwaveUrl}/payments", [
                 'tx_ref' => Str::uuid(),
                 'amount' => $data['amount'],
                 'currency' => 'NGN',
@@ -56,8 +57,8 @@ class FlutterwaveController extends Controller
             $response = Http::withHeaders([
                 'Content-Type' => 'application/json',
                 'Authorization' => "Bearer {$this->flutterwaveSecKey}",
-            ])->post(env('FLUTTERWAVE_URL') . '/virtual-account-numbers', [
-                'trx_ref' =>  Str::uuid(),
+            ])->post("{$this->flutterwaveUrl}/virtual-account-numbers", [
+                'trx_ref' =>  str_shuffle($data['id'] . config('app.name')),
                 'email' => $data['email_address'],
                 'is_permanent' => true,
                 'bvn' => $data['bvn'],
@@ -84,7 +85,7 @@ class FlutterwaveController extends Controller
             $response = Http::withHeaders([
                 'Content-Type' => 'application/json',
                 'Authorization' => "Bearer {$this->flutterwaveSecKey}",
-            ])->post(env('FLUTTERWAVE_URL') . '/virtual-cards', [
+            ])->post("{$this->flutterwaveUrl}/virtual-cards", [
                 'currency' => 'USD',
                 'amount' => $data['amount'],
                 'billing_name' => "{$data['first_name']} {$data['last_name']}",
@@ -107,7 +108,7 @@ class FlutterwaveController extends Controller
             $response = Http::withHeaders([
                 'Content-Type' => 'application/json',
                 'Authorization' => "Bearer {$this->flutterwaveSecKey}",
-            ])->post(env('FLUTTERWAVE_URL') . "/virtual-cards/{$data['card']}/fund", [
+            ])->post("{$this->flutterwaveUrl}/virtual-cards/{$data['card']}/fund", [
                 'debit_currency' => 'USD',
                 'amount' => $data['amount'],
             ])->json();
@@ -129,7 +130,7 @@ class FlutterwaveController extends Controller
             $response = Http::withHeaders([
                 'Content-Type' => 'application/json',
                 'Authorization' => "Bearer {$this->flutterwaveSecKey}",
-            ])->post(env('FLUTTERWAVE_URL') . "/virtual-cards/{$data['card']}/withdraw", [
+            ])->post("{$this->flutterwaveUrl}/virtual-cards/{$data['card']}/withdraw", [
                 'amount' => $data['amount'],
             ])->json();
 
@@ -150,7 +151,7 @@ class FlutterwaveController extends Controller
             $response = Http::withHeaders([
                 'Content-Type' => 'application/json',
                 'Authorization' => "Bearer {$this->flutterwaveSecKey}",
-            ])->get(env('FLUTTERWAVE_URL') . "/virtual-cards/{$data['card']}/transactions", $data)->json();
+            ])->get("{$this->flutterwaveUrl}/virtual-cards/{$data['card']}/transactions", $data)->json();
 
             // catch error
             if ($response['status'] === 'error') {
@@ -169,7 +170,7 @@ class FlutterwaveController extends Controller
             $response = Http::withHeaders([
                 'Content-Type' => 'application/json',
                 'Authorization' => "Bearer {$this->flutterwaveSecKey}",
-            ])->put(env('FLUTTERWAVE_URL') . "/virtual-cards/{$data['card']}/status/{$data['action']}")->json();
+            ])->put("{$this->flutterwaveUrl}/virtual-cards/{$data['card']}/status/{$data['action']}")->json();
 
             // catch error
             if ($response['status'] === 'error') {
@@ -185,10 +186,11 @@ class FlutterwaveController extends Controller
     public function verifyTransaction($data)
     {
         try {
+
             $response = Http::withHeaders([
                 'Content-Type' => 'application/json',
                 'Authorization' => "Bearer {$this->flutterwaveSecKey}",
-            ])->get(env('FLUTTERWAVE_URL') . "/transactions/{$data}/verify")->json();
+            ])->get("{$this->flutterwaveUrl}/transactions/{$data}/verify")->json();
 
             // catch error
             if ($response['status'] === 'error') {
@@ -207,7 +209,7 @@ class FlutterwaveController extends Controller
             $response =  Http::withHeaders([
                 'Content-Type' => 'application/json',
                 'Authorization' => "Bearer {$this->flutterwaveSecKey}",
-            ])->get(env('FLUTTERWAVE_URL') . "/kyc/bvns/{$data}")->json();
+            ])->get("{$this->flutterwaveUrl}/kyc/bvns/{$data}")->json();
 
             // catch error
             if ($response['status'] === 'error') {
@@ -231,7 +233,7 @@ class FlutterwaveController extends Controller
             $response =  Http::withHeaders([
                 'Content-Type' => 'application/json',
                 'Authorization' => "Bearer {$this->flutterwaveSecKey}",
-            ])->post(env('FLUTTERWAVE_URL') . '/transfers', $data)->json();
+            ])->post("{$this->flutterwaveUrl}/transfers", $data)->json();
 
             // catch error
             if ($response['status'] === 'error') {
@@ -254,7 +256,7 @@ class FlutterwaveController extends Controller
             $response =  Http::withHeaders([
                 'Content-Type' => 'application/json',
                 'Authorization' => "Bearer {$this->flutterwaveSecKey}",
-            ])->get(env('FLUTTERWAVE_URL') . "/banks/{$request->country}")->json();
+            ])->get("{$this->flutterwaveUrl}/banks/{$request->country}")->json();
 
             // catch error
             if ($response['status'] === 'error') {
@@ -277,7 +279,7 @@ class FlutterwaveController extends Controller
             $response =  Http::withHeaders([
                 'Content-Type' => 'application/json',
                 'Authorization' => "Bearer {$this->flutterwaveSecKey}",
-            ])->get(env('FLUTTERWAVE_URL') . "/banks/{$request->bank_id}/branches")->json();
+            ])->get("{$this->flutterwaveUrl}/banks/{$request->bank_id}/branches")->json();
 
             // catch error
             if ($response['status'] === 'error') {
@@ -296,7 +298,7 @@ class FlutterwaveController extends Controller
             $response =  Http::withHeaders([
                 'Content-Type' => 'application/json',
                 'Authorization' => "Bearer {$this->flutterwaveSecKey}",
-            ])->post(env('FLUTTERWAVE_URL') . '/accounts/resolve', $request->all())->json();
+            ])->post("{$this->flutterwaveUrl}/accounts/resolve", $request->all())->json();
 
             // catch error
             if ($response['status'] === 'error') {
