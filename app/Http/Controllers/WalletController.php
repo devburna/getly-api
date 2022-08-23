@@ -9,9 +9,10 @@ use App\Http\Requests\FundWalletRequest;
 use App\Http\Requests\StoreTransactionRequest;
 use App\Http\Requests\StoreWalletRequest;
 use App\Models\Wallet;
-use App\Notifications\Transaction as NotificationsTransaction;
+use App\Notifications\Transaction;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 
 class WalletController extends Controller
 {
@@ -39,63 +40,62 @@ class WalletController extends Controller
     /**
      * Display the specified resource.
      *
+     * @param  \App\Models\Wallet  $wallet
      * @param  \App\Http\Requests\Request  $request
      * @return \Illuminate\Http\Response
      */
-    public function show(Request $request)
+    public function show(Wallet $wallet, $message = 'success', $code = 200)
     {
         return response()->json([
             'status' => true,
-            'data' => $request->user()->wallet,
-            'message' => 'success',
-        ]);
+            'data' => $wallet,
+            'message' => $message,
+        ], $code);
     }
 
     /**
      * Update the specified resource in storage.
      *
+     * @param  \App\Models\Wallet  $wallet
      * @param  \App\Http\Requests\StoreWalletRequest  $request
      * @return \Illuminate\Http\Response
      */
-    public function withdraw(StoreWalletRequest $request)
+    public function withdraw(Wallet $wallet, StoreWalletRequest $request)
     {
-        return response()->json([
-            'status' => true,
-            'data' => $request->all(),
-            'message' => 'success',
-        ]);
+        return $this->show($wallet);
     }
 
     /**
      * Update the specified resource in storage.
      *
+     * @param  \App\Models\Wallet  $wallet
      * @param  \App\Http\Requests\FundWalletRequest  $request
      * @return \Illuminate\Http\Response
      */
-    public function fund(FundWalletRequest $request)
+    public function fund(Wallet $wallet, FundWalletRequest $request)
     {
-        // generate payment link
-        $data = [];
-        $data['tx_ref'] = Str::uuid();
-        $data['name'] = $request->user()->first_name . ' ' . $request->user()->last_name;
-        $data['email'] = $request->user()->email_address;
-        $data['phone_number'] = $request->user()->phone_number;
-        $data['amount'] = $request->amount;
-        $data['meta'] = [
-            "consumer_id" => $request->user()->wallet->id,
-            "consumer_mac" => TransactionChannel::CARD_TOP_UP(),
-        ];
-        $data['redirect_url'] = route('flw-webhook');
+        try {
+            // generate payment link
+            $data = [];
+            $data['tx_ref'] = Str::uuid();
+            $data['name'] = $request->user()->first_name . ' ' . $request->user()->last_name;
+            $data['email'] = $request->user()->email_address;
+            $data['phone_number'] = $request->user()->phone_number;
+            $data['amount'] = $request->amount;
+            $data['meta'] = [
+                "consumer_id" => $request->user()->wallet->id,
+                "consumer_mac" => TransactionChannel::CARD_TOP_UP(),
+            ];
+            $data['redirect_url'] = route('flw-webhook');
 
-        $link = (new FlutterwaveController())->generatePaymentLink($data)->json()['data'];
+            $wallet->payment_link = (new FlutterwaveController())->generatePaymentLink($data);
 
-        return response()->json([
-            'status' => true,
-            'data' => [
-                'payment_link' => $link['link'],
-            ],
-            'message' => 'success',
-        ]);
+            return $this->show($wallet);
+        } catch (\Throwable $th) {
+            throw ValidationException::withMessages([
+                'message' => $th->getMessage()
+            ]);
+        }
     }
 
     public function chargeCompleted($data)
@@ -122,12 +122,8 @@ class WalletController extends Controller
         $transaction = (new TransactionController())->store($transactionRequest);
 
         // notify user of transaction
-        $wallet->user->notify(new NotificationsTransaction($transaction));
+        $wallet->user->notify(new Transaction($transaction));
 
-        return response()->json([
-            'status' => true,
-            'data' => $transaction,
-            'message' => 'success',
-        ], 200);
+        return response()->json([]);
     }
 }
