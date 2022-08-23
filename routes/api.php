@@ -275,4 +275,7 @@ Route::prefix('v1')->group(function () {
         # branches
         Route::get('branches', [\App\Http\Controllers\FlutterwaveController::class, 'bankBranches']);
     });
+
+    # bank details
+    Route::get('bank-details', [\App\Http\Controllers\FlutterwaveController::class, 'bankDetails']);
 });
