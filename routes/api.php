@@ -140,14 +140,11 @@ Route::prefix('v1')->group(function () {
             # details
             Route::get('', [\App\Http\Controllers\WalletController::class, 'show']);
 
-            Route::prefix('{wallet}')->group(function () {
+            # fund
+            Route::put('', [\App\Http\Controllers\WalletController::class, 'fund']);
 
-                # fund
-                Route::put('', [\App\Http\Controllers\WalletController::class, 'fund'])->can('update', 'wallet');
-
-                # withdraw
-                Route::post('', [\App\Http\Controllers\WalletController::class, 'withdraw'])->can('update', 'wallet');
-            });
+            # withdraw
+            Route::post('', [\App\Http\Controllers\WalletController::class, 'withdraw']);
         });
 
         # virtual card
