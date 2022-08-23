@@ -273,7 +273,7 @@ class FlutterwaveController extends Controller
     {
         try {
             $request->validate([
-                'bank_id' => 'required|int'
+                'bank_id' => 'required|numeric'
             ]);
 
             $response =  Http::withHeaders([
