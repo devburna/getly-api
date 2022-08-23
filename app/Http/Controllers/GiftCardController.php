@@ -65,7 +65,7 @@ class GiftCardController extends Controller
             // checks if sender can fund gift
             if (!$request->user()->hasFunds(array_sum(array_column($request->items, 'price')))) {
                 throw ValidationException::withMessages([
-                    'amount' => 'Insufficient funds, please fund wallet and try again.'
+                    'Insufficient funds, please fund wallet and try again.'
                 ]);
             }
 
@@ -124,7 +124,7 @@ class GiftCardController extends Controller
 
             // notify receiver via email, whatsapp or sms
             $giftCard['id'] = $giftCard->id;
-            $giftCard->notify(new NotificationsGiftCard($giftCard->createToken('redeem-gift-card', ['redeem-gift-card', 'authenticate'])->plainTextToken));
+            $giftCard->notify(new NotificationsGiftCard());
 
             return $this->show($giftCard, "You’ve just sent your gift card to {$request->receiver_name}", 201);
         });
@@ -193,37 +193,31 @@ class GiftCardController extends Controller
     /**
      * Display the specified resource.
      *
-     * @param  \App\Http\Requests\Request  $request
+     *
+     * @param  \App\Models\GiftCard  $giftCard
      * @return \Illuminate\Http\Response
      */
-    public function preview(Request $request)
+    public function preview(GiftCard $giftCard)
     {
-        // retrive gift card
-        $giftCard = $request->user();
-        $giftCard->sender;
-        $giftCard->items;
-
         return $this->show($giftCard);
     }
 
     /**
      * Display the specified resource.
      *
+     *
+     * @param  \App\Models\GiftCard  $giftCard
      * @param  \App\Http\Requests\Request  $request
      * @return \Illuminate\Http\Response
      */
-    public function redeem(Request $request)
+    public function redeem(Request $request, GiftCard $giftCard)
     {
         try {
-            return DB::transaction(function () use ($request) {
-                // retrive gift card
-                $giftCard = $request->user();
-                $giftCard->sender;
-                $giftCard->items;
+            return DB::transaction(function () use ($request, $giftCard) {
 
-                // checks if receiver has registered
-                if (!User::where('email_address', $giftCard->receiver_email_address)->orWhere('phone_number',    $giftCard->receiver_phone_number)->first()) {
-                    throw ValidationException::withMessages(['You must create an account to redeem gift card.']);
+                // checks if receiver owns gift
+                if ($giftCard->user_id && !$giftCard->user_id === $request->user()->id) {
+                    throw ValidationException::withMessages(["This gift does'nt belong to you."]);
                 }
 
                 // checks if gift card has been redeemed
@@ -233,16 +227,16 @@ class GiftCardController extends Controller
 
                 // update gift card status
                 $giftCard->update([
-                    'user_id' => $giftCard->user->id,
+                    'user_id' => $request->user()->id,
                     'status' => GiftCardStatus::CLAIMED()
                 ]);
 
                 // credit receiver wallet
-                $giftCard->user->credit($giftCard->items->sum('price'));
+                $request->user()->credit($giftCard->items->sum('price'));
 
                 // store transaction
                 $transactionRequest = new StoreTransactionRequest();
-                $transactionRequest['user_id'] = $giftCard->user->id;
+                $transactionRequest['user_id'] = $request->user()->id;
                 $transactionRequest['identity'] = Str::uuid();
                 $transactionRequest['reference'] = Str::uuid();
                 $transactionRequest['type'] = TransactionType::CREDIT();
@@ -254,7 +248,7 @@ class GiftCardController extends Controller
                 $transaction = (new TransactionController())->store($transactionRequest);
 
                 // notify user of transaction
-                $giftCard->user->notify(new Transaction($transaction));
+                $request->user()->notify(new Transaction($transaction));
 
                 // notify sender via email, whatsapp or sms
                 $giftCard->notify(new Redeemed());

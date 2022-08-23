@@ -12,16 +12,14 @@ class GiftCard extends Notification implements ShouldQueue
 {
     use Queueable;
 
-    private $url;
-
     /**
      * Create a new notification instance.
      *
      * @return void
      */
-    public function __construct($token)
+    public function __construct()
     {
-        $this->url = "/redeem-gift/{$token}";
+        //
     }
 
     /**
@@ -51,7 +49,7 @@ class GiftCard extends Notification implements ShouldQueue
             ->subject("Gift Card From {$notifiable->sender->first_name}")
             ->greeting("Hi, {$notifiable->receiver_name}")
             ->line("You've got a gift from {$notifiable->sender->first_name}, use the button below to redeem your gift.")
-            ->action('Redeem Gift', url($this->url))
+            ->action('Redeem Gift', url("/redeem-gift/{$notifiable->id}"))
             ->line('Thank you for using ' . config('app.name') . '!');
     }
 
@@ -65,7 +63,7 @@ class GiftCard extends Notification implements ShouldQueue
     {
         return (new VonageMessage)
             ->clientReference(config('app.name'))
-            ->content("You've got a gift from {$notifiable->sender->first_name}, use the link to redeem your gift " . url($this->url))
+            ->content("You've got a gift from {$notifiable->sender->first_name}, use the link to redeem your gift " . url("/redeem-gift/{$notifiable->id}"))
             ->unicode();
     }
 
@@ -83,7 +81,7 @@ class GiftCard extends Notification implements ShouldQueue
             'user_id' => $notifiable->user_id,
             'body' => "You just got a gift from {$senderName}.",
             'action' => 'Check it out now.',
-            'link' => url($this->url),
+            'link' => url("/redeem-gift/{$notifiable->id}"),
         ];
     }
 }

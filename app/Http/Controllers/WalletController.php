@@ -40,15 +40,14 @@ class WalletController extends Controller
     /**
      * Display the specified resource.
      *
-     * @param  \App\Models\Wallet  $wallet
      * @param  \App\Http\Requests\Request  $request
      * @return \Illuminate\Http\Response
      */
-    public function show(Wallet $wallet, $message = 'success', $code = 200)
+    public function show(Request $request, $message = 'success', $code = 200)
     {
         return response()->json([
             'status' => true,
-            'data' => $wallet,
+            'data' => $request->user()->wallet,
             'message' => $message,
         ], $code);
     }
@@ -56,13 +55,12 @@ class WalletController extends Controller
     /**
      * Update the specified resource in storage.
      *
-     * @param  \App\Models\Wallet  $wallet
      * @param  \App\Http\Requests\StoreWalletRequest  $request
      * @return \Illuminate\Http\Response
      */
-    public function withdraw(Wallet $wallet, StoreWalletRequest $request)
+    public function withdraw(StoreWalletRequest $request)
     {
-        return $this->show($wallet);
+        return $this->show($request);
     }
 
     /**
@@ -88,9 +86,9 @@ class WalletController extends Controller
             ];
             $data['redirect_url'] = route('flw-webhook');
 
-            $wallet->payment_link = (new FlutterwaveController())->generatePaymentLink($data);
+            $request->user()->wallet->payment_link = (new FlutterwaveController())->generatePaymentLink($data)['link'];
 
-            return $this->show($wallet);
+            return $this->show($request);
         } catch (\Throwable $th) {
             throw ValidationException::withMessages([
                 'message' => $th->getMessage()
