@@ -57,7 +57,7 @@ class FlutterwaveController extends Controller
                 'Content-Type' => 'application/json',
                 'Authorization' => "Bearer {$this->flutterwaveSecKey}",
             ])->post(env('FLUTTERWAVE_URL') . '/virtual-account-numbers', [
-                'trx_ref' =>  str_shuffle($data['id'] . config('app.name')),
+                'trx_ref' =>  Str::uuid(),
                 'email' => $data['email_address'],
                 'is_permanent' => true,
                 'bvn' => $data['bvn'],
