@@ -36,6 +36,10 @@ class TransactionController extends Controller
     public function create(Request $request)
     {
         try {
+            // verify request is from flutterwave
+            if ($request->header('verify-hash') && !$request->header('verify-hash') === env('FLUTTERWAVE_SECRET_HASH')) {
+                return response()->json([], 401);
+            }
 
             // verify transaction
             $response = (new FlutterwaveController())->verifyTransaction($request->transaction_id);
