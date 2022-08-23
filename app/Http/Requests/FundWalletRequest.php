@@ -24,7 +24,7 @@ class FundWalletRequest extends FormRequest
     public function rules()
     {
         return [
-            'amount' => 'required|numeric|gte:1000',
+            'amount' => 'required|numeric',
         ];
     }
 }
