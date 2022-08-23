@@ -16,6 +16,14 @@ use Illuminate\Validation\ValidationException;
 
 Route::prefix('v1')->group(function () {
 
+    #status
+    Route::get('/', function () {
+        return response()->json([
+            'status' => true,
+            'message' => 'Serve is up and running.'
+        ]);
+    });
+
     # signup
     Route::post('signup', [\App\Http\Controllers\AuthController::class, 'register']);
 
