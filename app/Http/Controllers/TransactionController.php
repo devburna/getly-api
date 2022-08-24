@@ -53,7 +53,7 @@ class TransactionController extends Controller
 
             // check for duplicate transaction
             if ($transaction && $transaction->status->is(TransactionStatus::SUCCESS()) || $transaction->status->is(TransactionStatus::FAILED())) {
-                throw ValidationException::withMessages(['Transaction already exists.']);
+                throw ValidationException::withMessages(['Duplicate transaction.']);
             }
 
             // check for card-top-up  transaction
