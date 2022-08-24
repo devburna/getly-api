@@ -50,7 +50,7 @@ class TransactionController extends Controller
             // store webhook info
             Webhook::create([
                 'origin' => $request->server('SERVER_NAME'),
-                'status' => $response['status'],
+                'status' => true,
                 'data' => json_encode($response['data']),
                 'message' => $response['message'],
             ]);
@@ -88,7 +88,12 @@ class TransactionController extends Controller
 
             return response()->json([], 422);
         } catch (\Throwable $th) {
-            return response()->json([], 422);
+            // store webhook info
+            Webhook::create([
+                'origin' => $request->server('SERVER_NAME'),
+                'status' => false,
+                'message' => $th->getMessage(),
+            ]);
         }
     }
 

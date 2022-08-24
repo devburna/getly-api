@@ -144,11 +144,11 @@ class WalletController extends Controller
         $transactionRequest = new StoreTransactionRequest();
         $transactionRequest['user_id'] = $wallet->user->id;
         $transactionRequest['identity'] = $data['data']['id'];
-        $transactionRequest['reference'] = $data['data']['flw_ref'];
+        $transactionRequest['reference'] = $data['data']['tx_ref'];
         $transactionRequest['type'] = TransactionType::CREDIT();
         $transactionRequest['channel'] = TransactionChannel::CARD_TOP_UP();
         $transactionRequest['amount'] = $data['data']['amount'];
-        $transactionRequest['narration'] = $data['data']['narration'];
+        $transactionRequest['narration'] = 'Wallet deposit';
         $transactionRequest['meta'] = json_encode($data);
 
         // verify transaction status

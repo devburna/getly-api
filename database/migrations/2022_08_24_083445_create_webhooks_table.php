@@ -16,9 +16,9 @@ return new class extends Migration
         Schema::create('webhooks', function (Blueprint $table) {
             $table->id()->from(time());
             $table->string('origin')->nullable();
-            $table->string('status')->nullable();
+            $table->boolean('status')->nullable();
             $table->longText('data')->nullable();
-            $table->string('message')->nullable();
+            $table->longText('message')->nullable();
             $table->softDeletes();
             $table->timestamps();
         });

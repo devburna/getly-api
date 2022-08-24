@@ -38,7 +38,7 @@ class Webhook extends Model
      * @var array
      */
     protected $casts = [
-        //
+        'status' => 'boolean'
     ];
 
     protected function data(): Attribute
