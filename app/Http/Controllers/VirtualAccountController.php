@@ -23,16 +23,16 @@ class VirtualAccountController extends Controller
     public function create(StoreVirtualAccountRequest $request)
     {
         try {
+            // checks duplicate wallet
+            if ($request->user()->virtualAccount) {
+                return $this->show($request->user()->virtualAccount);
+            }
+
             // checks if bvn was approved
             if (!$request->approved) {
                 throw ValidationException::withMessages([
                     'Please verify your BVN.'
                 ]);
-            }
-
-            // checks duplicate wallet
-            if ($request->user()->virtualAccount) {
-                return $this->show($request->user()->virtualAccount);
             }
 
             // get bvn info
