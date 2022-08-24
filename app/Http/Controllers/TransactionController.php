@@ -47,14 +47,6 @@ class TransactionController extends Controller
             // verify transaction
             $response = (new FlutterwaveController())->verifyTransaction($request->transaction_id);
 
-            // store webhook info
-            Webhook::create([
-                'origin' => $request->server('SERVER_NAME'),
-                'status' => true,
-                'data' => json_encode($response['data']),
-                'message' => $response['message'],
-            ]);
-
             // find transaction
             $transaction = Transaction::where('identity', $response['data']['id'])->first();
 
@@ -65,12 +57,12 @@ class TransactionController extends Controller
 
             // check for card-top-up  transaction
             if (array_key_exists('meta', $response['data']) && $response['data']['meta']['consumer_mac'] === 'card-top-up') {
-                return (new WalletController())->chargeCompleted($response);
+                (new WalletController())->chargeCompleted($response);
             }
 
             // check for contribution or buy  transaction
             if (array_key_exists('meta', $response['data']) && $response['data']['meta']['consumer_mac'] === 'contribute' || $response['data']['meta']['consumer_mac'] === 'buy') {
-                return (new GetlistItem())->chargeCompleted($response);
+                (new GetlistItem())->chargeCompleted($response);
             }
 
             // check for transfer transaction
@@ -78,15 +70,23 @@ class TransactionController extends Controller
                 // add transaction to response
                 $response['transaction'] = $transaction;
 
-                return (new WalletController())->transferCompleted($response);
+                (new WalletController())->transferCompleted($response);
             }
 
             // check for virtual account transaction
             if (array_key_exists('event', $response) && $response['event'] === 'charge.completed') {
-                return (new VirtualAccount())->chargeCompleted($response);
+                (new VirtualAccount())->chargeCompleted($response);
             }
 
-            return response()->json([], 422);
+            // store webhook info
+            Webhook::create([
+                'origin' => $request->server('SERVER_NAME'),
+                'status' => true,
+                'data' => json_encode($response['data']),
+                'message' => $response['message'],
+            ]);
+
+            return response()->json([]);
         } catch (\Throwable $th) {
             // store webhook info
             Webhook::create([
