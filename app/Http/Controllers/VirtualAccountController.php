@@ -36,7 +36,7 @@ class VirtualAccountController extends Controller
             }
 
             // get bvn info
-            $bvn = (new FlutterwaveController())->verifyBvn($request->identity);
+            $bvn = (new IdentityPass())->verifyBvn($request->identity);
 
             // generate virtual card
             $bvn['id'] = $request->user()->id;

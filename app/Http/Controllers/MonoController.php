@@ -16,6 +16,7 @@ class MonoController extends Controller
         $this->monoSecKey = env('MONO_SEC_KEY');
         $this->provider = 'mono';
     }
+
     public function createVirtualCard($data)
     {
         try {
