@@ -16,7 +16,7 @@ class KYCController extends Controller
 
             return response()->json([
                 'status' => true,
-                'data' => $bvn,
+                'data' => $bvn['bvn_data'],
                 'message' => 'success',
             ]);
         } catch (\Throwable $th) {
