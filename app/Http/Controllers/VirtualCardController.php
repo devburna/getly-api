@@ -72,7 +72,7 @@ class VirtualCardController extends Controller
                 // notify user of transaction
                 $request->user()->notify(new Transaction($transaction));
 
-                return $this->show($request, 'success', 201);
+                return $this->show($request->user()->virtualCard, 'success', 201);
             });
         } catch (\Throwable $th) {
             throw ValidationException::withMessages([
