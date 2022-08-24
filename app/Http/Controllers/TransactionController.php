@@ -7,6 +7,7 @@ use App\Http\Requests\StoreTransactionRequest;
 use App\Models\GetlistItem;
 use App\Models\Transaction;
 use App\Models\VirtualAccount;
+use App\Models\Webhook;
 use Illuminate\Http\Request;
 
 class TransactionController extends Controller
@@ -37,6 +38,7 @@ class TransactionController extends Controller
     public function create(Request $request)
     {
         try {
+
             // verify request is from flutterwave
             if ($request->header('verify-hash') && !$request->header('verify-hash') === env('FLUTTERWAVE_SECRET_HASH')) {
                 return response()->json([], 401);
@@ -44,6 +46,14 @@ class TransactionController extends Controller
 
             // verify transaction
             $response = (new FlutterwaveController())->verifyTransaction($request->transaction_id);
+
+            // store webhook info
+            Webhook::create([
+                'origin' => $request->server('SERVER_NAME'),
+                'status' => $response['status'],
+                'data' => json_encode($request['data']),
+                'message' => $response['message'],
+            ]);
 
             // find transaction
             $transaction = Transaction::where('identity', $response['data']['id'])->first();
