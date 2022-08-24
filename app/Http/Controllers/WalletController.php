@@ -123,7 +123,7 @@ class WalletController extends Controller
 
             $link = (new FlutterwaveController())->generatePaymentLink($request->all());
 
-            $request->user()->wallet->payment_link = $link['data']['link'];
+            return $request->user()->wallet->payment_link = $link['data']['link'];
 
             return $this->show($request);
         } catch (\Throwable $th) {
