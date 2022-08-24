@@ -9,6 +9,7 @@ use App\Models\Transaction;
 use App\Models\VirtualAccount;
 use App\Models\Webhook;
 use Illuminate\Http\Request;
+use Illuminate\Validation\ValidationException;
 
 class TransactionController extends Controller
 {
@@ -52,7 +53,7 @@ class TransactionController extends Controller
 
             // check for duplicate transaction
             if ($transaction && $transaction->status->is(TransactionStatus::SUCCESS()) || $transaction->status->is(TransactionStatus::FAILED())) {
-                return response()->json([], 422);
+                throw ValidationException::withMessages(['Transaction already exists.']);
             }
 
             // check for card-top-up  transaction
@@ -94,6 +95,8 @@ class TransactionController extends Controller
                 'status' => false,
                 'message' => $th->getMessage(),
             ]);
+
+            return response()->json([], 422);
         }
     }
 
