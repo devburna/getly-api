@@ -86,7 +86,7 @@ class FlutterwaveController extends Controller
                 'Content-Type' => 'application/json',
                 'Authorization' => "Bearer {$this->flutterwaveSecKey}",
             ])->post("{$this->flutterwaveUrl}/virtual-cards", [
-                'currency' => 'USD',
+                'currency' => 'NGN',
                 'amount' => $data['amount'],
                 'billing_name' => "{$data['first_name']} {$data['last_name']}",
             ])->json();
@@ -109,7 +109,7 @@ class FlutterwaveController extends Controller
                 'Content-Type' => 'application/json',
                 'Authorization' => "Bearer {$this->flutterwaveSecKey}",
             ])->post("{$this->flutterwaveUrl}/virtual-cards/{$data['card']}/fund", [
-                'debit_currency' => 'USD',
+                'debit_currency' => 'NGN',
                 'amount' => $data['amount'],
             ])->json();
 
