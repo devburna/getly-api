@@ -21,7 +21,7 @@ class MonoController extends Controller
         try {
             $responseData = Http::withHeaders([
                 'Content-Type' => 'application/json',
-                'Authorization' => "Bearer {$this->monoSecKey}",
+                'mono-sec-key' => $this->monoSecKey,
             ])->post("{$this->monoUrl}/cards/virtual", [
                 'currency' => 'NGN',
                 'amount' => $data['amount'],
@@ -39,7 +39,7 @@ class MonoController extends Controller
             // get card details
             $details = Http::withHeaders([
                 'Content-Type' => 'application/json',
-                'Authorization' => "Bearer {$this->monoSecKey}",
+                'mono-sec-key' => $this->monoSecKey,
             ])->get("{$this->monoUrl}/cards/{$responseData['data']['id']}");
 
             // set response
@@ -80,7 +80,7 @@ class MonoController extends Controller
         try {
             $responseData = Http::withHeaders([
                 'Content-Type' => 'application/json',
-                'Authorization' => "Bearer {$this->monoSecKey}",
+                'mono-sec-key' => $this->monoSecKey,
             ])->post("{$this->monoUrl}/cards/{$data['card']}/fund", [
                 'fund_source' => 'NGN',
                 'amount' => $data['amount'],
@@ -111,7 +111,7 @@ class MonoController extends Controller
             unset($data['size']);
             $responseData = Http::withHeaders([
                 'Content-Type' => 'application/json',
-                'Authorization' => "Bearer {$this->monoSecKey}",
+                'mono-sec-key' => $this->monoSecKey,
             ])->get("{$this->monoUrl}/cards/{$data['card']}", $data);
 
             // set response
@@ -136,7 +136,7 @@ class MonoController extends Controller
         try {
             $responseData =  Http::withHeaders([
                 'Content-Type' => 'application/json',
-                'Authorization' => "Bearer {$this->monoSecKey}",
+                'mono-sec-key' => $this->monoSecKey,
             ])->get("{$this->monoUrl}/lookup/bvn", [
                 'bvn' => $data
             ]);
