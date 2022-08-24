@@ -49,9 +49,9 @@ class VirtualCardController extends Controller
                 $virtualCard = (new FlutterwaveController())->createVirtualCard($data);
 
                 // store virtual card
-                $request['user_id'] = $request->user()->id;
-                $request['identity'] = $virtualCard['id'];
-                $request->user()->virtualCard = $this->store($request);
+                $virtualCard['user_id'] = $request->user()->id;
+                $virtualCard['identity'] = $virtualCard['id'];
+                $request->user()->virtualCard = $this->store($virtualCard);
 
                 // debit user wallet
                 $request->user()->debit($request->amount);
@@ -71,7 +71,7 @@ class VirtualCardController extends Controller
                 // notify user of transaction
                 $request->user()->notify(new Transaction($transaction));
 
-                return $this->show($request->user()->virtualCard, 'success', 201);
+                return $this->show($request, 'success', 201);
             });
         } catch (\Throwable $th) {
             throw ValidationException::withMessages([
@@ -112,14 +112,14 @@ class VirtualCardController extends Controller
     /**
      * Display the specified resource.
      *
-     * @param  \App\Models\VirtualCard  $virtualCard
+     * @param  \App\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
-    public function show(VirtualCard $virtualCard, $message = 'success', $code = 200)
+    public function show(Request $request, $message = 'success', $code = 200)
     {
         return response()->json([
             'status' => true,
-            'data' => $virtualCard,
+            'data' => $request->user()->virtualCard,
             'message' => $message,
         ], $code);
     }
@@ -133,12 +133,17 @@ class VirtualCardController extends Controller
     public function update(UpdateVirtualCardRequest $request)
     {
         try {
+            // checks for virtual card
+            if (!$request->user()->virtualCard) {
+                throw ValidationException::withMessages(['No virtual card found for this account.']);
+            }
+
             // toggle virtual card
             $data['action'] = $request->action;
             $data['card'] = $request->user()->virtualCard->identity;
             (new FlutterwaveController())->withdrawVirtualCard($data);
 
-            return $this->show($request->user()->virtualCard);
+            return $this->show($request);
         } catch (\Throwable $th) {
             throw ValidationException::withMessages([
                 'message' => $th->getMessage()
@@ -156,6 +161,11 @@ class VirtualCardController extends Controller
     {
         try {
             return DB::transaction(function () use ($request) {
+                // checks for virtual card
+                if (!$request->user()->virtualCard) {
+                    throw ValidationException::withMessages(['No virtual card found for this account.']);
+                }
+
                 // checks if sender can fund virtual card
                 if (!$request->user()->hasFunds($request->amount)) {
                     throw ValidationException::withMessages([
@@ -187,7 +197,7 @@ class VirtualCardController extends Controller
                 // notify user of transaction
                 $request->user()->notify(new Transaction($transaction));
 
-                return $this->show($request->user()->virtualCard);
+                return $this->show($request);
             });
         } catch (\Throwable $th) {
             throw ValidationException::withMessages([
@@ -205,8 +215,12 @@ class VirtualCardController extends Controller
     public function withdraw(StoreVirtualCardRequest $request)
     {
         try {
-            // checks if user has virtaul card
             return DB::transaction(function () use ($request) {
+                // checks for virtual card
+                if (!$request->user()->virtualCard) {
+                    throw ValidationException::withMessages(['No virtual card found for this account.']);
+                }
+
 
                 // withdraw virtual card
                 $data = [];
@@ -232,7 +246,7 @@ class VirtualCardController extends Controller
                 // notify user of transaction
                 $request->user()->notify(new Transaction($transaction));
 
-                return $this->show($request->user()->virtualCard);
+                return $this->show($request);
             });
         } catch (\Throwable $th) {
             throw ValidationException::withMessages([
@@ -244,6 +258,10 @@ class VirtualCardController extends Controller
     public function transactions(Request $request)
     {
         try {
+            // checks for virtual card
+            if (!$request->user()->virtualCard) {
+                throw ValidationException::withMessages(['No virtual card found for this account.']);
+            }
 
             //  virtual card transactions
             $data = [];
@@ -254,7 +272,7 @@ class VirtualCardController extends Controller
             $data['size'] = $request->size;
             $request->user()->virtualCard->transactions = (new FlutterwaveController())->virtualCardTransactions($data);
 
-            return $this->show($request->user()->virtualCard);
+            return $this->show($request);
         } catch (\Throwable $th) {
             throw ValidationException::withMessages([
                 'message' => $th->getMessage()

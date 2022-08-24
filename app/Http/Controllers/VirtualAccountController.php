@@ -49,10 +49,10 @@ class VirtualAccountController extends Controller
             $virtualAccount = (new FlutterwaveController())->createVirtualAccount($bvn);
 
             // store virtual account
-            $request['user_id'] = $request->user()->id;
-            $request['identity'] = $virtualAccount['order_ref'];
-            $request['account_name'] = "{$request->user()->first_name} {$request->user()->last_name}";
-            $request->user()->virtualAccount = $this->store($request);
+            $virtualAccount['user_id'] = $request->user()->id;
+            $virtualAccount['identity'] = $virtualAccount['order_ref'];
+            $virtualAccount['account_name'] = "{$request->user()->first_name} {$request->user()->last_name}";
+            $request->user()->virtualAccount = $this->store($virtualAccount);
 
             return $this->show($request, 'success', 201);
         } catch (\Throwable $th) {
