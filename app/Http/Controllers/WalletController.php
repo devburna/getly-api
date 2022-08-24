@@ -121,7 +121,9 @@ class WalletController extends Controller
             ];
             $request['redirect_url'] = route('flw-webhook');
 
-            $request->user()->wallet->payment_link = (new FlutterwaveController())->generatePaymentLink($request->all())['data']['link'];
+            $link = (new FlutterwaveController())->generatePaymentLink($request->all());
+
+            $request->user()->wallet->payment_link = $link['data']['link'];
 
             return $this->show($request);
         } catch (\Throwable $th) {
