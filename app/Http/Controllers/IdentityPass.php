@@ -21,7 +21,6 @@ class IdentityPass extends Controller
     {
         try {
             $responseData =  Http::withHeaders([
-                'Content-Type' => 'application/json',
                 'x-api-key' => $this->identityPassKey,
                 'app-id' => $this->identityPassAppId,
             ])->post("{$this->identityPassUrl}/biometrics/merchant/data/verification/bvn", [
