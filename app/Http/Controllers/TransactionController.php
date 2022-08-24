@@ -45,12 +45,12 @@ class TransactionController extends Controller
             $response = (new FlutterwaveController())->verifyTransaction($request->transaction_id);
 
             // check for duplicate transaction
-            if (Transaction::where('identity', $response['id'])->first()) {
+            if (Transaction::where('identity', $response['data']['id'])->first()) {
                 return response()->json([], 422);
             }
 
             // verify status
-            if (!$response['status'] === 'successful') {
+            if (!$response['data']['status'] === 'successful') {
                 return response()->json([], 422);
             }
 
@@ -65,12 +65,12 @@ class TransactionController extends Controller
             }
 
             // check for card-top-up  transaction
-            if (array_key_exists('meta', $response) && $response['meta']['consumer_mac'] === 'card-top-up') {
+            if (array_key_exists('meta', $response['data']) && $response['data']['meta']['consumer_mac'] === 'card-top-up') {
                 return (new WalletController())->chargeCompleted($response);
             }
 
             // check for contribution or buy  transaction
-            if (array_key_exists('meta', $response) && $response['meta']['consumer_mac'] === 'contribute' || $response['meta']['consumer_mac'] === 'buy') {
+            if (array_key_exists('meta', $response['data']) && $response['data']['meta']['consumer_mac'] === 'contribute' || $response['data']['meta']['consumer_mac'] === 'buy') {
                 return (new GetlistItem())->chargeCompleted($response);
             }
 
