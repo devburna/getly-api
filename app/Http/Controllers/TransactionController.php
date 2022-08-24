@@ -56,16 +56,6 @@ class TransactionController extends Controller
             // add transaction to response
             $response['transaction'] = $transaction;
 
-            // check for virtual account transaction
-            if (array_key_exists('event', $response) && $response['event'] === 'charge.completed') {
-                return (new VirtualAccount())->chargeCompleted($response);
-            }
-
-            // check for transfer transaction
-            if (array_key_exists('event', $response) && $response['event'] === 'transfer.completed' && array_key_exists('event.type', $response) && $response['event.type'] === 'Transfer' || $response['event.type'] === 'transfer') {
-                return (new WalletController())->transferCompleted($response);
-            }
-
             // check for card-top-up  transaction
             if (array_key_exists('meta', $response['data']) && $response['data']['meta']['consumer_mac'] === 'card-top-up') {
                 return (new WalletController())->chargeCompleted($response);
@@ -74,6 +64,16 @@ class TransactionController extends Controller
             // check for contribution or buy  transaction
             if (array_key_exists('meta', $response['data']) && $response['data']['meta']['consumer_mac'] === 'contribute' || $response['data']['meta']['consumer_mac'] === 'buy') {
                 return (new GetlistItem())->chargeCompleted($response);
+            }
+
+            // check for transfer transaction
+            if (array_key_exists('event', $response) && $response['event'] === 'transfer.completed' && array_key_exists('event.type', $response) && $response['event.type'] === 'Transfer' || $response['event.type'] === 'transfer') {
+                return (new WalletController())->transferCompleted($response);
+            }
+
+            // check for virtual account transaction
+            if (array_key_exists('event', $response) && $response['event'] === 'charge.completed') {
+                return (new VirtualAccount())->chargeCompleted($response);
             }
 
             return response()->json([], 422);
