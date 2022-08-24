@@ -53,9 +53,6 @@ class TransactionController extends Controller
                 return response()->json([], 422);
             }
 
-            // add transaction to response
-            $response['transaction'] = $transaction;
-
             // check for card-top-up  transaction
             if (array_key_exists('meta', $response['data']) && $response['data']['meta']['consumer_mac'] === 'card-top-up') {
                 return (new WalletController())->chargeCompleted($response);
@@ -68,6 +65,9 @@ class TransactionController extends Controller
 
             // check for transfer transaction
             if (array_key_exists('event', $response) && $response['event'] === 'transfer.completed' && array_key_exists('event.type', $response) && $response['event.type'] === 'Transfer' || $response['event.type'] === 'transfer') {
+                // add transaction to response
+                $response['transaction'] = $transaction;
+
                 return (new WalletController())->transferCompleted($response);
             }
 
