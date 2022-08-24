@@ -21,6 +21,7 @@ return new class extends Migration
             $table->string('account_number');
             $table->string('account_name');
             $table->string('provider');
+            $table->longText('meta')->after('provider');
             $table->softDeletes();
             $table->timestamps();
         });

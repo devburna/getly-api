@@ -33,6 +33,7 @@ return new class extends Migration
             $table->string('callback_url');
             $table->boolean('is_active');
             $table->string('provider');
+            $table->longText('meta')->after('provider');
             $table->softDeletes();
             $table->timestamps();
         });
