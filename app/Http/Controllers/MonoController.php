@@ -19,25 +19,31 @@ class MonoController extends Controller
     public function createVirtualCard($data)
     {
         try {
-            $response = Http::withHeaders([
+            $responseData = Http::withHeaders([
                 'Content-Type' => 'application/json',
                 'Authorization' => "Bearer {$this->monoSecKey}",
             ])->post("{$this->monoUrl}/cards/virtual", [
                 'currency' => 'NGN',
                 'amount' => $data['amount'],
                 'account_holder' => "{$data['first_name']} {$data['last_name']}",
-            ])->json();
+            ]);
+
+            // set response
+            $responseData = $responseData->json();
 
             // catch error
-            if ($response['status'] === 'error') {
-                throw ValidationException::withMessages([$response['message']]);
+            if ($responseData['status'] === 'error') {
+                throw ValidationException::withMessages([$responseData['message']]);
             }
 
             // get card details
             $details = Http::withHeaders([
                 'Content-Type' => 'application/json',
                 'Authorization' => "Bearer {$this->monoSecKey}",
-            ])->get("{$this->monoUrl}/cards/{$response['id']}")->json();
+            ])->get("{$this->monoUrl}/cards/{$responseData['data']['id']}");
+
+            // set response
+            $details = $details->json();
 
             // catch error
             if ($details['status'] === 'error') {
@@ -45,24 +51,23 @@ class MonoController extends Controller
             }
 
             // set card data
-            $responseData = $details['data'];
-            $responseData['id'] = $details['id'];
-            $responseData['account_id'] = Str::uuid();
-            $responseData['currency'] = $details['currency'];
-            $responseData['card_hash'] = Str::uuid();
-            $responseData['card_pan'] = $details['card_number'];
-            $responseData['masked_pan'] = $details['card_pan'];
-            $responseData['name_on_card'] = $details['name_on_card'];
-            $responseData['expiration'] = "{$details['expiry_month']}/{$details['expiry_year']}";
-            $responseData['cvv'] = $details['cvv'];
-            $responseData['address_1'] = "{$details['billing_address']['street']} {$details['billing_address']['state']}";
-            $responseData['address_2'] = null;
-            $responseData['city'] = $details['billing_address']['street'];
-            $responseData['state'] = $details['billing_address']['state'];
-            $responseData['zip_code'] = $details['billing_address']['postal_code'];
-            $responseData['callback_url'] = route('payment');
-            $responseData['is_active'] = true;
-            $responseData['provider'] = $this->provider;
+            $responseData['data']['id'] = $details['data']['id'];
+            $responseData['data']['account_id'] = Str::uuid();
+            $responseData['data']['currency'] = $details['data']['currency'];
+            $responseData['data']['card_hash'] = Str::uuid();
+            $responseData['data']['card_pan'] = $details['data']['card_number'];
+            $responseData['data']['masked_pan'] = $details['data']['card_pan'];
+            $responseData['data']['name_on_card'] = $details['data']['name_on_card'];
+            $responseData['data']['expiration'] = "{$details['data']['expiry_month']}/{$details['data']['expiry_year']}";
+            $responseData['data']['cvv'] = $details['data']['cvv'];
+            $responseData['data']['address_1'] = "{$details['data']['billing_address']['street']} {$details['data']['billing_address']['state']}";
+            $responseData['data']['address_2'] = null;
+            $responseData['data']['city'] = $details['data']['billing_address']['street'];
+            $responseData['data']['state'] = $details['data']['billing_address']['state'];
+            $responseData['data']['zip_code'] = $details['data']['billing_address']['postal_code'];
+            $responseData['data']['callback_url'] = route('payment');
+            $responseData['data']['is_active'] = true;
+            $responseData['data']['provider'] = $this->provider;
 
             return $responseData;
         } catch (\Throwable $th) {
@@ -73,23 +78,25 @@ class MonoController extends Controller
     public function fundVirtualCard($data)
     {
         try {
-            $response = Http::withHeaders([
+            $responseData = Http::withHeaders([
                 'Content-Type' => 'application/json',
                 'Authorization' => "Bearer {$this->monoSecKey}",
             ])->post("{$this->monoUrl}/cards/{$data['card']}/fund", [
                 'fund_source' => 'NGN',
                 'amount' => $data['amount'],
                 'meta' => $data['meta']
-            ])->json();
+            ]);
+
+            // set response
+            $responseData = $responseData->json();
 
             // catch error
-            if ($response['status'] === 'error') {
-                throw ValidationException::withMessages([$response['message']]);
+            if ($responseData['status'] === 'error') {
+                throw ValidationException::withMessages([$responseData['message']]);
             }
 
-            // set provider
-            $responseData = $response['data'];
-            $responseData['provider'] = $this->provider;
+            // set response data
+            $responseData['data']['provider'] = $this->provider;
 
             return $responseData;
         } catch (\Throwable $th) {
@@ -102,17 +109,17 @@ class MonoController extends Controller
         try {
             unset($data['index']);
             unset($data['size']);
-            $response = Http::withHeaders([
+            $responseData = Http::withHeaders([
                 'Content-Type' => 'application/json',
                 'Authorization' => "Bearer {$this->flutterwaveSecKey}",
-            ])->get("{$this->monoUrl}/cards/{$data['card']}", $data)->json();
+            ])->get("{$this->monoUrl}/cards/{$data['card']}", $data);
 
             // set response
-            $responseData = $response->json();
+            $responseData = $responseData->json();
 
             // catch error
-            if ($response['status'] === 'error') {
-                throw ValidationException::withMessages([$response['message']]);
+            if ($responseData['status'] === 'error') {
+                throw ValidationException::withMessages([$responseData['message']]);
             }
 
             // set response data

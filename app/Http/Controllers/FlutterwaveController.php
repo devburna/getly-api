@@ -21,7 +21,7 @@ class FlutterwaveController extends Controller
     public function generatePaymentLink($data)
     {
         try {
-            $response = Http::withHeaders([
+            $responseData = Http::withHeaders([
                 'Content-Type' => 'application/json',
                 'Authorization' => "Bearer {$this->flutterwaveSecKey}",
             ])->post("{$this->flutterwaveUrl}/payments", [
@@ -42,11 +42,11 @@ class FlutterwaveController extends Controller
             ]);
 
             // set response
-            $responseData = $response->json();
+            $responseData = $responseData->json();
 
             // catch error
-            if ($response['status'] === 'error') {
-                throw ValidationException::withMessages([$response['message']]);
+            if ($responseData['status'] === 'error') {
+                throw ValidationException::withMessages([$responseData['message']]);
             }
 
             // set response data
@@ -61,7 +61,7 @@ class FlutterwaveController extends Controller
     public function createVirtualAccount($data)
     {
         try {
-            $response = Http::withHeaders([
+            $responseData = Http::withHeaders([
                 'Content-Type' => 'application/json',
                 'Authorization' => "Bearer {$this->flutterwaveSecKey}",
             ])->post("{$this->flutterwaveUrl}/virtual-account-numbers", [
@@ -76,11 +76,11 @@ class FlutterwaveController extends Controller
             ]);
 
             // set response
-            $responseData = $response->json();
+            $responseData = $responseData->json();
 
             // catch error
-            if ($response['status'] === 'error') {
-                throw ValidationException::withMessages([$response['message']]);
+            if ($responseData['status'] === 'error') {
+                throw ValidationException::withMessages([$responseData['message']]);
             }
 
             // set response data
@@ -98,7 +98,7 @@ class FlutterwaveController extends Controller
     public function createVirtualCard($data)
     {
         try {
-            $response = Http::withHeaders([
+            $responseData = Http::withHeaders([
                 'Content-Type' => 'application/json',
                 'Authorization' => "Bearer {$this->flutterwaveSecKey}",
             ])->post("{$this->flutterwaveUrl}/virtual-cards", [
@@ -108,30 +108,30 @@ class FlutterwaveController extends Controller
             ]);
 
             // set response
-            $responseData = $response->json();
+            $responseData = $responseData->json();
 
             // catch error
-            if ($response['status'] === 'error') {
-                throw ValidationException::withMessages([$response['message']]);
+            if ($responseData['status'] === 'error') {
+                throw ValidationException::withMessages([$responseData['message']]);
             }
 
             // set card data
-            $responseData['data']['id'] = $response['id'];
-            $responseData['data']['account_id'] = $response['account_id'];
-            $responseData['data']['currency'] = $response['currency'];
-            $responseData['data']['card_hash'] = $response['card_hash'];
-            $responseData['data']['card_pan'] = $response['card_pan'];
-            $responseData['data']['masked_pan'] = $response['masked_pan'];
-            $responseData['data']['name_on_card'] = $response['name_on_card'];
-            $responseData['data']['expiration'] = $response['expiration'];
-            $responseData['data']['cvv'] = $response['cvv'];
-            $responseData['data']['address_1'] = $response['address_1'];
-            $responseData['data']['address_2'] = $response['address_2'];
-            $responseData['data']['city'] = $response['city'];
-            $responseData['data']['state'] = $response['state'];
-            $responseData['data']['zip_code'] = $response['zip_code'];
-            $responseData['data']['callback_url'] = $response['callback_url'];
-            $responseData['data']['is_active'] = $response['is_active'];
+            $responseData['data']['id'] = $responseData['data']['id'];
+            $responseData['data']['account_id'] = $responseData['data']['account_id'];
+            $responseData['data']['currency'] = $responseData['data']['currency'];
+            $responseData['data']['card_hash'] = $responseData['data']['card_hash'];
+            $responseData['data']['card_pan'] = $responseData['data']['card_pan'];
+            $responseData['data']['masked_pan'] = $responseData['data']['masked_pan'];
+            $responseData['data']['name_on_card'] = $responseData['data']['name_on_card'];
+            $responseData['data']['expiration'] = $responseData['data']['expiration'];
+            $responseData['data']['cvv'] = $responseData['data']['cvv'];
+            $responseData['data']['address_1'] = $responseData['data']['address_1'];
+            $responseData['data']['address_2'] = $responseData['data']['address_2'];
+            $responseData['data']['city'] = $responseData['data']['city'];
+            $responseData['data']['state'] = $responseData['data']['state'];
+            $responseData['data']['zip_code'] = $responseData['data']['zip_code'];
+            $responseData['data']['callback_url'] = $responseData['data']['callback_url'];
+            $responseData['data']['is_active'] = $responseData['data']['is_active'];
             $responseData['data']['provider'] = 'flutterwave';
 
             return $responseData;
@@ -143,7 +143,7 @@ class FlutterwaveController extends Controller
     public function fundVirtualCard($data)
     {
         try {
-            $response = Http::withHeaders([
+            $responseData = Http::withHeaders([
                 'Content-Type' => 'application/json',
                 'Authorization' => "Bearer {$this->flutterwaveSecKey}",
             ])->post("{$this->flutterwaveUrl}/virtual-cards/{$data['card']}/fund", [
@@ -152,11 +152,11 @@ class FlutterwaveController extends Controller
             ]);
 
             // set response
-            $responseData = $response->json();
+            $responseData = $responseData->json();
 
             // catch error
-            if ($response['status'] === 'error') {
-                throw ValidationException::withMessages([$response['message']]);
+            if ($responseData['status'] === 'error') {
+                throw ValidationException::withMessages([$responseData['message']]);
             }
 
             // set response data
@@ -171,7 +171,7 @@ class FlutterwaveController extends Controller
     public function withdrawVirtualCard($data)
     {
         try {
-            $response = Http::withHeaders([
+            $responseData = Http::withHeaders([
                 'Content-Type' => 'application/json',
                 'Authorization' => "Bearer {$this->flutterwaveSecKey}",
             ])->post("{$this->flutterwaveUrl}/virtual-cards/{$data['card']}/withdraw", [
@@ -179,11 +179,11 @@ class FlutterwaveController extends Controller
             ]);
 
             // set response
-            $responseData = $response->json();
+            $responseData = $responseData->json();
 
             // catch error
-            if ($response['status'] === 'error') {
-                throw ValidationException::withMessages([$response['message']]);
+            if ($responseData['status'] === 'error') {
+                throw ValidationException::withMessages([$responseData['message']]);
             }
 
             // set response data
@@ -199,17 +199,17 @@ class FlutterwaveController extends Controller
     {
         try {
             unset($data['page']);
-            $response = Http::withHeaders([
+            $responseData = Http::withHeaders([
                 'Content-Type' => 'application/json',
                 'Authorization' => "Bearer {$this->flutterwaveSecKey}",
             ])->get("{$this->flutterwaveUrl}/virtual-cards/{$data['card']}/transactions", $data);
 
             // set response
-            $responseData = $response->json();
+            $responseData = $responseData->json();
 
             // catch error
-            if ($response['status'] === 'error') {
-                throw ValidationException::withMessages([$response['message']]);
+            if ($responseData['status'] === 'error') {
+                throw ValidationException::withMessages([$responseData['message']]);
             }
 
             // set response data
@@ -224,17 +224,17 @@ class FlutterwaveController extends Controller
     public function toggleVirtualCard($data)
     {
         try {
-            $response = Http::withHeaders([
+            $responseData = Http::withHeaders([
                 'Content-Type' => 'application/json',
                 'Authorization' => "Bearer {$this->flutterwaveSecKey}",
             ])->put("{$this->flutterwaveUrl}/virtual-cards/{$data['card']}/status/{$data['action']}");
 
             // set response
-            $responseData = $response->json();
+            $responseData = $responseData->json();
 
             // catch error
-            if ($response['status'] === 'error') {
-                throw ValidationException::withMessages([$response['message']]);
+            if ($responseData['status'] === 'error') {
+                throw ValidationException::withMessages([$responseData['message']]);
             }
 
             // set response data
@@ -250,17 +250,17 @@ class FlutterwaveController extends Controller
     {
         try {
 
-            $response = Http::withHeaders([
+            $responseData = Http::withHeaders([
                 'Content-Type' => 'application/json',
                 'Authorization' => "Bearer {$this->flutterwaveSecKey}",
             ])->get("{$this->flutterwaveUrl}/transactions/{$data}/verify");
 
             // set response
-            $responseData = $response->json();
+            $responseData = $responseData->json();
 
             // catch error
-            if ($response['status'] === 'error') {
-                throw ValidationException::withMessages([$response['message']]);
+            if ($responseData['status'] === 'error') {
+                throw ValidationException::withMessages([$responseData['message']]);
             }
 
             // set response data
@@ -275,17 +275,17 @@ class FlutterwaveController extends Controller
     public function verifyBvn($data)
     {
         try {
-            $response =  Http::withHeaders([
+            $responseData =  Http::withHeaders([
                 'Content-Type' => 'application/json',
                 'Authorization' => "Bearer {$this->flutterwaveSecKey}",
             ])->get("{$this->flutterwaveUrl}/kyc/bvns/{$data}");
 
             // set response
-            $responseData = $response->json();
+            $responseData = $responseData->json();
 
             // catch error
-            if ($response['status'] === 'error') {
-                throw ValidationException::withMessages([$response['message']]);
+            if ($responseData['status'] === 'error') {
+                throw ValidationException::withMessages([$responseData['message']]);
             }
 
             // set response data
@@ -305,17 +305,17 @@ class FlutterwaveController extends Controller
             $data['narration'] = array_key_exists('narration', $data) ? $data['narration'] : null;
             $data['callback_url'] = route('flw-webhook');
 
-            $response =  Http::withHeaders([
+            $responseData =  Http::withHeaders([
                 'Content-Type' => 'application/json',
                 'Authorization' => "Bearer {$this->flutterwaveSecKey}",
             ])->post("{$this->flutterwaveUrl}/transfers", $data);
 
             // set response
-            $responseData = $response->json();
+            $responseData = $responseData->json();
 
             // catch error
-            if ($response['status'] === 'error') {
-                throw ValidationException::withMessages([$response['message']]);
+            if ($responseData['status'] === 'error') {
+                throw ValidationException::withMessages([$responseData['message']]);
             }
 
             // set response data
@@ -334,17 +334,17 @@ class FlutterwaveController extends Controller
                 'country' => 'required|in:ng,gh,ke,ug,za,tz'
             ]);
 
-            $response =  Http::withHeaders([
+            $responseData =  Http::withHeaders([
                 'Content-Type' => 'application/json',
                 'Authorization' => "Bearer {$this->flutterwaveSecKey}",
             ])->get("{$this->flutterwaveUrl}/banks/{$request->country}");
 
             // set response
-            $responseData = $response->json();
+            $responseData = $responseData->json();
 
             // catch error
-            if ($response['status'] === 'error') {
-                throw ValidationException::withMessages([$response['message']]);
+            if ($responseData['status'] === 'error') {
+                throw ValidationException::withMessages([$responseData['message']]);
             }
 
             // set response data
@@ -363,17 +363,17 @@ class FlutterwaveController extends Controller
                 'bank_id' => 'required|numeric'
             ]);
 
-            $response =  Http::withHeaders([
+            $responseData =  Http::withHeaders([
                 'Content-Type' => 'application/json',
                 'Authorization' => "Bearer {$this->flutterwaveSecKey}",
             ])->get("{$this->flutterwaveUrl}/banks/{$request->bank_id}/branches");
 
             // set response
-            $responseData = $response->json();
+            $responseData = $responseData->json();
 
             // catch error
-            if ($response['status'] === 'error') {
-                throw ValidationException::withMessages([$response['message']]);
+            if ($responseData['status'] === 'error') {
+                throw ValidationException::withMessages([$responseData['message']]);
             }
 
             // set response data
@@ -388,17 +388,17 @@ class FlutterwaveController extends Controller
     public function bankDetails(Request $request)
     {
         try {
-            $response =  Http::withHeaders([
+            $responseData =  Http::withHeaders([
                 'Content-Type' => 'application/json',
                 'Authorization' => "Bearer {$this->flutterwaveSecKey}",
             ])->post("{$this->flutterwaveUrl}/accounts/resolve", $request->all());
 
             // set response
-            $responseData = $response->json();
+            $responseData = $responseData->json();
 
             // catch error
-            if ($response['status'] === 'error') {
-                throw ValidationException::withMessages([$response['message']]);
+            if ($responseData['status'] === 'error') {
+                throw ValidationException::withMessages([$responseData['message']]);
             }
 
             // set response data

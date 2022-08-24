@@ -50,6 +50,7 @@ class VirtualCardController extends Controller
                 // store virtual card
                 $virtualCard['user_id'] = $request->user()->id;
                 $virtualCard['identity'] = $virtualCard['data']['id'];
+                $virtualCard['provider'] = $virtualCard['data']['provider'];
                 $data['meta'] = json_encode($virtualCard);
                 $request->user()->virtualCard = $this->store($virtualCard);
 

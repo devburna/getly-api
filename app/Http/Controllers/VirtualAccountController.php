@@ -52,6 +52,7 @@ class VirtualAccountController extends Controller
             $virtualAccount['user_id'] = $request->user()->id;
             $virtualAccount['identity'] = $virtualAccount['data']['order_ref'];
             $virtualAccount['account_name'] = "{$request->user()->first_name} {$request->user()->last_name}";
+            $virtualAccount['provider'] = $virtualAccount['data']['provider'];
             $request->user()->virtualAccount = $this->store($virtualAccount);
 
             return $this->show($request, 'success', 201);
