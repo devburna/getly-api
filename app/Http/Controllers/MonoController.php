@@ -8,7 +8,7 @@ use Illuminate\Validation\ValidationException;
 
 class MonoController extends Controller
 {
-    private  $monoUrl, $monoSecKey;
+    private $monoUrl, $monoSecKey;
 
     public function __construct()
     {
