@@ -90,10 +90,7 @@ class WalletController extends Controller
             $transactionRequest['narration'] = "Transfer to {$transfer['data']['full_name']}";
             $transactionRequest['status'] = TransactionStatus::NEW();
             $transactionRequest['meta'] = json_encode($transfer);
-            $transaction = (new TransactionController())->store($transactionRequest);
-
-            // notify user of transaction
-            $request->user()->notify(new Transaction($transaction));
+            $request->user()->transaction = (new TransactionController())->store($transactionRequest);
 
             return $this->show($request);
         } catch (\Throwable $th) {
