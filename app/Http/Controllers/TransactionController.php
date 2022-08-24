@@ -51,6 +51,11 @@ class TransactionController extends Controller
             // find transaction
             $transaction = Transaction::where('identity', $response['data']['id'])->first();
 
+            throw ValidationException::withMessages([json_encode([
+                'transaction' => $transaction,
+                $response
+            ])]);
+
             // check for duplicate transaction
             if ($transaction && $transaction->status->is(TransactionStatus::SUCCESS()) || $transaction->status->is(TransactionStatus::FAILED())) {
                 throw ValidationException::withMessages(['Duplicate transaction.']);
