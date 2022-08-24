@@ -52,14 +52,9 @@ class TransactionController extends Controller
             $transaction = Transaction::where('identity', $response['data']['id'])->first();
 
             // check for duplicate transaction
-            if ($transaction && $transaction->status->is(TransactionStatus::SUCCESS()) || $transaction->status->is(TransactionStatus::FAILED())) {
+            if ($transaction && $transaction->status->is(TransactionStatus::SUCCESS()) || $transaction && $transaction->status->is(TransactionStatus::FAILED())) {
                 throw ValidationException::withMessages(['Duplicate transaction.']);
             }
-
-            throw ValidationException::withMessages([json_encode([
-                'transaction' => $transaction,
-                $response
-            ])]);
 
             // check for card-top-up transaction
             if (array_key_exists('meta', $response['data']) && $response['data']['meta']['consumer_mac'] === 'card-top-up') {
