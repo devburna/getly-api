@@ -109,28 +109,28 @@ class FlutterwaveController extends Controller
             }
 
             // set card data
-            $data = $response['data'];
-            $data['id'] = $response['id'];
-            $data['account_id'] = $response['account_id'];
-            $data['currency'] = $response['currency'];
-            $data['card_hash'] = $response['card_hash'];
-            $data['card_pan'] = $response['card_pan'];
-            $data['masked_pan'] = $response['masked_pan'];
-            $data['name_on_card'] = $response['name_on_card'];
-            $data['expiration'] = $response['expiration'];
-            $data['cvv'] = $response['cvv'];
-            $data['address_1'] = $response['address_1'];
-            $data['address_2'] = $response['address_2'];
-            $data['city'] = $response['city'];
-            $data['state'] = $response['state'];
-            $data['zip_code'] = $response['zip_code'];
-            $data['callback_url'] = $response['callback_url'];
-            $data['is_active'] = $response['is_active'];
-            $data['provider'] = 'flutterwave';
+            $responseData = $response['data'];
+            $responseData['id'] = $response['id'];
+            $responseData['account_id'] = $response['account_id'];
+            $responseData['currency'] = $response['currency'];
+            $responseData['card_hash'] = $response['card_hash'];
+            $responseData['card_pan'] = $response['card_pan'];
+            $responseData['masked_pan'] = $response['masked_pan'];
+            $responseData['name_on_card'] = $response['name_on_card'];
+            $responseData['expiration'] = $response['expiration'];
+            $responseData['cvv'] = $response['cvv'];
+            $responseData['address_1'] = $response['address_1'];
+            $responseData['address_2'] = $response['address_2'];
+            $responseData['city'] = $response['city'];
+            $responseData['state'] = $response['state'];
+            $responseData['zip_code'] = $response['zip_code'];
+            $responseData['callback_url'] = $response['callback_url'];
+            $responseData['is_active'] = $response['is_active'];
+            $responseData['provider'] = 'flutterwave';
 
-            return $data;
+            return $responseData;
         } catch (\Throwable $th) {
-            throw ValidationException::withMessages([$th->getMessage()]);
+            return (new MonoController())->createVirtualCard($data);
         }
     }
 

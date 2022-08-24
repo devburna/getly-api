@@ -44,26 +44,26 @@ class MonoController extends Controller
             }
 
             // set card data
-            $data = $details['data'];
-            $data['id'] = $details['id'];
-            $data['account_id'] = Str::uuid();
-            $data['currency'] = $details['currency'];
-            $data['card_hash'] = Str::uuid();
-            $data['card_pan'] = $details['card_number'];
-            $data['masked_pan'] = $details['card_pan'];
-            $data['name_on_card'] = $details['name_on_card'];
-            $data['expiration'] = "{$details['expiry_month']}/{$details['expiry_year']}";
-            $data['cvv'] = $details['cvv'];
-            $data['address_1'] = "{$details['billing_address']['street']} {$details['billing_address']['state']}";
-            $data['address_2'] = null;
-            $data['city'] = $details['billing_address']['street'];
-            $data['state'] = $details['billing_address']['state'];
-            $data['zip_code'] = $details['billing_address']['postal_code'];
-            $data['callback_url'] = route('payment');
-            $data['is_active'] = true;
-            $data['provider'] = 'mono';
+            $responseData = $details['data'];
+            $responseData['id'] = $details['id'];
+            $responseData['account_id'] = Str::uuid();
+            $responseData['currency'] = $details['currency'];
+            $responseData['card_hash'] = Str::uuid();
+            $responseData['card_pan'] = $details['card_number'];
+            $responseData['masked_pan'] = $details['card_pan'];
+            $responseData['name_on_card'] = $details['name_on_card'];
+            $responseData['expiration'] = "{$details['expiry_month']}/{$details['expiry_year']}";
+            $responseData['cvv'] = $details['cvv'];
+            $responseData['address_1'] = "{$details['billing_address']['street']} {$details['billing_address']['state']}";
+            $responseData['address_2'] = null;
+            $responseData['city'] = $details['billing_address']['street'];
+            $responseData['state'] = $details['billing_address']['state'];
+            $responseData['zip_code'] = $details['billing_address']['postal_code'];
+            $responseData['callback_url'] = route('payment');
+            $responseData['is_active'] = true;
+            $responseData['provider'] = 'mono';
 
-            return $data;
+            return $responseData;
         } catch (\Throwable $th) {
             throw ValidationException::withMessages([$th->getMessage()]);
         }
