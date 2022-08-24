@@ -261,6 +261,9 @@ Route::prefix('v1')->group(function () {
 
         # notifications
         Route::get('notifications', [\App\Http\Controllers\NotificationController::class, 'index']);
+
+        # webhooks
+        Route::get('webhooks', [\App\Http\Controllers\WebhookController::class, 'index']);
     });
 
     # gifts

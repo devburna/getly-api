@@ -15,7 +15,13 @@ class WebhookController extends Controller
      */
     public function index()
     {
-        //
+        $webHooks = Webhook::orderByDesc('created_at')->paginate(20);
+
+        return response()->json([
+            'status' => true,
+            'data' => $webHooks,
+            'message' => 'success',
+        ]);
     }
 
     /**
