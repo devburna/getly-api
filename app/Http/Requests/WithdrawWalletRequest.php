@@ -25,6 +25,7 @@ class WithdrawWalletRequest extends FormRequest
     {
         return [
             'currency' => 'required|string|in:ngn',
+            'amount' => 'required|numeric',
             // ngn required paylaod
             'ngn.account_bank' => 'required_if:currency,ngn|numeric',
             'ngn.account_number' => 'required_if:currency,ngn',
