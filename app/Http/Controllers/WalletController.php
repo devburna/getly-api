@@ -111,7 +111,7 @@ class WalletController extends Controller
         try {
             // generate payment link
             $request['tx_ref'] = Str::uuid();
-            $request['name'] = $request->user()->first_name . ' ' . $request->user()->last_name;
+            $request['name'] = "{$request->user()->first_name} {$request->user()->last_name}";
             $request['email'] = $request->user()->email_address;
             $request['phone_number'] = $request->user()->phone_number;
             $request['amount'] = $request->amount;
