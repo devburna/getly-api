@@ -162,7 +162,7 @@ class GetlistItemController extends Controller
                 $link = (new FlutterwaveController())->generatePaymentLink($data);
 
                 // set payment link
-                $getlistItem->payment_link = $link['link'];
+                $getlistItem->payment_link = $link['data']['link'];
 
                 return $this->show($getlistItem);
             });
@@ -176,23 +176,23 @@ class GetlistItemController extends Controller
     public function chargeCompleted($data)
     {
         // find getlist
-        if (!$getlistItem = GetlistItem::find($data['meta']['consumer_id'])) {
+        if (!$getlistItem = GetlistItem::find($data['data']['meta']['consumer_id'])) {
             return response()->json([], 422);
         }
 
         // checks duplicate entry
-        if (GetlistItemContributor::where('reference', $data['id'])->first()) {
+        if (GetlistItemContributor::where('reference', $data['data']['id'])->first()) {
             return response()->json([], 422);
         }
 
         // set contributor details
-        $data['getlist_item_id'] = $data['meta']['consumer_id'];
-        $data['reference'] = $data['id'];
-        $data['full_name'] = $data['customer']['name'];
-        $data['email_address'] = $data['customer']['email'];
-        $data['phone_number'] = $data['customer']['phone_number'];
-        $data['type'] =  $data['meta']['consumer_mac'];
-        $data['amount'] = $data['amount'];
+        $data['getlist_item_id'] = $data['data']['meta']['consumer_id'];
+        $data['reference'] = $data['data']['id'];
+        $data['full_name'] = $data['data']['customer']['name'];
+        $data['email_address'] = $data['data']['customer']['email'];
+        $data['phone_number'] = $data['data']['customer']['phone_number'];
+        $data['type'] =  $data['data']['meta']['consumer_mac'];
+        $data['amount'] = $data['data']['amount'];
         $data['meta'] = json_encode($data);
 
         // store contributor details

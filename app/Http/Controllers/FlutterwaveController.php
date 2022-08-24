@@ -39,16 +39,18 @@ class FlutterwaveController extends Controller
                     'title' => config('app.name'),
                     'logo' => asset('img/logo.png')
                 ]
-            ])->json();
+            ]);
+
+            // set response
+            $responseData = $response->json();
 
             // catch error
             if ($response['status'] === 'error') {
                 throw ValidationException::withMessages([$response['message']]);
             }
 
-            // set provider
-            $responseData = $response['data'];
-            $responseData['provider'] = $this->provider;
+            // set response data
+            $responseData['data']['provider'] = $this->provider;
 
             return $responseData;
         } catch (\Throwable $th) {
@@ -71,20 +73,21 @@ class FlutterwaveController extends Controller
                 'firstname' => $data['first_name'],
                 'lastname' => $data['last_name'],
                 'narration' => "{$data['first_name']} {$data['last_name']}"
-            ])->json();
+            ]);
+
+            // set response
+            $responseData = $response->json();
 
             // catch error
             if ($response['status'] === 'error') {
                 throw ValidationException::withMessages([$response['message']]);
             }
 
-            // set provider
-            $responseData = $response['data'];
-            $responseData['provider'] = $this->provider;
+            // set response data
+            $responseData['data']['provider'] = $this->provider;
 
-            // set provider
-            $responseData = $response['data'];
-            $responseData['provider'] = $this->provider;
+            // set response data
+            $responseData['data']['provider'] = $this->provider;
 
             return $responseData;
         } catch (\Throwable $th) {
@@ -102,7 +105,10 @@ class FlutterwaveController extends Controller
                 'currency' => 'NGN',
                 'amount' => $data['amount'],
                 'billing_name' => "{$data['first_name']} {$data['last_name']}",
-            ])->json();
+            ]);
+
+            // set response
+            $responseData = $response->json();
 
             // catch error
             if ($response['status'] === 'error') {
@@ -110,24 +116,23 @@ class FlutterwaveController extends Controller
             }
 
             // set card data
-            $responseData = $response['data'];
-            $responseData['id'] = $response['id'];
-            $responseData['account_id'] = $response['account_id'];
-            $responseData['currency'] = $response['currency'];
-            $responseData['card_hash'] = $response['card_hash'];
-            $responseData['card_pan'] = $response['card_pan'];
-            $responseData['masked_pan'] = $response['masked_pan'];
-            $responseData['name_on_card'] = $response['name_on_card'];
-            $responseData['expiration'] = $response['expiration'];
-            $responseData['cvv'] = $response['cvv'];
-            $responseData['address_1'] = $response['address_1'];
-            $responseData['address_2'] = $response['address_2'];
-            $responseData['city'] = $response['city'];
-            $responseData['state'] = $response['state'];
-            $responseData['zip_code'] = $response['zip_code'];
-            $responseData['callback_url'] = $response['callback_url'];
-            $responseData['is_active'] = $response['is_active'];
-            $responseData['provider'] = 'flutterwave';
+            $responseData['data']['id'] = $response['id'];
+            $responseData['data']['account_id'] = $response['account_id'];
+            $responseData['data']['currency'] = $response['currency'];
+            $responseData['data']['card_hash'] = $response['card_hash'];
+            $responseData['data']['card_pan'] = $response['card_pan'];
+            $responseData['data']['masked_pan'] = $response['masked_pan'];
+            $responseData['data']['name_on_card'] = $response['name_on_card'];
+            $responseData['data']['expiration'] = $response['expiration'];
+            $responseData['data']['cvv'] = $response['cvv'];
+            $responseData['data']['address_1'] = $response['address_1'];
+            $responseData['data']['address_2'] = $response['address_2'];
+            $responseData['data']['city'] = $response['city'];
+            $responseData['data']['state'] = $response['state'];
+            $responseData['data']['zip_code'] = $response['zip_code'];
+            $responseData['data']['callback_url'] = $response['callback_url'];
+            $responseData['data']['is_active'] = $response['is_active'];
+            $responseData['data']['provider'] = 'flutterwave';
 
             return $responseData;
         } catch (\Throwable $th) {
@@ -144,16 +149,18 @@ class FlutterwaveController extends Controller
             ])->post("{$this->flutterwaveUrl}/virtual-cards/{$data['card']}/fund", [
                 'debit_currency' => 'NGN',
                 'amount' => $data['amount'],
-            ])->json();
+            ]);
+
+            // set response
+            $responseData = $response->json();
 
             // catch error
             if ($response['status'] === 'error') {
                 throw ValidationException::withMessages([$response['message']]);
             }
 
-            // set provider
-            $responseData = $response['data'];
-            $responseData['provider'] = $this->provider;
+            // set response data
+            $responseData['data']['provider'] = $this->provider;
 
             return $responseData;
         } catch (\Throwable $th) {
@@ -169,16 +176,18 @@ class FlutterwaveController extends Controller
                 'Authorization' => "Bearer {$this->flutterwaveSecKey}",
             ])->post("{$this->flutterwaveUrl}/virtual-cards/{$data['card']}/withdraw", [
                 'amount' => $data['amount'],
-            ])->json();
+            ]);
+
+            // set response
+            $responseData = $response->json();
 
             // catch error
             if ($response['status'] === 'error') {
                 throw ValidationException::withMessages([$response['message']]);
             }
 
-            // set provider
-            $responseData = $response['data'];
-            $responseData['provider'] = $this->provider;
+            // set response data
+            $responseData['data']['provider'] = $this->provider;
 
             return $responseData;
         } catch (\Throwable $th) {
@@ -192,16 +201,18 @@ class FlutterwaveController extends Controller
             $response = Http::withHeaders([
                 'Content-Type' => 'application/json',
                 'Authorization' => "Bearer {$this->flutterwaveSecKey}",
-            ])->get("{$this->flutterwaveUrl}/virtual-cards/{$data['card']}/transactions", $data)->json();
+            ])->get("{$this->flutterwaveUrl}/virtual-cards/{$data['card']}/transactions", $data);
+
+            // set response
+            $responseData = $response->json();
 
             // catch error
             if ($response['status'] === 'error') {
                 throw ValidationException::withMessages([$response['message']]);
             }
 
-            // set provider
-            $responseData = $response['data'];
-            $responseData['provider'] = $this->provider;
+            // set response data
+            $responseData['data']['provider'] = $this->provider;
 
             return $responseData;
         } catch (\Throwable $th) {
@@ -215,16 +226,18 @@ class FlutterwaveController extends Controller
             $response = Http::withHeaders([
                 'Content-Type' => 'application/json',
                 'Authorization' => "Bearer {$this->flutterwaveSecKey}",
-            ])->put("{$this->flutterwaveUrl}/virtual-cards/{$data['card']}/status/{$data['action']}")->json();
+            ])->put("{$this->flutterwaveUrl}/virtual-cards/{$data['card']}/status/{$data['action']}");
+
+            // set response
+            $responseData = $response->json();
 
             // catch error
             if ($response['status'] === 'error') {
                 throw ValidationException::withMessages([$response['message']]);
             }
 
-            // set provider
-            $responseData = $response['data'];
-            $responseData['provider'] = $this->provider;
+            // set response data
+            $responseData['data']['provider'] = $this->provider;
 
             return $responseData;
         } catch (\Throwable $th) {
@@ -239,16 +252,18 @@ class FlutterwaveController extends Controller
             $response = Http::withHeaders([
                 'Content-Type' => 'application/json',
                 'Authorization' => "Bearer {$this->flutterwaveSecKey}",
-            ])->get("{$this->flutterwaveUrl}/transactions/{$data}/verify")->json();
+            ])->get("{$this->flutterwaveUrl}/transactions/{$data}/verify");
+
+            // set response
+            $responseData = $response->json();
 
             // catch error
             if ($response['status'] === 'error') {
                 throw ValidationException::withMessages([$response['message']]);
             }
 
-            // set provider
-            $responseData = $response['data'];
-            $responseData['provider'] = $this->provider;
+            // set response data
+            $responseData['data']['provider'] = $this->provider;
 
             return $responseData;
         } catch (\Throwable $th) {
@@ -262,16 +277,18 @@ class FlutterwaveController extends Controller
             $response =  Http::withHeaders([
                 'Content-Type' => 'application/json',
                 'Authorization' => "Bearer {$this->flutterwaveSecKey}",
-            ])->get("{$this->flutterwaveUrl}/kyc/bvns/{$data}")->json();
+            ])->get("{$this->flutterwaveUrl}/kyc/bvns/{$data}");
+
+            // set response
+            $responseData = $response->json();
 
             // catch error
             if ($response['status'] === 'error') {
                 throw ValidationException::withMessages([$response['message']]);
             }
 
-            // set provider
-            $responseData = $response['data'];
-            $responseData['provider'] = $this->provider;
+            // set response data
+            $responseData['data']['provider'] = $this->provider;
 
             return $responseData;
         } catch (\Throwable $th) {
@@ -290,16 +307,18 @@ class FlutterwaveController extends Controller
             $response =  Http::withHeaders([
                 'Content-Type' => 'application/json',
                 'Authorization' => "Bearer {$this->flutterwaveSecKey}",
-            ])->post("{$this->flutterwaveUrl}/transfers", $data)->json();
+            ])->post("{$this->flutterwaveUrl}/transfers", $data);
+
+            // set response
+            $responseData = $response->json();
 
             // catch error
             if ($response['status'] === 'error') {
                 throw ValidationException::withMessages([$response['message']]);
             }
 
-            // set provider
-            $responseData = $response['data'];
-            $responseData['provider'] = $this->provider;
+            // set response data
+            $responseData['data']['provider'] = $this->provider;
 
             return $responseData;
         } catch (\Throwable $th) {
@@ -317,16 +336,18 @@ class FlutterwaveController extends Controller
             $response =  Http::withHeaders([
                 'Content-Type' => 'application/json',
                 'Authorization' => "Bearer {$this->flutterwaveSecKey}",
-            ])->get("{$this->flutterwaveUrl}/banks/{$request->country}")->json();
+            ])->get("{$this->flutterwaveUrl}/banks/{$request->country}");
+
+            // set response
+            $responseData = $response->json();
 
             // catch error
             if ($response['status'] === 'error') {
                 throw ValidationException::withMessages([$response['message']]);
             }
 
-            // set provider
-            $responseData = $response['data'];
-            $responseData['provider'] = $this->provider;
+            // set response data
+            $responseData['data']['provider'] = $this->provider;
 
             return $responseData;
         } catch (\Throwable $th) {
@@ -344,16 +365,18 @@ class FlutterwaveController extends Controller
             $response =  Http::withHeaders([
                 'Content-Type' => 'application/json',
                 'Authorization' => "Bearer {$this->flutterwaveSecKey}",
-            ])->get("{$this->flutterwaveUrl}/banks/{$request->bank_id}/branches")->json();
+            ])->get("{$this->flutterwaveUrl}/banks/{$request->bank_id}/branches");
+
+            // set response
+            $responseData = $response->json();
 
             // catch error
             if ($response['status'] === 'error') {
                 throw ValidationException::withMessages([$response['message']]);
             }
 
-            // set provider
-            $responseData = $response['data'];
-            $responseData['provider'] = $this->provider;
+            // set response data
+            $responseData['data']['provider'] = $this->provider;
 
             return $responseData;
         } catch (\Throwable $th) {
@@ -367,16 +390,18 @@ class FlutterwaveController extends Controller
             $response =  Http::withHeaders([
                 'Content-Type' => 'application/json',
                 'Authorization' => "Bearer {$this->flutterwaveSecKey}",
-            ])->post("{$this->flutterwaveUrl}/accounts/resolve", $request->all())->json();
+            ])->post("{$this->flutterwaveUrl}/accounts/resolve", $request->all());
+
+            // set response
+            $responseData = $response->json();
 
             // catch error
             if ($response['status'] === 'error') {
                 throw ValidationException::withMessages([$response['message']]);
             }
 
-            // set provider
-            $responseData = $response['data'];
-            $responseData['provider'] = $this->provider;
+            // set response data
+            $responseData['data']['provider'] = $this->provider;
 
             return $responseData;
         } catch (\Throwable $th) {

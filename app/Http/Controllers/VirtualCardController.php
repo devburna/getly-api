@@ -51,7 +51,7 @@ class VirtualCardController extends Controller
 
                 // store virtual card
                 $virtualCard['user_id'] = $request->user()->id;
-                $virtualCard['identity'] = $virtualCard['id'];
+                $virtualCard['identity'] = $virtualCard['data']['id'];
                 $data['meta'] = json_encode($virtualCard);
                 $request->user()->virtualCard = $this->store($virtualCard);
 
@@ -279,7 +279,7 @@ class VirtualCardController extends Controller
             $data['to'] = $request->to;
             $data['index'] = $request->index;
             $data['size'] = $request->size;
-            $request->user()->virtualCard->transactions = (new FlutterwaveController())->virtualCardTransactions($data);
+            $request->user()->virtualCard->transactions = (new FlutterwaveController())->virtualCardTransactions($data)['data'];
 
             return $this->show($request);
         } catch (\Throwable $th) {

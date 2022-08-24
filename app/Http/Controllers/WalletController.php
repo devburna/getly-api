@@ -118,7 +118,7 @@ class WalletController extends Controller
             ];
             $data['redirect_url'] = route('flw-webhook');
 
-            $request->user()->wallet->payment_link = (new FlutterwaveController())->generatePaymentLink($data)['link'];
+            $request->user()->wallet->payment_link = (new FlutterwaveController())->generatePaymentLink($data)['data']['link'];
 
             return $this->show($request);
         } catch (\Throwable $th) {
@@ -131,22 +131,22 @@ class WalletController extends Controller
     public function chargeCompleted($data)
     {
         // find virtual account
-        if (!$wallet = Wallet::where('id', $data['meta']['consumer_id'])->first()) {
+        if (!$wallet = Wallet::where('id', $data['data']['meta']['consumer_id'])->first()) {
             return response()->json([], 422);
         }
 
         // credit user wallet
-        $wallet->user->credit($data['amount']);
+        $wallet->user->credit($data['data']['amount']);
 
         // store transaction
         $transactionRequest = new StoreTransactionRequest();
         $transactionRequest['user_id'] = $wallet->user->id;
-        $transactionRequest['identity'] = $data['id'];
-        $transactionRequest['reference'] = $data['flw_ref'];
+        $transactionRequest['identity'] = $data['data']['id'];
+        $transactionRequest['reference'] = $data['data']['flw_ref'];
         $transactionRequest['type'] = TransactionType::CREDIT();
         $transactionRequest['channel'] = TransactionChannel::CARD_TOP_UP();
-        $transactionRequest['amount'] = $data['amount'];
-        $transactionRequest['narration'] = $data['narration'];
+        $transactionRequest['amount'] = $data['data']['amount'];
+        $transactionRequest['narration'] = $data['data']['narration'];
         $transactionRequest['status'] = TransactionStatus::SUCCESS();
         $transactionRequest['meta'] = json_encode($data);
         $transaction = (new TransactionController())->store($transactionRequest);
@@ -160,7 +160,7 @@ class WalletController extends Controller
     public function transferCompleted($data)
     {
         // find transaction
-        if (!$transaction = ModelsTransaction::where('reference', $data['reference'])->first()) {
+        if (!$transaction = ModelsTransaction::where('reference', $data['data']['reference'])->first()) {
             return response()->json([], 422);
         }
 
@@ -169,35 +169,35 @@ class WalletController extends Controller
             return response()->json([], 422);
         }
 
-        if (TransactionStatus::FAILED() === strtolower($data['status'])) {
+        if (TransactionStatus::FAILED() === strtolower($data['data']['status'])) {
 
             // update transaction status to failed
             $transaction->update([
-                'status' => strtolower($data['status'])
+                'status' => strtolower($data['data']['status'])
             ]);
 
             // store transaction
             $transactionRequest = new StoreTransactionRequest();
             $transactionRequest['user_id'] = $transaction->user->id;
-            $transactionRequest['identity'] = $data['id'];
-            $transactionRequest['reference'] = $data['reference'];
+            $transactionRequest['identity'] = $data['data']['id'];
+            $transactionRequest['reference'] = $data['data']['reference'];
             $transactionRequest['type'] = TransactionType::CREDIT();
             $transactionRequest['channel'] = TransactionChannel::WALLET();
-            $transactionRequest['amount'] = $data['amount'];
+            $transactionRequest['amount'] = $data['data']['amount'];
             $transactionRequest['narration'] = 'Transfer reversal';
             $transactionRequest['status'] = TransactionStatus::SUCCESS();
             $transactionRequest['meta'] = json_encode($data);
             $transaction = (new TransactionController())->store($transactionRequest);
 
             // credit user wallet
-            $transaction->user->credit($data['amount']);
+            $transaction->user->credit($data['data']['amount']);
 
             return response()->json([]);
         }
 
         // update transaction status
         $transaction->update([
-            'status' => strtolower($data['status'])
+            'status' => strtolower($data['data']['status'])
         ]);
 
         // notify user of transaction
