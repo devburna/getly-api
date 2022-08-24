@@ -101,10 +101,7 @@ class VirtualAccountController extends Controller
             return response()->json([], 422);
         }
 
-        // credit user wallet
-        $virtualAccount->user->credit($data['data']['amount']);
-
-        // store transaction
+        // set transaction data
         $transactionRequest = new StoreTransactionRequest();
         $transactionRequest['user_id'] = $virtualAccount->user->id;
         $transactionRequest['identity'] = $data['data']['id'];
@@ -113,8 +110,21 @@ class VirtualAccountController extends Controller
         $transactionRequest['channel'] = TransactionChannel::VIRTUAL_ACCOUNT();
         $transactionRequest['amount'] = $data['data']['amount'];
         $transactionRequest['narration'] = $data['data']['narration'];
-        $transactionRequest['status'] = TransactionStatus::SUCCESS();
         $transactionRequest['meta'] = json_encode($data);
+
+        // verify transaction status
+        if (!$data['data']['status'] === 'successful') {
+            // set status
+            $transactionRequest['status'] = TransactionStatus::FAILED();
+        } else {
+            // set status
+            $transactionRequest['status'] = TransactionStatus::SUCCESS();
+
+            // credit user wallet
+            $virtualAccount->user->credit($data['data']['amount']);
+        }
+
+        // store transaction
         $transaction = (new TransactionController())->store($transactionRequest);
 
         // notify user of transaction

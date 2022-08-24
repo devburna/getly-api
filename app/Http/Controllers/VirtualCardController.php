@@ -41,13 +41,11 @@ class VirtualCardController extends Controller
                 }
 
                 // generate virtual card
-                $data = [];
-                $data['amount'] = $request->amount;
-                $data['first_name'] = $request->user()->first_name;
-                $data['last_name'] = $request->user()->last_name;
+                $request['first_name'] = $request->user()->first_name;
+                $request['last_name'] = $request->user()->last_name;
 
                 // check current provider
-                $virtualCard = (new FlutterwaveController())->createVirtualCard($data);
+                $virtualCard = (new FlutterwaveController())->createVirtualCard($request->all());
 
                 // store virtual card
                 $virtualCard['user_id'] = $request->user()->id;
@@ -141,9 +139,9 @@ class VirtualCardController extends Controller
             }
 
             // toggle virtual card
-            $data['action'] = $request->action;
-            $data['card'] = $request->user()->virtualCard->identity;
-            (new FlutterwaveController())->withdrawVirtualCard($data);
+            $request['card'] = $request->user()->virtualCard->identity;
+            $request['action'] = $request->action;
+            (new FlutterwaveController())->withdrawVirtualCard($request->all());
 
             return $this->show($request);
         } catch (\Throwable $th) {
@@ -176,15 +174,13 @@ class VirtualCardController extends Controller
                 }
 
                 // fund virtual card
-                $data = [];
-                $data['card'] = $request->user()->virtualCard->identity;
-                $data['amount'] = $request->amount;
-                $data['meta'] = "{$request->user()->virtualCard->identity}";
+                $request['card'] = $request->user()->virtualCard->identity;
+                $request['meta'] = "{$request->user()->virtualCard->identity}";
 
                 // checks provider
                 $response = match ($request->user()->virtualCard->provider) {
-                    'flutterwave' => (new FlutterwaveController())->fundVirtualCard($data),
-                    'mono' => (new MonoController())->fundVirtualCard($data),
+                    'flutterwave' => (new FlutterwaveController())->fundVirtualCard($request->all()),
+                    'mono' => (new MonoController())->fundVirtualCard($request->all()),
                 };
 
                 // debit user wallet
@@ -232,10 +228,8 @@ class VirtualCardController extends Controller
 
 
                 // withdraw virtual card
-                $data = [];
-                $data['card'] = $request->user()->virtualCard->identity;
-                $data['amount'] = $request->amount;
-                (new FlutterwaveController())->withdrawVirtualCard($data);
+                $request['card'] = $request->user()->virtualCard->identity;
+                (new FlutterwaveController())->withdrawVirtualCard($request->all());
 
                 // credit user wallet
                 $request->user()->credit($request->amount);
@@ -273,18 +267,12 @@ class VirtualCardController extends Controller
             }
 
             //  virtual card transactions
-            $data = [];
-            $data['card'] = $request->user()->virtualCard->identity;
-            $data['from'] = $request->from;
-            $data['to'] = $request->to;
-            $data['index'] = $request->index;
-            $data['size'] = $request->size;
-            $data['page'] = $request->page;
+            $request['card'] = $request->user()->virtualCard->identity;
 
             // checks provider
             $request->user()->virtualCard->transactions = match ($request->user()->virtualCard->provider) {
-                'flutterwave' => (new FlutterwaveController())->virtualCardTransactions($data)['data'],
-                'mono' => (new FlutterwaveController())->virtualCardTransactions($data)['data']
+                'flutterwave' => (new FlutterwaveController())->virtualCardTransactions($request->all())['data'],
+                'mono' => (new FlutterwaveController())->virtualCardTransactions($request->all())['data']
             };
 
             return $this->show($request);

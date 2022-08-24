@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\TransactionStatus;
 use App\Http\Requests\StoreTransactionRequest;
 use App\Models\GetlistItem;
 use App\Models\Transaction;
@@ -44,15 +45,16 @@ class TransactionController extends Controller
             // verify transaction
             $response = (new FlutterwaveController())->verifyTransaction($request->transaction_id);
 
+            // find transaction
+            $transaction = Transaction::where('identity', $response['data']['id'])->first();
+
             // check for duplicate transaction
-            if (Transaction::where('identity', $response['data']['id'])->first()) {
+            if ($transaction && $transaction->status->is(TransactionStatus::SUCCESS()) || $transaction->status->is(TransactionStatus::FAILED())) {
                 return response()->json([], 422);
             }
 
-            // verify status
-            if (!$response['data']['status'] === 'successful') {
-                return response()->json([], 422);
-            }
+            // add transaction to response
+            $response['transaction'] = $transaction;
 
             // check for virtual account transaction
             if (array_key_exists('event', $response) && $response['event'] === 'charge.completed') {
