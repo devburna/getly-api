@@ -51,7 +51,7 @@ class TransactionController extends Controller
             Webhook::create([
                 'origin' => $request->server('SERVER_NAME'),
                 'status' => $response['status'],
-                'data' => json_encode($request['data']),
+                'data' => json_encode($response['data']),
                 'message' => $response['message'],
             ]);
 
