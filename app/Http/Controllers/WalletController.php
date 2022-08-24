@@ -65,7 +65,7 @@ class WalletController extends Controller
         try {
 
             $transfer = match ($request->currency) {
-                'usd' => (new FlutterwaveController())->bankTransfer($request->ngn),
+                'usd' => (new FlutterwaveController())->bankTransfer($request->usd),
                 'ngn' => (new FlutterwaveController())->bankTransfer($request->ngn),
             };
 

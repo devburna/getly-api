@@ -29,8 +29,8 @@ class WithdrawWalletRequest extends FormRequest
             // ngn required paylaod
             'ngn.account_bank' => 'required_if:currency,ngn|numeric',
             'ngn.account_number' => 'required_if:currency,ngn',
-            'ngn.amount' => 'required_if:currency,ngn|numeric',
-            'ngn.currency' => 'required_if:currency,ngn|string',
+            'ngn.amount' => 'required_if:currency,ngn|numeric|same:amount',
+            'ngn.currency' => 'required_if:currency,ngn|string|same:currency',
         ];
     }
 }
