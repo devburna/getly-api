@@ -17,6 +17,7 @@ class VirtualCard extends Model
      * @var string[]
      */
     protected $fillable = [
+        'id',
         'user_id',
         'identity',
         'account_id',
@@ -49,6 +50,9 @@ class VirtualCard extends Model
         'account_id',
         'card_hash',
         'provider',
+        'deleted_at',
+        'created_at',
+        'updated_at'
     ];
 
     /**

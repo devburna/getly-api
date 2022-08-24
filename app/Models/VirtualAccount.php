@@ -17,6 +17,7 @@ class VirtualAccount extends Model
      * @var string[]
      */
     protected $fillable = [
+        'id',
         'user_id',
         'identity',
         'bank_name',
@@ -33,7 +34,10 @@ class VirtualAccount extends Model
     protected $hidden = [
         'user_id',
         'identity',
-        'provider'
+        'provider',
+        'deleted_at',
+        'created_at',
+        'updated_at'
     ];
 
     /**
