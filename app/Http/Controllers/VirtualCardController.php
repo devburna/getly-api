@@ -51,6 +51,7 @@ class VirtualCardController extends Controller
                 // store virtual card
                 $virtualCard['user_id'] = $request->user()->id;
                 $virtualCard['identity'] = $virtualCard['id'];
+                $data['meta'] = json_encode($virtualCard);
                 $request->user()->virtualCard = $this->store($virtualCard);
 
                 // debit user wallet

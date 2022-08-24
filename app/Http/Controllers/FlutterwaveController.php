@@ -108,8 +108,24 @@ class FlutterwaveController extends Controller
                 throw ValidationException::withMessages([$response['message']]);
             }
 
-            // set provider
+            // set card data
             $data = $response['data'];
+            $data['id'] = $response['id'];
+            $data['account_id'] = $response['account_id'];
+            $data['currency'] = $response['currency'];
+            $data['card_hash'] = $response['card_hash'];
+            $data['card_pan'] = $response['card_pan'];
+            $data['masked_pan'] = $response['masked_pan'];
+            $data['name_on_card'] = $response['name_on_card'];
+            $data['expiration'] = $response['expiration'];
+            $data['cvv'] = $response['cvv'];
+            $data['address_1'] = $response['address_1'];
+            $data['address_2'] = $response['address_2'];
+            $data['city'] = $response['city'];
+            $data['state'] = $response['state'];
+            $data['zip_code'] = $response['zip_code'];
+            $data['callback_url'] = $response['callback_url'];
+            $data['is_active'] = $response['is_active'];
             $data['provider'] = 'flutterwave';
 
             return $data;

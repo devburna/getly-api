@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
 class MonoController extends Controller
@@ -33,11 +34,25 @@ class MonoController extends Controller
 
             // set provider
             $data = $response['data'];
+            $data['id'] = $response['id'];
+            $data['account_id'] = Str::uuid();
+            $data['currency'] = $response['currency'];
+            $data['card_hash'] = Str::uuid();
+            $data['card_pan'] = $response['card_number'];
+            $data['masked_pan'] = $response['card_pan'];
+            $data['name_on_card'] = $response['name_on_card'];
+            $data['expiration'] = "{$response['expiry_month']}/{$response['expiry_year']}";
+            $data['cvv'] = $response['cvv'];
+            $data['address_1'] = $response['address_1'];
+            $data['address_2'] = null;
+            $data['city'] = $response['billing_address']['street'];
+            $data['state'] = $response['billing_address']['state'];
+            $data['zip_code'] = $response['billing_address']['postal_code'];
+            $data['callback_url'] = null;
+            $data['is_active'] = true;
             $data['provider'] = 'mono';
 
             return $data;
-
-            return $response['data'];
         } catch (\Throwable $th) {
             throw ValidationException::withMessages([$th->getMessage()]);
         }

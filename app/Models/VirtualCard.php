@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -36,6 +37,7 @@ class VirtualCard extends Model
         'callback_url',
         'is_active',
         'provider',
+        'meta'
     ];
 
     /**
@@ -67,5 +69,12 @@ class VirtualCard extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    protected function meta(): Attribute
+    {
+        return Attribute::make(
+            get: fn ($value, $attributes) => json_decode($value),
+        );
     }
 }
