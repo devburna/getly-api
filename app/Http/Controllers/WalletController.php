@@ -150,7 +150,7 @@ class WalletController extends Controller
         $transactionRequest['amount'] = $data['data']['amount'];
         $transactionRequest['narration'] = 'Wallet deposit';
         $transactionRequest['meta'] = json_encode($data);
-        throw ValidationException::withMessages(['Wallet.']);
+        throw ValidationException::withMessages($data['data']);
         // verify transaction status
         if (!$data['data']['status'] === 'successful') {
             // set status
