@@ -52,7 +52,6 @@ class VirtualAccountController extends Controller
             $request['user_id'] = $request->user()->id;
             $request['identity'] = $virtualAccount['order_ref'];
             $request['account_name'] = "{$request->user()->first_name} {$request->user()->last_name}";
-            $request['provider'] = 'flutterwave';
             $request->user()->virtualAccount = $this->store($request);
 
             return $this->show($request, 'success', 201);

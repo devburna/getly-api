@@ -51,7 +51,6 @@ class VirtualCardController extends Controller
                 // store virtual card
                 $request['user_id'] = $request->user()->id;
                 $request['identity'] = $virtualCard['id'];
-                $request['provider'] = 'flutterwave';
                 $request->user()->virtualCard = $this->store($request);
 
                 // debit user wallet
