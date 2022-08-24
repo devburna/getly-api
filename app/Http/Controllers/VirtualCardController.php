@@ -179,7 +179,13 @@ class VirtualCardController extends Controller
                 $data = [];
                 $data['card'] = $request->user()->virtualCard->identity;
                 $data['amount'] = $request->amount;
-                (new FlutterwaveController())->fundVirtualCard($data);
+                $data['meta'] = "{$request->user()->virtualCard->identity}";
+
+                // checks provider
+                $response = match ($request->user()->virtualCard->provider) {
+                    'flutterwave' => (new FlutterwaveController())->fundVirtualCard($data),
+                    'mono' => (new MonoController())->fundVirtualCard($data),
+                };
 
                 // debit user wallet
                 $request->user()->debit($request->amount);
@@ -194,6 +200,7 @@ class VirtualCardController extends Controller
                 $transactionRequest['amount'] = $request->amount;
                 $transactionRequest['narration'] = 'Virtual card top up';
                 $transactionRequest['status'] = TransactionStatus::SUCCESS();
+                $transactionRequest['meta'] = json_encode($response);
                 $transaction = (new TransactionController())->store($transactionRequest);
 
                 // notify user of transaction

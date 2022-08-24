@@ -9,12 +9,13 @@ use Illuminate\Validation\ValidationException;
 
 class FlutterwaveController extends Controller
 {
-    private  $flutterwaveUrl, $flutterwaveSecKey;
+    private  $flutterwaveUrl, $flutterwaveSecKey, $provider;
 
     public function __construct()
     {
         $this->flutterwaveUrl = env('FLUTTERWAVE_URL');
         $this->flutterwaveSecKey = env('FLUTTERWAVE_SEC_KEY');
+        $this->provider = 'flutterwave';
     }
 
     public function generatePaymentLink($data)
@@ -46,10 +47,10 @@ class FlutterwaveController extends Controller
             }
 
             // set provider
-            $data = $response['data'];
-            $data['provider'] = 'flutterwave';
+            $responseData = $response['data'];
+            $responseData['provider'] = $this->provider;
 
-            return $data;
+            return $responseData;
         } catch (\Throwable $th) {
             throw ValidationException::withMessages([$th->getMessage()]);
         }
@@ -78,14 +79,14 @@ class FlutterwaveController extends Controller
             }
 
             // set provider
-            $data = $response['data'];
-            $data['provider'] = 'flutterwave';
+            $responseData = $response['data'];
+            $responseData['provider'] = $this->provider;
 
             // set provider
-            $data = $response['data'];
-            $data['provider'] = 'flutterwave';
+            $responseData = $response['data'];
+            $responseData['provider'] = $this->provider;
 
-            return $data;
+            return $responseData;
         } catch (\Throwable $th) {
             throw ValidationException::withMessages([$th->getMessage()]);
         }
@@ -151,10 +152,10 @@ class FlutterwaveController extends Controller
             }
 
             // set provider
-            $data = $response['data'];
-            $data['provider'] = 'flutterwave';
+            $responseData = $response['data'];
+            $responseData['provider'] = $this->provider;
 
-            return $data;
+            return $responseData;
         } catch (\Throwable $th) {
             throw ValidationException::withMessages([$th->getMessage()]);
         }
@@ -176,10 +177,10 @@ class FlutterwaveController extends Controller
             }
 
             // set provider
-            $data = $response['data'];
-            $data['provider'] = 'flutterwave';
+            $responseData = $response['data'];
+            $responseData['provider'] = $this->provider;
 
-            return $data;
+            return $responseData;
         } catch (\Throwable $th) {
             throw ValidationException::withMessages([$th->getMessage()]);
         }
@@ -199,10 +200,10 @@ class FlutterwaveController extends Controller
             }
 
             // set provider
-            $data = $response['data'];
-            $data['provider'] = 'flutterwave';
+            $responseData = $response['data'];
+            $responseData['provider'] = $this->provider;
 
-            return $data;
+            return $responseData;
         } catch (\Throwable $th) {
             throw ValidationException::withMessages([$th->getMessage()]);
         }
@@ -222,10 +223,10 @@ class FlutterwaveController extends Controller
             }
 
             // set provider
-            $data = $response['data'];
-            $data['provider'] = 'flutterwave';
+            $responseData = $response['data'];
+            $responseData['provider'] = $this->provider;
 
-            return $data;
+            return $responseData;
         } catch (\Throwable $th) {
             throw ValidationException::withMessages([$th->getMessage()]);
         }
@@ -246,10 +247,10 @@ class FlutterwaveController extends Controller
             }
 
             // set provider
-            $data = $response['data'];
-            $data['provider'] = 'flutterwave';
+            $responseData = $response['data'];
+            $responseData['provider'] = $this->provider;
 
-            return $data;
+            return $responseData;
         } catch (\Throwable $th) {
             throw ValidationException::withMessages([$th->getMessage()]);
         }
@@ -269,10 +270,10 @@ class FlutterwaveController extends Controller
             }
 
             // set provider
-            $data = $response['data'];
-            $data['provider'] = 'flutterwave';
+            $responseData = $response['data'];
+            $responseData['provider'] = $this->provider;
 
-            return $data;
+            return $responseData;
         } catch (\Throwable $th) {
             throw ValidationException::withMessages([$th->getMessage()]);
         }
@@ -297,10 +298,10 @@ class FlutterwaveController extends Controller
             }
 
             // set provider
-            $data = $response['data'];
-            $data['provider'] = 'flutterwave';
+            $responseData = $response['data'];
+            $responseData['provider'] = $this->provider;
 
-            return $data;
+            return $responseData;
         } catch (\Throwable $th) {
             throw ValidationException::withMessages([$th->getMessage()]);
         }
@@ -324,10 +325,10 @@ class FlutterwaveController extends Controller
             }
 
             // set provider
-            $data = $response['data'];
-            $data['provider'] = 'flutterwave';
+            $responseData = $response['data'];
+            $responseData['provider'] = $this->provider;
 
-            return $data;
+            return $responseData;
         } catch (\Throwable $th) {
             throw ValidationException::withMessages([$th->getMessage()]);
         }
@@ -351,10 +352,10 @@ class FlutterwaveController extends Controller
             }
 
             // set provider
-            $data = $response['data'];
-            $data['provider'] = 'flutterwave';
+            $responseData = $response['data'];
+            $responseData['provider'] = $this->provider;
 
-            return $data;
+            return $responseData;
         } catch (\Throwable $th) {
             throw ValidationException::withMessages([$th->getMessage()]);
         }
@@ -374,10 +375,10 @@ class FlutterwaveController extends Controller
             }
 
             // set provider
-            $data = $response['data'];
-            $data['provider'] = 'flutterwave';
+            $responseData = $response['data'];
+            $responseData['provider'] = $this->provider;
 
-            return $data;
+            return $responseData;
         } catch (\Throwable $th) {
             throw ValidationException::withMessages([$th->getMessage()]);
         }

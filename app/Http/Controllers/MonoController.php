@@ -8,12 +8,13 @@ use Illuminate\Validation\ValidationException;
 
 class MonoController extends Controller
 {
-    private $monoUrl, $monoSecKey;
+    private $monoUrl, $monoSecKey, $provider;
 
     public function __construct()
     {
         $this->monoUrl = env('MONO_URL');
         $this->monoSecKey = env('MONO_SEC_KEY');
+        $this->provider = 'mono';
     }
     public function createVirtualCard($data)
     {
@@ -61,7 +62,34 @@ class MonoController extends Controller
             $responseData['zip_code'] = $details['billing_address']['postal_code'];
             $responseData['callback_url'] = route('payment');
             $responseData['is_active'] = true;
-            $responseData['provider'] = 'mono';
+            $responseData['provider'] = $this->provider;
+
+            return $responseData;
+        } catch (\Throwable $th) {
+            throw ValidationException::withMessages([$th->getMessage()]);
+        }
+    }
+
+    public function fundVirtualCard($data)
+    {
+        try {
+            $response = Http::withHeaders([
+                'Content-Type' => 'application/json',
+                'Authorization' => "Bearer {$this->monoSecKey}",
+            ])->post("{$this->monoUrl}/cards/{$data['card']}/fund", [
+                'fund_source' => 'NGN',
+                'amount' => $data['amount'],
+                'meta' => $data['meta']
+            ])->json();
+
+            // catch error
+            if ($response['status'] === 'error') {
+                throw ValidationException::withMessages([$response['message']]);
+            }
+
+            // set provider
+            $responseData = $response['data'];
+            $responseData['provider'] = $this->provider;
 
             return $responseData;
         } catch (\Throwable $th) {
