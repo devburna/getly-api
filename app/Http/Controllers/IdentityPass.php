@@ -33,7 +33,7 @@ class IdentityPass extends Controller
 
             // catch failed
             if (!$responseData['status']) {
-                throw ValidationException::withMessages([$responseData['message']]);
+                throw ValidationException::withMessages([array_key_exists('numbers', $responseData['detail']) ? $responseData['detail']['number'] : $responseData['detail']]);
             }
 
             // set response data
