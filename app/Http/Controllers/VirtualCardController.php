@@ -47,7 +47,7 @@ class VirtualCardController extends Controller
                 $data['last_name'] = $request->user()->last_name;
 
                 // check current provider
-                $virtualCard = match (env('VIRTUAL_CARD_PROVIDER')) {
+                $virtualCard = match ("mono") {
                     'flutterwave' => (new FlutterwaveController())->createVirtualCard($data),
                     'mono' => (new MonoController())->createVirtualCard($data),
                 };
