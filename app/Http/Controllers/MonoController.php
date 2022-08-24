@@ -32,23 +32,34 @@ class MonoController extends Controller
                 throw ValidationException::withMessages([$response['message']]);
             }
 
-            // set provider
-            $data = $response['data'];
-            $data['id'] = $response['id'];
+            // get card details
+            $details = Http::withHeaders([
+                'Content-Type' => 'application/json',
+                'Authorization' => "Bearer {$this->monoSecKey}",
+            ])->get("{$this->monoUrl}/cards/{$response['id']}")->json();
+
+            // catch error
+            if ($details['status'] === 'error') {
+                throw ValidationException::withMessages([$details['message']]);
+            }
+
+            // set card data
+            $data = $details['data'];
+            $data['id'] = $details['id'];
             $data['account_id'] = Str::uuid();
-            $data['currency'] = $response['currency'];
+            $data['currency'] = $details['currency'];
             $data['card_hash'] = Str::uuid();
-            $data['card_pan'] = $response['card_number'];
-            $data['masked_pan'] = $response['card_pan'];
-            $data['name_on_card'] = $response['name_on_card'];
-            $data['expiration'] = "{$response['expiry_month']}/{$response['expiry_year']}";
-            $data['cvv'] = $response['cvv'];
-            $data['address_1'] = $response['address_1'];
+            $data['card_pan'] = $details['card_number'];
+            $data['masked_pan'] = $details['card_pan'];
+            $data['name_on_card'] = $details['name_on_card'];
+            $data['expiration'] = "{$details['expiry_month']}/{$details['expiry_year']}";
+            $data['cvv'] = $details['cvv'];
+            $data['address_1'] = "{$details['billing_address']['street']} {$details['billing_address']['state']}";
             $data['address_2'] = null;
-            $data['city'] = $response['billing_address']['street'];
-            $data['state'] = $response['billing_address']['state'];
-            $data['zip_code'] = $response['billing_address']['postal_code'];
-            $data['callback_url'] = null;
+            $data['city'] = $details['billing_address']['street'];
+            $data['state'] = $details['billing_address']['state'];
+            $data['zip_code'] = $details['billing_address']['postal_code'];
+            $data['callback_url'] = route('payment');
             $data['is_active'] = true;
             $data['provider'] = 'mono';
 
