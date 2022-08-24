@@ -62,7 +62,7 @@ class TransactionController extends Controller
             }
 
             // check for transfer transaction
-            if (array_key_exists('event', $response) && $response['event'] === 'transfer.completed') {
+            if (array_key_exists('event', $response) && $response['event'] === 'transfer.completed' && array_key_exists('event.type', $response) && $response['event.type'] === 'Transfer' || $response['event.type'] === 'transfer') {
                 return (new WalletController())->transferCompleted($response);
             }
 
