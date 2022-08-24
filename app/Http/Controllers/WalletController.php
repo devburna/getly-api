@@ -64,6 +64,13 @@ class WalletController extends Controller
     {
         try {
 
+            // checks if user can withdraw
+            if (!$request->user()->hasFunds($request->amount)) {
+                throw ValidationException::withMessages([
+                    'Insufficient funds, please fund wallet and try again.'
+                ]);
+            }
+
             $transfer = match ($request->currency) {
                 'usd' => (new FlutterwaveController())->bankTransfer($request->usd),
                 'ngn' => (new FlutterwaveController())->bankTransfer($request->ngn),
