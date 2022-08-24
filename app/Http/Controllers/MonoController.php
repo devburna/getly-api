@@ -31,8 +31,8 @@ class MonoController extends Controller
             // set response
             $responseData = $responseData->json();
 
-            // catch error
-            if ($responseData['status'] === 'error') {
+            // catch failed
+            if ($responseData['status'] === 'failed') {
                 throw ValidationException::withMessages([$responseData['message']]);
             }
 
@@ -45,8 +45,8 @@ class MonoController extends Controller
             // set response
             $details = $details->json();
 
-            // catch error
-            if ($details['status'] === 'error') {
+            // catch failed
+            if ($details['status'] === 'failed') {
                 throw ValidationException::withMessages([$details['message']]);
             }
 
@@ -90,8 +90,8 @@ class MonoController extends Controller
             // set response
             $responseData = $responseData->json();
 
-            // catch error
-            if ($responseData['status'] === 'error') {
+            // catch failed
+            if ($responseData['status'] === 'failed') {
                 throw ValidationException::withMessages([$responseData['message']]);
             }
 
@@ -117,8 +117,8 @@ class MonoController extends Controller
             // set response
             $responseData = $responseData->json();
 
-            // catch error
-            if ($responseData['status'] === 'error') {
+            // catch failed
+            if ($responseData['status'] === 'failed') {
                 throw ValidationException::withMessages([$responseData['message']]);
             }
 
@@ -144,8 +144,8 @@ class MonoController extends Controller
             // set response
             $responseData = $responseData->json();
 
-            // catch error
-            if ($responseData['status'] === 'error') {
+            // catch failed
+            if ($responseData['status'] === 'failed') {
                 throw ValidationException::withMessages([$responseData['message']]);
             }
 
