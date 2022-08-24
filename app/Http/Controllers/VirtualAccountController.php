@@ -40,7 +40,7 @@ class VirtualAccountController extends Controller
 
             // generate virtual card
             $bvn['id'] = $request->user()->id;
-            $bvn['bvn'] = $bvn['bvn'];
+            $bvn['bvn'] = $request->identity;
             $bvn['first_name'] = $bvn['first_name'];
             $bvn['last_name'] = $bvn['last_name'];
             $bvn['email_address'] = $request->user()->email_address;

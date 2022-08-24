@@ -111,8 +111,35 @@ class MonoController extends Controller
             unset($data['size']);
             $responseData = Http::withHeaders([
                 'Content-Type' => 'application/json',
-                'Authorization' => "Bearer {$this->flutterwaveSecKey}",
+                'Authorization' => "Bearer {$this->monoSecKey}",
             ])->get("{$this->monoUrl}/cards/{$data['card']}", $data);
+
+            // set response
+            $responseData = $responseData->json();
+
+            // catch error
+            if ($responseData['status'] === 'error') {
+                throw ValidationException::withMessages([$responseData['message']]);
+            }
+
+            // set response data
+            $responseData['data']['provider'] = $this->provider;
+
+            return $responseData;
+        } catch (\Throwable $th) {
+            throw ValidationException::withMessages([$th->getMessage()]);
+        }
+    }
+
+    public function verifyBvn($data)
+    {
+        try {
+            $responseData =  Http::withHeaders([
+                'Content-Type' => 'application/json',
+                'Authorization' => "Bearer {$this->monoSecKey}",
+            ])->get("{$this->monoUrl}/lookup/bvn", [
+                'bvn' => $data
+            ]);
 
             // set response
             $responseData = $responseData->json();

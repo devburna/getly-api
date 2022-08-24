@@ -12,7 +12,7 @@ class KYCController extends Controller
     {
         try {
             // get bvn info
-            $bvn = (new FlutterwaveController())->verifyBvn($request->bvn);
+            $bvn = (new MonoController())->verifyBvn($request->bvn);
 
             return response()->json([
                 'status' => true,
