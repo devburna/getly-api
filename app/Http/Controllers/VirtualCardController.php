@@ -279,7 +279,13 @@ class VirtualCardController extends Controller
             $data['to'] = $request->to;
             $data['index'] = $request->index;
             $data['size'] = $request->size;
-            $request->user()->virtualCard->transactions = (new FlutterwaveController())->virtualCardTransactions($data)['data'];
+            $data['page'] = $request->page;
+
+            // checks provider
+            $request->user()->virtualCard->transactions = match ($request->user()->virtualCard->provider) {
+                'flutterwave' => (new FlutterwaveController())->virtualCardTransactions($data)['data'],
+                'mono' => (new FlutterwaveController())->virtualCardTransactions($data)['data']
+            };
 
             return $this->show($request);
         } catch (\Throwable $th) {

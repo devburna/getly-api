@@ -198,6 +198,7 @@ class FlutterwaveController extends Controller
     public function virtualCardTransactions($data)
     {
         try {
+            unset($data['page']);
             $response = Http::withHeaders([
                 'Content-Type' => 'application/json',
                 'Authorization' => "Bearer {$this->flutterwaveSecKey}",

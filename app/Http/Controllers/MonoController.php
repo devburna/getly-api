@@ -96,4 +96,31 @@ class MonoController extends Controller
             throw ValidationException::withMessages([$th->getMessage()]);
         }
     }
+
+    public function virtualCardTransactions($data)
+    {
+        try {
+            unset($data['index']);
+            unset($data['size']);
+            $response = Http::withHeaders([
+                'Content-Type' => 'application/json',
+                'Authorization' => "Bearer {$this->flutterwaveSecKey}",
+            ])->get("{$this->monoUrl}/cards/{$data['card']}", $data)->json();
+
+            // set response
+            $responseData = $response->json();
+
+            // catch error
+            if ($response['status'] === 'error') {
+                throw ValidationException::withMessages([$response['message']]);
+            }
+
+            // set response data
+            $responseData['data']['provider'] = $this->provider;
+
+            return $responseData;
+        } catch (\Throwable $th) {
+            throw ValidationException::withMessages([$th->getMessage()]);
+        }
+    }
 }
