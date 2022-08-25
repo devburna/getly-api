@@ -24,6 +24,9 @@ class StoreVirtualCardRequest extends FormRequest
     public function rules()
     {
         return [
+            'document' => 'required|string|in:bvn',
+            'bvn' => 'required_if:document,bvn',
+            'approved' => 'required|boolean',
             'amount' => 'required|numeric',
         ];
     }

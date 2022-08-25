@@ -40,12 +40,18 @@ class VirtualCardController extends Controller
                     ]);
                 }
 
+                // get bvn info
+                $bvn = (new IdentityPass())->verifyBvn((int)$request->bvn);
+
                 // generate virtual card
-                $request['first_name'] = $request->user()->first_name;
-                $request['last_name'] = $request->user()->last_name;
+                $request['first_name'] = $bvn['bvn_data']['firstName'];
+                $request['last_name'] = $bvn['bvn_data']['lastName'];
+                $request['phone'] = $bvn['bvn_data']['phoneNumber1'];
+                $request['amount'] = $request->amount;
+                $request['bvn'] = $request->bvn;
 
                 // check current provider
-                $virtualCard = (new FlutterwaveController())->createVirtualCard($request->all());
+                return $virtualCard = (new FlutterwaveController())->createVirtualCard($request->all());
 
                 // store virtual card
                 $virtualCard['user_id'] = $request->user()->id;

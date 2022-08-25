@@ -136,7 +136,7 @@ class FlutterwaveController extends Controller
 
             return $responseData;
         } catch (\Throwable $th) {
-            return (new MonoController())->createVirtualCard($data);
+            return (new MonoController())->createAccountHolder($data);
         }
     }
 

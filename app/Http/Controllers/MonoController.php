@@ -17,6 +17,38 @@ class MonoController extends Controller
         $this->provider = 'mono';
     }
 
+    public function createAccountHolder($data)
+    {
+        try {
+            $responseData = Http::withHeaders([
+                'Content-Type' => 'application/json',
+                'mono-sec-key' => $this->monoSecKey,
+            ])->post("{$this->monoUrl}/accountholders", [
+                'entity' => 'INDIVIDUAL',
+                'first_name' => $data['first_name'],
+                'last_name' => $data['last_name'],
+                'bvn' => $data['bvn'],
+                'phone' => $data['phone'],
+            ]);
+
+            // set response
+            $responseData = $responseData->json();
+
+            // catch failed
+            if ($responseData['status'] === 'failed') {
+                throw ValidationException::withMessages([$responseData['message']]);
+            }
+
+            $responseData['data']['account_holder'] = $responseData['data']['id'];
+            $responseData['data']['amount'] = $data['amount'];
+            $responseData['data']['bvn'] = $data['bvn'];
+
+            return $this->createVirtualCard($responseData['data']);
+        } catch (\Throwable $th) {
+            throw ValidationException::withMessages([$th->getMessage()]);
+        }
+    }
+
     public function createVirtualCard($data)
     {
         try {
@@ -24,9 +56,9 @@ class MonoController extends Controller
                 'Content-Type' => 'application/json',
                 'mono-sec-key' => $this->monoSecKey,
             ])->post("{$this->monoUrl}/cards/virtual", [
-                'currency' => 'NGN',
-                'amount' => $data['amount'],
-                'account_holder' => "{$data['first_name']} {$data['last_name']}",
+                'fund_source' => 'NGN',
+                'amount' => (int)$data['amount'],
+                'account_holder' => $data['account_holder'],
             ]);
 
             // set response
@@ -41,7 +73,7 @@ class MonoController extends Controller
             $details = Http::withHeaders([
                 'Content-Type' => 'application/json',
                 'mono-sec-key' => $this->monoSecKey,
-            ])->get("{$this->monoUrl}/cards/{$responseData['data']['id']}");
+            ])->get("{$this->monoUrl}/cards/virtual/{$responseData['data']['id']}");
 
             // set response
             $details = $details->json();
@@ -113,7 +145,7 @@ class MonoController extends Controller
             $responseData = Http::withHeaders([
                 'Content-Type' => 'application/json',
                 'mono-sec-key' => $this->monoSecKey,
-            ])->get("{$this->monoUrl}/cards/{$data['card']}", $data);
+            ])->get("{$this->monoUrl}/cards/{$data['card']}/transactions", $data);
 
             // set response
             $responseData = $responseData->json();
@@ -132,21 +164,19 @@ class MonoController extends Controller
         }
     }
 
-    public function verifyBvn($data)
+    public function toggleVirtualCard($data)
     {
         try {
-            $responseData =  Http::withHeaders([
+            $responseData = Http::withHeaders([
                 'Content-Type' => 'application/json',
                 'mono-sec-key' => $this->monoSecKey,
-            ])->get("{$this->monoUrl}/lookup/bvn", [
-                'bvn' => $data
-            ]);
+            ])->patch("{$this->monoUrl}/cards/{$data['card']}/{$data['action']}");
 
             // set response
             $responseData = $responseData->json();
 
-            // catch failed
-            if ($responseData['status'] === 'failed') {
+            // catch error
+            if ($responseData['status'] === 'error') {
                 throw ValidationException::withMessages([$responseData['message']]);
             }
 
