@@ -90,7 +90,7 @@ class VirtualAccountController extends Controller
     /**
      * Display the specified resource.
      *
-     * @param  \App\Http\Requests  $request
+     * @param  \App\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
     public function show(Request $request, $message = 'success', $code = 200)
