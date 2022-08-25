@@ -12,7 +12,7 @@ class KYCController extends Controller
     {
         try {
             // get bvn info
-            $bvn = (new IdentityPass())->verifyBvn($request->bvn);
+            $bvn = (new IdentityPass())->verifyBvn((int)$request->bvn);
 
             return response()->json([
                 'status' => true,

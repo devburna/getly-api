@@ -24,8 +24,8 @@ class KYCRequest extends FormRequest
     public function rules()
     {
         return [
-            "document" => "required|string|in:bvn",
-            "bvn" => "required_if:document,bvn"
+            'document' => 'required|string|in:bvn',
+            'bvn' => 'required_if:document,bvn'
         ];
     }
 }

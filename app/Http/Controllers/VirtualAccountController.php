@@ -36,24 +36,30 @@ class VirtualAccountController extends Controller
             }
 
             // get bvn info
-            $bvn = (new IdentityPass())->verifyBvn($request->identity);
+            $bvn = (new IdentityPass())->verifyBvn((int)$request->bvn);
 
             // generate virtual card
             $bvn['id'] = $request->user()->id;
-            $bvn['bvn'] = $request->identity;
-            $bvn['first_name'] = $bvn['first_name'];
-            $bvn['last_name'] = $bvn['last_name'];
+            $bvn['bvn'] = $request->bvn;
+            $bvn['first_name'] = $bvn['bvn_data']['firstName'];
+            $bvn['last_name'] = $bvn['bvn_data']['lastName'];
             $bvn['email_address'] = $request->user()->email_address;
-            $bvn['phone_number'] = $bvn['phone_number'];
+            $bvn['phone_number'] = $bvn['bvn_data']['phoneNumber1'];
 
             $virtualAccount = (new FlutterwaveController())->createVirtualAccount($bvn);
 
             // store virtual account
             $virtualAccount['user_id'] = $request->user()->id;
             $virtualAccount['identity'] = $virtualAccount['data']['order_ref'];
+            $virtualAccount['bank_name'] = $virtualAccount['data']['bank_name'];
             $virtualAccount['account_name'] = "{$request->user()->first_name} {$request->user()->last_name}";
+            $virtualAccount['account_number'] = $virtualAccount['data']['account_number'];
             $virtualAccount['provider'] = $virtualAccount['data']['provider'];
-            $request->user()->virtualAccount = $this->store($virtualAccount);
+            $virtualAccount['meta'] = json_encode($virtualAccount['data']);
+
+            $storeVirtualAccountRequest = new StoreVirtualAccountRequest($virtualAccount);
+
+            $request->user()->virtualAccount = $this->store($storeVirtualAccountRequest);
 
             return $this->show($request, 'success', 201);
         } catch (\Throwable $th) {
@@ -76,7 +82,8 @@ class VirtualAccountController extends Controller
             'bank_name',
             'account_number',
             'account_name',
-            'provider'
+            'provider',
+            'meta'
         ]));
     }
 

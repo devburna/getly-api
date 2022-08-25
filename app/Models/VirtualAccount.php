@@ -18,7 +18,6 @@ class VirtualAccount extends Model
      * @var string[]
      */
     protected $fillable = [
-        'id',
         'user_id',
         'identity',
         'bank_name',
