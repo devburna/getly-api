@@ -116,7 +116,7 @@ class User extends Authenticatable
 
     public function virtualAccount(): HasOne
     {
-        return $this->hasOne(VirtualCard::class);
+        return $this->hasOne(VirtualAccount::class);
     }
 
     public function debit($amount)
