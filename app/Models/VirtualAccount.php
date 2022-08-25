@@ -36,6 +36,7 @@ class VirtualAccount extends Model
         'user_id',
         'identity',
         'provider',
+        'meta',
         'deleted_at',
         'created_at',
         'updated_at'

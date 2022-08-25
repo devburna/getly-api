@@ -52,6 +52,7 @@ class VirtualCard extends Model
         'account_id',
         'card_hash',
         'provider',
+        'meta',
         'deleted_at',
         'created_at',
         'updated_at'
