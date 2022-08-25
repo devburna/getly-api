@@ -30,7 +30,7 @@ class VirtualCardController extends Controller
 
                 // checks duplicate wallet
                 if ($request->user()->virtualCard) {
-                    return $this->show($request->user()->virtualCard);
+                    return $this->show($request);
                 }
 
                 // checks if sender can fund virtual card

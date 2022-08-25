@@ -25,7 +25,7 @@ class VirtualAccountController extends Controller
         try {
             // checks duplicate wallet
             if ($request->user()->virtualAccount) {
-                return $this->show($request->user()->virtualAccount);
+                return $this->show($request);
             }
 
             // checks if bvn was approved
