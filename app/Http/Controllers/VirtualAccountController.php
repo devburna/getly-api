@@ -95,6 +95,7 @@ class VirtualAccountController extends Controller
      */
     public function show(Request $request, $message = 'success', $code = 200)
     {
+        return $request->user()->virtualAccount;
         return response()->json([
             'status' => true,
             'data' => $request->user()->virtualAccount,
