@@ -18,9 +18,13 @@ class UserController extends Controller
      */
     public function index(Request $request)
     {
+        $user = $request->user();
+        $user->kyc_verified = $request->user()->monoAccountHolder ? true : false;
+        unset($user->monoAccountHolder);
+
         return response()->json([
             'status' => true,
-            'data' => $request->user(),
+            'data' => $user,
             'message' => 'success',
         ]);
     }

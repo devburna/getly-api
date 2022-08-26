@@ -6,7 +6,6 @@ use App\Enums\TransactionChannel;
 use App\Enums\TransactionStatus;
 use App\Enums\TransactionType;
 use App\Http\Requests\FundVirtualCardRequest;
-use App\Http\Requests\StoreMonoAccountHolderRequest;
 use App\Http\Requests\StoreTransactionRequest;
 use App\Http\Requests\StoreVirtualCardRequest;
 use App\Http\Requests\ToggleVirtualCardRequest;
@@ -42,17 +41,9 @@ class VirtualCardController extends Controller
 
             // create a mono account if not found
             if (!$request->user()->monoAccountHolder) {
-
-                // re-verify bvn
-                $bvn = (new MonoController())->verifyBvn($request->bvn);
-
-                $storeMonoAccountHolderRequest = (new StoreMonoAccountHolderRequest());
-                $storeMonoAccountHolderRequest['user_id'] = $request->user()->id;
-                $storeMonoAccountHolderRequest['first_name'] = $bvn['data']['first_name'];
-                $storeMonoAccountHolderRequest['last_name'] = $bvn['data']['last_name'];
-                $storeMonoAccountHolderRequest['bvn'] = $request->bvn;
-                $storeMonoAccountHolderRequest['phone'] = $bvn['data']['phone'];
-                (new MonoAccountHolderController())->createAccountHolder($storeMonoAccountHolderRequest);
+                throw ValidationException::withMessages([
+                    'Please verify your kyc.'
+                ]);
             }
 
             // generate virtual card
