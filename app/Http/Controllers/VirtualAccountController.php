@@ -13,6 +13,7 @@ use App\Notifications\Transaction;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
+use Illuminate\Support\Str;
 
 class VirtualAccountController extends Controller
 {
@@ -52,7 +53,7 @@ class VirtualAccountController extends Controller
             $request['provider'] = $virtualAccount['data']['provider'];
             $request['meta'] = json_encode($virtualAccount);
 
-            // store vitual account
+            // store virtual account
             $request->user()->virtualAccount = $this->store($request);
 
             return $this->show($request);
@@ -153,8 +154,8 @@ class VirtualAccountController extends Controller
                 // create transaction
                 $storeTransactionRequest = (new StoreTransactionRequest());
                 $storeTransactionRequest['user_id'] = $virtualAccount->user->id;
-                $storeTransactionRequest['identity'] = $data['data']['id'];
-                $storeTransactionRequest['reference'] = str_shuffle($data['data']['account']);
+                $storeTransactionRequest['identity'] = Str::uuid();
+                $storeTransactionRequest['reference'] = Str::uuid();
                 $storeTransactionRequest['type'] = $type;
                 $storeTransactionRequest['channel'] = TransactionChannel::VIRTUAL_ACCOUNT();
                 $storeTransactionRequest['amount'] = $data['data']['amount'];

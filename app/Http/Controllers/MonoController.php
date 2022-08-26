@@ -131,9 +131,9 @@ class MonoController extends Controller
                 'mono-sec-key' => $this->monoSecKey,
             ])->post("{$this->monoUrl}/issuing/v1/cards/virtual", [
                 'account_holder' => $data,
-                'currency' => 'USD',
-                'amount' => 5,
-                'fund_source' => 'usd'
+                'currency' => 'NGN',
+                'amount' => env('MONO_VIRTUAL_CARD_FEE') * 100,
+                'fund_source' => 'ngn'
             ])->json();
 
             // catch error
@@ -179,7 +179,7 @@ class MonoController extends Controller
                 'mono-sec-key' => $this->monoSecKey,
             ])->post("{$this->monoUrl}/issuing/v1/cards/{$data['card']}/fund", [
                 'amount' => $data['amount'],
-                'fund_source' => 'USD'
+                'fund_source' => 'ngn'
             ])->json();
 
             // catch error

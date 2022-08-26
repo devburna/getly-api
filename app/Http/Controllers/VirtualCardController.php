@@ -14,6 +14,7 @@ use App\Models\VirtualCard;
 use App\Notifications\VirtualCardTransaction;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
+use Illuminate\Support\Str;
 
 class VirtualCardController extends Controller
 {
@@ -61,14 +62,17 @@ class VirtualCardController extends Controller
             $request['provider'] = $virtualCard['data']['provider'];
             $request['meta'] = json_encode($virtualCard);
 
+            // store virtual card
+            $request->user()->virtualCard = $this->store($request);
+
             // debit user wallet
             $request->user()->debit(env('MONO_VIRTUAL_CARD_FEE'));
 
             // create transaction
             $storeTransactionRequest = (new StoreTransactionRequest());
             $storeTransactionRequest['user_id'] = $request->user()->id;
-            $storeTransactionRequest['identity'] = str_shuffle($request->user()->virtualCard->identity . time());
-            $storeTransactionRequest['reference'] = str_shuffle($request->user()->virtualCard->identity);
+            $storeTransactionRequest['identity'] = Str::uuid();
+            $storeTransactionRequest['reference'] = Str::uuid();
             $storeTransactionRequest['type'] = TransactionType::DEBIT();
             $storeTransactionRequest['channel'] = TransactionChannel::WALLET();
             $storeTransactionRequest['amount'] = env('MONO_VIRTUAL_CARD_FEE');
@@ -78,10 +82,7 @@ class VirtualCardController extends Controller
             $transaction = (new TransactionController())->store($storeTransactionRequest);
 
             // notify user of transaction
-            $transaction->user->notify(new VirtualCardTransaction($transaction));
-
-            // store vitual account
-            $request->user()->virtualCard = $this->store($request);
+            $request->user()->notify(new VirtualCardTransaction($transaction));
 
             return $this->show($request);
         } catch (\Throwable $th) {
@@ -130,6 +131,7 @@ class VirtualCardController extends Controller
             unset($virtualCard['data']['disposable']);
             unset($virtualCard['data']['created_at']);
             unset($virtualCard['data']['account_holder']);
+            unset($virtualCard['data']['meta']);
 
             return response()->json([
                 'status' => true,
@@ -162,7 +164,7 @@ class VirtualCardController extends Controller
 
             // fund virtual card
             $request['card'] = $request->user()->virtualCard->identity;
-            $virtualCard = (new MonoController())->virtualCardDetails($request->all());
+            $virtualCard = (new MonoController())->fundVirtualCard($request->all());
 
             // debit user wallet
             $request->user()->debit($request->amount);
@@ -170,8 +172,8 @@ class VirtualCardController extends Controller
             // create transaction
             $storeTransactionRequest = (new StoreTransactionRequest());
             $storeTransactionRequest['user_id'] = $request->user()->id;
-            $storeTransactionRequest['identity'] = str_shuffle($request->user()->virtualCard->identity . time());
-            $storeTransactionRequest['reference'] = str_shuffle($request->user()->virtualCard->identity);
+            $storeTransactionRequest['identity'] = Str::uuid();
+            $storeTransactionRequest['reference'] = Str::uuid();
             $storeTransactionRequest['type'] = TransactionType::DEBIT();
             $storeTransactionRequest['channel'] = TransactionChannel::WALLET();
             $storeTransactionRequest['amount'] = $request->amount;
