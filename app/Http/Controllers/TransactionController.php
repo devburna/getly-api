@@ -34,12 +34,12 @@ class TransactionController extends Controller
      */
     public function create(Request $request)
     {
-        try {
+        // verify webhook origin
+        if (!$request->header('mono-webhook-secret') || $request->header('mono-webhook-secret') !== env('MONO_WEBHOOK_SECRET')) {
+            return response()->json([], 401);
+        }
 
-            // verify webhook
-            if (!$request->header('mono-webhook-secret') || $request->header('mono-webhook-secret') !== env('MONO_WEBHOOK_SECRET')) {
-                return response()->json([], 401);
-            }
+        try {
 
             // Mono transfer received
             $virtual_account_events = ['issuing.transfer_received', 'issuing.transfer_failed', 'issuing.transfer_successful'];
