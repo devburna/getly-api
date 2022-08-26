@@ -128,50 +128,22 @@ class VirtualCardController extends Controller
             $virtualCard['data']['balance'] = $virtualCard['data']['balance'] / 100;
 
             // decrypt data
-            $virtualCard['data']['card_number'] = $this->decryptString($virtualCard['data']['card_number']);
-            $virtualCard['data']['cvv'] = $this->decryptString($virtualCard['data']['cvv']);
-            $virtualCard['data']['expiry_month'] = $this->decryptString($virtualCard['data']['expiry_month']);
-            $virtualCard['data']['expiry_year'] = $this->decryptString($virtualCard['data']['expiry_year']);
-            $virtualCard['data']['last_four'] = $this->decryptString($virtualCard['data']['last_four']);
-            $virtualCard['data']['pin'] = $this->decryptString($virtualCard['data']['pin']);
+            if ($request->reveal) {
+                // validate request
+                $request->validate([
+                    'reveal' => 'boolean'
+                ]);
+                $virtualCard['data']['card_number'] = $this->decryptString($virtualCard['data']['card_number']);
+                $virtualCard['data']['cvv'] = $this->decryptString($virtualCard['data']['cvv']);
+                $virtualCard['data']['expiry_month'] = $this->decryptString($virtualCard['data']['expiry_month']);
+                $virtualCard['data']['expiry_year'] = $this->decryptString($virtualCard['data']['expiry_year']);
+                $virtualCard['data']['last_four'] = $this->decryptString($virtualCard['data']['last_four']);
+                $virtualCard['data']['pin'] = $this->decryptString($virtualCard['data']['pin']);
+            }
 
             return response()->json([
                 'status' => true,
                 'data' => $virtualCard['data'],
-                'message' => 'success',
-            ]);
-        } catch (\Throwable $th) {
-            return response()->json([
-                'status' => false,
-                'data' => null,
-                'message' => $th->getMessage()
-            ], 422);
-        }
-    }
-
-    public function revealCard(Request $request)
-    {
-        try {
-            // validate request
-            $request->validate([
-                'card_number' => 'required',
-                'cvv' => 'required',
-                'expiry_month' => 'required',
-                'expiry_year' => 'required',
-                'last_four' => 'required',
-                'pin' => 'required',
-            ]);
-
-            return response()->json([
-                'status' => true,
-                'data' => [
-                    'card_number' => $this->decryptString($request->card_number),
-                    'cvv' => $this->decryptString($request->cvv),
-                    'expiry_month' => $this->decryptString($request->expiry_month),
-                    'expiry_year' => $this->decryptString($request->expiry_year),
-                    'last_four' => $this->decryptString($request->last_four),
-                    'pin' => $this->decryptString($request->pin),
-                ],
                 'message' => 'success',
             ]);
         } catch (\Throwable $th) {
