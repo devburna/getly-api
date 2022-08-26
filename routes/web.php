@@ -20,10 +20,6 @@ Route::get('/', function () {
     ]);
 });
 
-Route::prefix('payment')->group(function () {
-    Route::get('', [\App\Http\Controllers\TransactionController::class, 'create'])->name('flw-webhook');
-});
-
 Route::prefix('mono')->group(function () {
     Route::get('', [\App\Http\Controllers\TransactionController::class, 'create']);
 });
