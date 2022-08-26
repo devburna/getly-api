@@ -98,6 +98,12 @@ class VirtualCardController extends Controller
             // get virtual card details
             $virtualCard = (new MonoController())->virtualCardDetails($request->user()->virtualCard->identity);
 
+            // clean response data
+            unset($virtualCard['data']['id']);
+            unset($virtualCard['data']['disposable']);
+            unset($virtualCard['data']['created_at']);
+            unset($virtualCard['data']['account_holder']);
+
             return response()->json([
                 'status' => true,
                 'data' => $virtualCard['data'],

@@ -96,16 +96,20 @@ class VirtualAccountController extends Controller
             // get virtual account details
             $virtualAccount = (new MonoController())->virtualAccountDetails($request->user()->virtualAccount->identity);
 
+            // clean response data
+            unset($virtualAccount['data']['id']);
+            unset($virtualAccount['data']['budget']);
+            unset($virtualAccount['data']['type']);
+            unset($virtualAccount['data']['bank_code']);
+            unset($virtualAccount['data']['currency']);
+            unset($virtualAccount['data']['balance']);
+            unset($virtualAccount['data']['created_at']);
+            unset($virtualAccount['data']['updated_at']);
+            unset($virtualAccount['data']['account_holder']);
+
             return response()->json([
                 'status' => true,
-                'data' => [
-                    'bank_name' =>  $virtualAccount['data']['bank_name'],
-                    'account_number' =>  $virtualAccount['data']['account_number'],
-                    'account_name' =>  $virtualAccount['data']['account_name'],
-                    'balance' =>  $virtualAccount['data']['balance'],
-                    'currency' =>  $virtualAccount['data']['currency'],
-                    'status' =>  $virtualAccount['data']['status']
-                ],
+                'data' => $virtualAccount['data'],
                 'message' => 'success',
             ]);
         } catch (\Throwable $th) {
