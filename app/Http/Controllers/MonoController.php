@@ -77,13 +77,15 @@ class MonoController extends Controller
                 'Accept' => 'application/json',
                 'Content-Type' => 'application/json',
                 'mono-sec-key' => $this->monoSecKey,
-            ])->post("{$this->monoUrl}/issuing/v1/virtualaccounts/{$data['card']}/transfer", [
+            ])->post("{$this->monoUrl}/issuing/v1/virtualaccounts/{$data['cust']}/transfer", [
                 'amount' => $data['amount'],
                 'narration' => $data['narration'],
-                'reference' => $data['narration'],
+                'reference' => Str::uuid(),
                 'account_number' => $data['account_number'],
-                'bank_code' => $data['bank_code'],
-                'meta' => $data['meta']
+                'bank_code' => $data['bank'],
+                'meta' => [
+                    'cust' => $data['cust']
+                ]
             ])->json();
 
             // catch error

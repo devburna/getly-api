@@ -191,7 +191,7 @@ Route::prefix('v1')->group(function () {
             Route::put('', [\App\Http\Controllers\WalletController::class, 'fund']);
 
             # withdraw
-            Route::post('', [\App\Http\Controllers\WalletController::class, 'withdraw']);
+            Route::post('', [\App\Http\Controllers\WalletController::class, 'transfer']);
         });
 
         # virtual card

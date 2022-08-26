@@ -5,15 +5,13 @@ namespace App\Http\Controllers;
 use App\Enums\TransactionChannel;
 use App\Enums\TransactionStatus;
 use App\Enums\TransactionType;
-use App\Http\Requests\FundWalletRequest;
 use App\Http\Requests\StoreTransactionRequest;
 use App\Http\Requests\StoreWalletRequest;
 use App\Http\Requests\WithdrawWalletRequest;
-use App\Models\Transaction as ModelsTransaction;
 use App\Models\Wallet;
 use App\Notifications\Transaction;
 use Illuminate\Http\Request;
-use Illuminate\Support\Str;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
 class WalletController extends Controller
@@ -54,33 +52,53 @@ class WalletController extends Controller
         ], $code);
     }
 
-    public function withdraw(Request $request)
+    public function transfer(WithdrawWalletRequest $request)
     {
         try {
 
-            if (!$request->user()->virtualAccount) {
-                throw ValidationException::withMessages(['No virtual account created for this account.']);
-            }
+            return DB::transaction(function () use ($request) {
+                if (!$request->user()->virtualAccount) {
+                    throw ValidationException::withMessages(['Transfer not available at the moment.']);
+                }
 
-            // get virtual account details
-            $virtualAccount = (new MonoController())->virtualAccountTransfer($request->user()->virtualAccount->identity);
+                // if user has funds
+                if (!$request->user()->hasFunds($request->amount)) {
+                    throw ValidationException::withMessages([
+                        'Insufficient funds, please fund wallet and try again.'
+                    ]);
+                }
 
-            // clean response data
-            unset($virtualAccount['data']['id']);
-            unset($virtualAccount['data']['budget']);
-            unset($virtualAccount['data']['type']);
-            unset($virtualAccount['data']['bank_code']);
-            unset($virtualAccount['data']['currency']);
-            unset($virtualAccount['data']['balance']);
-            unset($virtualAccount['data']['created_at']);
-            unset($virtualAccount['data']['updated_at']);
-            unset($virtualAccount['data']['account_holder']);
+                // transfer with mono
+                $request['cust'] = $request->user()->virtualAccount->id;
+                $transfer = (new MonoController())->virtualAccountTransfer($request->all());
 
-            return response()->json([
-                'status' => true,
-                'data' => $virtualAccount['data'],
-                'message' => 'success',
-            ]);
+                // debit user wallet
+                $request->user()->debit($request->amount);
+
+                // create transaction
+                $storeTransactionRequest = (new StoreTransactionRequest());
+                $storeTransactionRequest['user_id'] = $request->user()->id;
+                $storeTransactionRequest['identity'] = str_shuffle($transfer['data']['id'] . time());
+                $storeTransactionRequest['reference'] = $transfer['data']['id'];
+                $storeTransactionRequest['type'] = TransactionType::DEBIT();
+                $storeTransactionRequest['channel'] = TransactionChannel::WALLET();
+                $storeTransactionRequest['amount'] = $request->amount;
+                $storeTransactionRequest['narration'] = $request->narration;
+                $storeTransactionRequest['status'] = TransactionStatus::PENDING();
+                $storeTransactionRequest['meta'] = json_encode($transfer);
+                $transaction = (new TransactionController())->store($storeTransactionRequest);
+
+                // notify user of transaction
+                $transaction->user->notify(new Transaction($transaction));
+
+                return response()->json([
+                    'status' => true,
+                    'data' => [
+                        'amount' => $request->amount
+                    ],
+                    'message' => 'success',
+                ]);
+            });
         } catch (\Throwable $th) {
             return response()->json([
                 'status' => false,
