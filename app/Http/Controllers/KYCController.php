@@ -15,9 +15,6 @@ class KYCController extends Controller
             // get bvn info
             $bvn = (new MonoController())->verifyBvn($request->bvn);
 
-            // re-verify bvn
-            $bvn = (new MonoController())->verifyBvn($request->bvn);
-
             $storeMonoAccountHolderRequest = (new StoreMonoAccountHolderRequest());
             $storeMonoAccountHolderRequest['user_id'] = $request->user()->id;
             $storeMonoAccountHolderRequest['first_name'] = $bvn['data']['first_name'];
