@@ -157,7 +157,7 @@ class VirtualAccountController extends Controller
                 $transaction = (new TransactionController())->store($storeTransactionRequest);
 
                 // notify user of transaction
-                $transaction->owner->notify(new Transaction($transaction));
+                // $transaction->owner->notify(new Transaction($transaction));
 
                 return response()->json([]);
             });
