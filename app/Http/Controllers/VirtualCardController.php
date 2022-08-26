@@ -27,8 +27,13 @@ class VirtualCardController extends Controller
     {
         try {
 
+            // checks if user has a virtual card
+            if ($request->user()->virtualCard) {
+                return $this->show($request);
+            }
+
             // create a mono account if not found
-            if (!$request->user()->virtualCard || !$request->user()->monoAccount) {
+            if (!$request->user()->monoAccountHolder) {
 
                 // re-verify bvn
                 $bvn = (new MonoController())->verifyBvn($request->bvn);

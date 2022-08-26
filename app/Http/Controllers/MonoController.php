@@ -48,7 +48,7 @@ class MonoController extends Controller
                 'Accept' => 'application/json',
                 'Content-Type' => 'application/json',
                 'mono-sec-key' => $this->monoSecKey,
-            ])->post("{$this->monoUrl}/issuing/v1/accountholders", [
+            ])->post("{$this->monoUrl}/issuing/v1/virtualaccounts", [
                 'account_holder' => $data,
                 'account_type' => 'collection',
                 'disposable' => false,
@@ -100,7 +100,7 @@ class MonoController extends Controller
                 'account_holder' => $data,
                 'currency' => 'USD',
                 'amount' => 5,
-                'fund_source' => 'USD'
+                'fund_source' => 'usd'
             ])->json();
 
             // catch error

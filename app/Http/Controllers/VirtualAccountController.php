@@ -25,9 +25,13 @@ class VirtualAccountController extends Controller
     public function create(StoreVirtualAccountRequest $request)
     {
         try {
+            // checks if user has a virtual account
+            if ($request->user()->virtualAccount) {
+                return $this->show($request);
+            }
 
             // create a mono account if not found
-            if (!$request->user()->virtualAccount || !$request->user()->monoAccount) {
+            if (!$request->user()->monoAccountHolder) {
 
                 // re-verify bvn
                 $bvn = (new MonoController())->verifyBvn($request->bvn);
@@ -94,7 +98,14 @@ class VirtualAccountController extends Controller
 
             return response()->json([
                 'status' => true,
-                'data' => $virtualAccount['data'],
+                'data' => [
+                    'bank_name' =>  $virtualAccount['data']['bank_name'],
+                    'account_number' =>  $virtualAccount['data']['account_number'],
+                    'account_name' =>  $virtualAccount['data']['account_name'],
+                    'balance' =>  $virtualAccount['data']['balance'],
+                    'currency' =>  $virtualAccount['data']['currency'],
+                    'status' =>  $virtualAccount['data']['status']
+                ],
                 'message' => 'success',
             ]);
         } catch (\Throwable $th) {
