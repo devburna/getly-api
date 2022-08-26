@@ -204,25 +204,13 @@ Route::prefix('v1')->group(function () {
             Route::get('', [\App\Http\Controllers\VirtualCardController::class, 'show']);
 
             # fund
-            Route::put('', [\App\Http\Controllers\VirtualCardController::class, 'fund'])->can('update', 'virtualCard')->missing(function () {
-                throw ValidationException::withMessages([
-                    'message' => "Resource has been removed."
-                ]);
-            });
-
-            # withdraw
-            Route::patch('', [\App\Http\Controllers\VirtualCardController::class, 'withdraw'])->can('update', 'virtualCard')->missing(function () {
-                throw ValidationException::withMessages([
-                    'message' => "Resource has been removed."
-                ]);
-            });
+            Route::put('', [\App\Http\Controllers\VirtualCardController::class, 'fund']);
 
             # transactions
-            Route::get('transactions', [\App\Http\Controllers\VirtualCardController::class, 'transactions'])->can('view', 'virtualCard')->missing(function () {
-                throw ValidationException::withMessages([
-                    'message' => "Resource has been removed."
-                ]);
-            });
+            Route::get('transactions', [\App\Http\Controllers\VirtualCardController::class, 'transactions']);
+
+            # toggle
+            Route::delete('', [\App\Http\Controllers\VirtualCardController::class, 'withdraw']);
         });
 
         # virtual account
