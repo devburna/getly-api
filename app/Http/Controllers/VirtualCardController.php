@@ -32,6 +32,13 @@ class VirtualCardController extends Controller
                 return $this->show($request);
             }
 
+            // if user has funds
+            if (!$request->user()->hasFunds(env('MONO_VIRTUAL_CARD_FEE'))) {
+                throw ValidationException::withMessages([
+                    'Insufficient funds, please fund wallet and try again.'
+                ]);
+            }
+
             // create a mono account if not found
             if (!$request->user()->monoAccountHolder) {
 
@@ -91,6 +98,7 @@ class VirtualCardController extends Controller
     public function show(Request $request)
     {
         try {
+            // if user has virtual card
             if (!$request->user()->virtualCard) {
                 throw ValidationException::withMessages(['No virtual card created for this account.']);
             }
@@ -126,8 +134,8 @@ class VirtualCardController extends Controller
                 throw ValidationException::withMessages(['No virtual card created for this account.']);
             }
 
-            // if user has fund
-            if ($request->user()->hasFunds($request->amount)) {
+            // if user has funds
+            if (!$request->user()->hasFunds($request->amount)) {
                 throw ValidationException::withMessages([
                     'Insufficient funds, please fund wallet and try again.'
                 ]);
@@ -231,6 +239,7 @@ class VirtualCardController extends Controller
     public function transactionReceived($data)
     {
         try {
+            // if user has virtual card
             if (!$virtualCard = VirtualCard::where('identity', $data['data']['card'])->first()) {
                 return response()->json([], 401);
             }

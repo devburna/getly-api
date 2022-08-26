@@ -89,6 +89,7 @@ class VirtualAccountController extends Controller
     public function show(Request $request)
     {
         try {
+            // checks if user has a virtual account
             if (!$request->user()->virtualAccount) {
                 throw ValidationException::withMessages(['No virtual account created for this account.']);
             }
@@ -125,6 +126,7 @@ class VirtualAccountController extends Controller
     {
         try {
             return DB::transaction(function () use ($data) {
+                // checks if user has a virtual account
                 if (!$virtualAccount = VirtualAccount::where('identity', $data['data']['account'])->first()) {
                     return response()->json([], 401);
                 }

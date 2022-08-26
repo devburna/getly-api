@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Support\Facades\Http;
 use Illuminate\Validation\ValidationException;
+use Illuminate\Support\Str;
 
 class MonoController extends Controller
 {
@@ -53,6 +54,36 @@ class MonoController extends Controller
                 'account_type' => 'collection',
                 'disposable' => false,
                 'provider' => 'gtb'
+            ])->json();
+
+            // catch error
+            if (!array_key_exists('status', $response) || $response['status'] === 'failed') {
+                throw ValidationException::withMessages([$response['message']]);
+            }
+
+            // set data provider
+            $response['data']['provider'] = $this->provider;
+
+            return $response;
+        } catch (\Throwable $th) {
+            throw ValidationException::withMessages([$th->getMessage()]);
+        }
+    }
+
+    public function virtualAccountTransfer($data)
+    {
+        try {
+            $response = Http::withHeaders([
+                'Accept' => 'application/json',
+                'Content-Type' => 'application/json',
+                'mono-sec-key' => $this->monoSecKey,
+            ])->post("{$this->monoUrl}/issuing/v1/virtualaccounts/{$data['card']}/transfer", [
+                'amount' => $data['amount'],
+                'narration' => $data['narration'],
+                'reference' => $data['narration'],
+                'account_number' => $data['account_number'],
+                'bank_code' => $data['bank_code'],
+                'meta' => $data['meta']
             ])->json();
 
             // catch error
