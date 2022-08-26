@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\KYCRequest;
-use Illuminate\Validation\ValidationException;
 
 class KYCController extends Controller
 {
@@ -12,15 +11,17 @@ class KYCController extends Controller
     {
         try {
             // get bvn info
-            $bvn = (new IdentityPass())->verifyBvn((int)$request->bvn);
+            $bvn = (new MonoController())->verifyBvn($request->bvn);
 
             return response()->json([
                 'status' => true,
-                'data' => $bvn['bvn_data'],
+                'data' => $bvn['data'],
                 'message' => 'success',
             ]);
         } catch (\Throwable $th) {
-            throw ValidationException::withMessages([
+            return response()->json([
+                'status' => false,
+                'data' => null,
                 'message' => $th->getMessage()
             ]);
         }

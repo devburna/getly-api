@@ -20,9 +20,6 @@ class VirtualAccount extends Model
     protected $fillable = [
         'user_id',
         'identity',
-        'bank_name',
-        'account_number',
-        'account_name',
         'provider',
         'meta'
     ];
@@ -51,7 +48,7 @@ class VirtualAccount extends Model
         //
     ];
 
-    public function user(): BelongsTo
+    public function owner(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }

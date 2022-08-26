@@ -13,12 +13,11 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('virtual_accounts', function (Blueprint $table) {
+        Schema::create('mono_account_holders', function (Blueprint $table) {
             $table->id()->from(time());
             $table->unsignedBigInteger('user_id')->unique();
             $table->string('identity')->unique();
-            $table->string('provider');
-            $table->longText('meta');
+            $table->string('meta');
             $table->softDeletes();
             $table->timestamps();
         });
@@ -31,6 +30,6 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('virtual_accounts');
+        Schema::dropIfExists('mono_account_holders');
     }
 };

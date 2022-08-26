@@ -4,7 +4,7 @@ namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class StoreVirtualCardRequest extends FormRequest
+class StoreMonoAccountHolderRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -24,9 +24,9 @@ class StoreVirtualCardRequest extends FormRequest
     public function rules()
     {
         return [
-            'document' => 'required|string|in:bvn',
-            'bvn' => 'required_if:document,bvn',
-            'approved' => 'required|boolean'
+            'user_id' => 'required|exists:users,id|unique:mono_account_holders,user_id',
+            'identity' => 'required|unique:mono_account_holders,identity',
+            'meta' => 'required',
         ];
     }
 }

@@ -5,11 +5,13 @@ namespace App\Http\Controllers;
 use App\Enums\TransactionChannel;
 use App\Enums\TransactionStatus;
 use App\Enums\TransactionType;
+use App\Http\Requests\StoreMonoAccountHolderRequest;
 use App\Http\Requests\StoreTransactionRequest;
 use App\Http\Requests\StoreVirtualAccountRequest;
 use App\Models\VirtualAccount;
 use App\Notifications\Transaction;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
 class VirtualAccountController extends Controller
@@ -23,49 +25,39 @@ class VirtualAccountController extends Controller
     public function create(StoreVirtualAccountRequest $request)
     {
         try {
-            // checks duplicate wallet
-            if ($request->user()->virtualAccount) {
-                return $this->show($request);
+
+            // create a mono account if not found
+            if (!$request->user()->virtualAccount || !$request->user()->monoAccount) {
+
+                // re-verify bvn
+                $bvn = (new MonoController())->verifyBvn($request->bvn);
+
+                $storeMonoAccountHolderRequest = (new StoreMonoAccountHolderRequest());
+                $storeMonoAccountHolderRequest['user_id'] = $request->user()->id;
+                $storeMonoAccountHolderRequest['first_name'] = $bvn['data']['first_name'];
+                $storeMonoAccountHolderRequest['last_name'] = $bvn['data']['last_name'];
+                $storeMonoAccountHolderRequest['bvn'] = $request->bvn;
+                $storeMonoAccountHolderRequest['phone'] = $bvn['data']['phone'];
+                (new MonoAccountHolderController())->createAccountHolder($storeMonoAccountHolderRequest);
             }
 
-            // checks if bvn was approved
-            if (!$request->approved) {
-                throw ValidationException::withMessages([
-                    'Please verify your BVN.'
-                ]);
-            }
+            // generate virtual account
+            $virtualAccount = (new MonoController())->createVirtualAccount($request->user()->monoAccountHolder->identity);
+            $request['user_id'] = $request->user()->id;
+            $request['identity'] = $virtualAccount['data']['id'];
+            $request['provider'] = $virtualAccount['data']['provider'];
+            $request['meta'] = json_encode($virtualAccount);
 
-            // get bvn info
-            $bvn = (new IdentityPass())->verifyBvn((int)$request->bvn);
+            // store vitual account
+            $request->user()->virtualAccount = $this->store($request);
 
-            // generate virtual card
-            $bvn['id'] = $request->user()->id;
-            $bvn['bvn'] = $request->bvn;
-            $bvn['first_name'] = $bvn['bvn_data']['firstName'];
-            $bvn['last_name'] = $bvn['bvn_data']['lastName'];
-            $bvn['email_address'] = $request->user()->email_address;
-            $bvn['phone_number'] = $bvn['bvn_data']['phoneNumber1'];
-
-            $virtualAccount = (new FlutterwaveController())->createVirtualAccount($bvn);
-
-            // store virtual account
-            $virtualAccount['user_id'] = $request->user()->id;
-            $virtualAccount['identity'] = $virtualAccount['data']['order_ref'];
-            $virtualAccount['bank_name'] = $virtualAccount['data']['bank_name'];
-            $virtualAccount['account_name'] = "{$request->user()->first_name} {$request->user()->last_name}";
-            $virtualAccount['account_number'] = $virtualAccount['data']['account_number'];
-            $virtualAccount['provider'] = $virtualAccount['data']['provider'];
-            $virtualAccount['meta'] = json_encode($virtualAccount['data']);
-
-            $storeVirtualAccountRequest = new StoreVirtualAccountRequest($virtualAccount);
-
-            $request->user()->virtualAccount = $this->store($storeVirtualAccountRequest);
-
-            return $this->show($request, 'success', 201);
+            return $this->show($request);
         } catch (\Throwable $th) {
-            throw ValidationException::withMessages([
+            return response()->json([
+                'status' => false,
+                'data' => null,
                 'message' => $th->getMessage()
-            ]);
+            ], 422);
         }
     }
 
@@ -79,9 +71,6 @@ class VirtualAccountController extends Controller
         return VirtualAccount::create($request->only([
             'user_id',
             'identity',
-            'bank_name',
-            'account_number',
-            'account_name',
             'provider',
             'meta'
         ]));
@@ -90,54 +79,64 @@ class VirtualAccountController extends Controller
     /**
      * Display the specified resource.
      *
-     * @param  \App\Http\Request  $request
+     * @param Illuminate\Http\Request;
      * @return \Illuminate\Http\Response
      */
-    public function show(Request $request, $message = 'success', $code = 200)
+    public function show(Request $request)
     {
-        return response()->json([
-            'status' => true,
-            'data' => $request->user()->virtualAccount,
-            'message' => $message,
-        ], $code);
+        try {
+            if (!$request->user()->virtualAccount) {
+                throw ValidationException::withMessages(['No virtual account created for this account.']);
+            }
+
+            // get virtual account details
+            $virtualAccount = (new MonoController())->virtualAccountDetails($request->user()->virtualAccount->identity);
+
+            return response()->json([
+                'status' => true,
+                'data' => $virtualAccount['data'],
+                'message' => 'success',
+            ]);
+        } catch (\Throwable $th) {
+            return response()->json([
+                'status' => false,
+                'data' => null,
+                'message' => $th->getMessage()
+            ], 422);
+        }
     }
 
-    public function chargeCompleted($data)
+    public function transferReceived($data)
     {
-        // find virtual account
-        if (!$virtualAccount = VirtualAccount::where('identity', $data['data']['tx_ref'])->first()) {
+        try {
+            return DB::transaction(function () use ($data) {
+                if (!$virtualAccount = VirtualAccount::where('identity', $data['data']['account'])->first()) {
+                    return response()->json([], 401);
+                }
+
+                // credit user wallet
+                $virtualAccount->user->credit($data['data']['amount']);
+
+                // create transaction
+                $storeTransactionRequest = (new StoreTransactionRequest());
+                $storeTransactionRequest['user_id'] = $virtualAccount->user->id;
+                $storeTransactionRequest['identity'] = $data['data']['id'];
+                $storeTransactionRequest['reference'] = str_shuffle($data['data']['account']);
+                $storeTransactionRequest['type'] = TransactionType::CREDIT();
+                $storeTransactionRequest['channel'] = TransactionChannel::VIRTUAL_ACCOUNT();
+                $storeTransactionRequest['amount'] = $data['data']['amount'];
+                $storeTransactionRequest['narration'] = $data['data']['narration'];
+                $storeTransactionRequest['status'] = TransactionStatus::SUCCESS();
+                $storeTransactionRequest['meta'] = json_encode($data);
+                $transaction = (new TransactionController())->store($storeTransactionRequest);
+
+                // notify user of transaction
+                $transaction->owner->notify(new Transaction($transaction));
+
+                return response()->json([]);
+            });
+        } catch (\Throwable $th) {
             return response()->json([], 422);
         }
-
-        // set transaction data
-        $transactionRequest = new StoreTransactionRequest();
-        $transactionRequest['user_id'] = $virtualAccount->user->id;
-        $transactionRequest['identity'] = $data['data']['id'];
-        $transactionRequest['reference'] = $data['data']['flw_ref'];
-        $transactionRequest['type'] = TransactionType::CREDIT();
-        $transactionRequest['channel'] = TransactionChannel::VIRTUAL_ACCOUNT();
-        $transactionRequest['amount'] = $data['data']['amount'];
-        $transactionRequest['narration'] = $data['data']['narration'];
-        $transactionRequest['meta'] = json_encode($data);
-
-        // verify transaction status
-        if (!$data['data']['status'] === 'successful') {
-            // set status
-            $transactionRequest['status'] = TransactionStatus::FAILED();
-        } else {
-            // set status
-            $transactionRequest['status'] = TransactionStatus::SUCCESS();
-
-            // credit user wallet
-            $virtualAccount->user->credit($data['data']['amount']);
-        }
-
-        // store transaction
-        $transaction = (new TransactionController())->store($transactionRequest);
-
-        // notify user of transaction
-        $virtualAccount->user->notify(new Transaction($transaction));
-
-        return response()->json([]);
     }
 }

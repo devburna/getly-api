@@ -2,16 +2,12 @@
 
 namespace App\Models;
 
-use App\Enums\TransactionChannel;
-use App\Enums\TransactionStatus;
-use App\Enums\TransactionType;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class Transaction extends Model
+class MonoAccountHolder extends Model
 {
     use HasFactory, SoftDeletes;
 
@@ -23,12 +19,6 @@ class Transaction extends Model
     protected $fillable = [
         'user_id',
         'identity',
-        'reference',
-        'type',
-        'channel',
-        'amount',
-        'narration',
-        'status',
         'meta'
     ];
 
@@ -39,8 +29,6 @@ class Transaction extends Model
      */
     protected $hidden = [
         'user_id',
-        'identity',
-        'reference',
     ];
 
     /**
@@ -49,17 +37,10 @@ class Transaction extends Model
      * @var array
      */
     protected $casts = [
-        'type' => TransactionType::class,
-        'channel' => TransactionChannel::class,
-        'status' => TransactionStatus::class
+        //
     ];
 
-    public function owner(): BelongsTo
-    {
-        return $this->belongsTo(User::class);
-    }
-
-    protected function meta(): Attribute
+    protected function data(): Attribute
     {
         return Attribute::make(
             get: fn ($value, $attributes) => json_decode($value),

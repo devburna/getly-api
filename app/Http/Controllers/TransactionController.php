@@ -40,59 +40,32 @@ class TransactionController extends Controller
     {
         try {
 
-            // verify request is from flutterwave
-            if ($request->header('verify-hash') && !$request->header('verify-hash') === env('FLUTTERWAVE_SECRET_HASH')) {
-                return response()->json([], 401);
+            // Mono transfer received
+            if (array_key_exists('event', $request['data']) && $request['data']['event'] === 'issuing.transfer_received') {
+                (new VirtualAccountController())->transferReceived($request);
             }
 
-            // verify transaction
-            $response = (new FlutterwaveController())->verifyTransaction($request->transaction_id);
-
-            // find transaction
-            $transaction = Transaction::where('identity', $response['data']['id'])->first();
-
-            // check for duplicate transaction
-            if ($transaction && $transaction->status->is(TransactionStatus::SUCCESS()) || $transaction && $transaction->status->is(TransactionStatus::FAILED())) {
-                throw ValidationException::withMessages(['Duplicate transaction.']);
-            }
-
-            // check for card-top-up transaction
-            if (array_key_exists('meta', $response['data']) && $response['data']['meta']['consumer_mac'] === 'card-top-up') {
-                (new WalletController())->chargeCompleted($response);
-            }
-
-            // check for contribution or buy transaction
-            if (array_key_exists('meta', $response['data']) && $response['data']['meta']['consumer_mac'] === 'contribute' || $response['data']['meta']['consumer_mac'] === 'buy') {
-                (new GetlistItem())->chargeCompleted($response);
-            }
-
-            // check for transfer transaction
-            if (array_key_exists('event', $response) && $response['event'] === 'transfer.completed' && array_key_exists('event.type', $response) && $response['event.type'] === 'Transfer' || $response['event.type'] === 'transfer') {
-                // add transaction to response
-                $response['transaction'] = $transaction;
-
-                (new WalletController())->transferCompleted($response);
-            }
-
-            // check for virtual account transaction
-            if (array_key_exists('event', $response) && $response['event'] === 'charge.completed') {
-                (new VirtualAccount())->chargeCompleted($response);
+            // Mono card transaction received
+            if (array_key_exists('event', $request['data']) && $request['data']['event'] === 'issuing.card_transaction') {
+                (new VirtualCardController())->transactionReceived($request);
             }
 
             // store webhook info
             Webhook::create([
                 'origin' => $request->server('SERVER_NAME'),
                 'status' => true,
-                'data' => json_encode($response['data']),
-                'message' => $response['message'],
+                'data' => json_encode($request->all()),
+                'message' => 'success',
             ]);
 
             return response()->json([]);
         } catch (\Throwable $th) {
+
             // store webhook info
             Webhook::create([
                 'origin' => $request->server('SERVER_NAME'),
                 'status' => false,
+                'data' => json_encode($request->all()),
                 'message' => $th->getMessage(),
             ]);
 

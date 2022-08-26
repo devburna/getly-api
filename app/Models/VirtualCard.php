@@ -18,24 +18,8 @@ class VirtualCard extends Model
      * @var string[]
      */
     protected $fillable = [
-        'id',
         'user_id',
         'identity',
-        'account_id',
-        'currency',
-        'card_hash',
-        'card_pan',
-        'masked_pan',
-        'name_on_card',
-        'expiration',
-        'cvv',
-        'address_1',
-        'address_2',
-        'city',
-        'state',
-        'zip_code',
-        'callback_url',
-        'is_active',
         'provider',
         'meta'
     ];
@@ -47,10 +31,7 @@ class VirtualCard extends Model
      */
     protected $hidden = [
         'user_id',
-        'callback_url',
         'identity',
-        'account_id',
-        'card_hash',
         'provider',
         'meta',
         'deleted_at',
@@ -67,7 +48,7 @@ class VirtualCard extends Model
         //
     ];
 
-    public function user(): BelongsTo
+    public function owner(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }

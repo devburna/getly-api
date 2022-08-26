@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
 class MonoController extends Controller
@@ -17,33 +16,74 @@ class MonoController extends Controller
         $this->provider = 'mono';
     }
 
-    public function createAccountHolder($data)
+    public function verifyBvn($data)
     {
         try {
-            $responseData = Http::withHeaders([
+            $response = Http::withHeaders([
+                'Accept' => 'application/json',
                 'Content-Type' => 'application/json',
                 'mono-sec-key' => $this->monoSecKey,
-            ])->post("{$this->monoUrl}/accountholders", [
-                'entity' => 'INDIVIDUAL',
-                'first_name' => $data['first_name'],
-                'last_name' => $data['last_name'],
-                'bvn' => $data['bvn'],
-                'phone' => $data['phone'],
-            ]);
+            ])->post("{$this->monoUrl}/v2/lookup/bvn", [
+                'bvn' => $data
+            ])->json();
 
-            // set response
-            $responseData = $responseData->json();
-
-            // catch failed
-            if ($responseData['status'] === 'failed') {
-                throw ValidationException::withMessages([$responseData['message']]);
+            // catch error
+            if (!array_key_exists('status', $response) || $response['status'] === 'failed') {
+                throw ValidationException::withMessages([$response['message']]);
             }
 
-            $responseData['data']['account_holder'] = $responseData['data']['id'];
-            $responseData['data']['amount'] = $data['amount'];
-            $responseData['data']['bvn'] = $data['bvn'];
+            // set data provider
+            $response['data']['provider'] = $this->provider;
 
-            return $this->createVirtualCard($responseData['data']);
+            return $response;
+        } catch (\Throwable $th) {
+            throw ValidationException::withMessages([$th->getMessage()]);
+        }
+    }
+
+    public function createVirtualAccount($data)
+    {
+        try {
+            $response = Http::withHeaders([
+                'Accept' => 'application/json',
+                'Content-Type' => 'application/json',
+                'mono-sec-key' => $this->monoSecKey,
+            ])->post("{$this->monoUrl}/issuing/v1/accountholders", [
+                'account_holder' => $data,
+                'account_type' => 'collection',
+                'disposable' => false,
+                'provider' => 'gtb'
+            ])->json();
+
+            // catch error
+            if (!array_key_exists('status', $response) || $response['status'] === 'failed') {
+                throw ValidationException::withMessages([$response['message']]);
+            }
+
+            // set data provider
+            $response['data']['provider'] = $this->provider;
+
+            return $response;
+        } catch (\Throwable $th) {
+            throw ValidationException::withMessages([$th->getMessage()]);
+        }
+    }
+
+    public function virtualAccountDetails($data)
+    {
+        try {
+            $response = Http::withHeaders([
+                'Accept' => 'application/json',
+                'Content-Type' => 'application/json',
+                'mono-sec-key' => $this->monoSecKey,
+            ])->get("{$this->monoUrl}/issuing/v1/accountholders/{$data}")->json();
+
+            // catch error
+            if (!array_key_exists('status', $response) || $response['status'] === 'failed') {
+                throw ValidationException::withMessages([$response['message']]);
+            }
+
+            return $response;
         } catch (\Throwable $th) {
             throw ValidationException::withMessages([$th->getMessage()]);
         }
@@ -52,138 +92,26 @@ class MonoController extends Controller
     public function createVirtualCard($data)
     {
         try {
-            $responseData = Http::withHeaders([
+            $response = Http::withHeaders([
+                'Accept' => 'application/json',
                 'Content-Type' => 'application/json',
                 'mono-sec-key' => $this->monoSecKey,
-            ])->post("{$this->monoUrl}/cards/virtual", [
-                'fund_source' => 'NGN',
-                'amount' => (int)$data['amount'],
-                'account_holder' => $data['account_holder'],
-            ]);
-
-            // set response
-            $responseData = $responseData->json();
-
-            // catch failed
-            if ($responseData['status'] === 'failed') {
-                throw ValidationException::withMessages([$responseData['message']]);
-            }
-
-            // get card details
-            $details = Http::withHeaders([
-                'Content-Type' => 'application/json',
-                'mono-sec-key' => $this->monoSecKey,
-            ])->get("{$this->monoUrl}/cards/virtual/{$responseData['data']['id']}");
-
-            // set response
-            $details = $details->json();
-
-            // catch failed
-            if ($details['status'] === 'failed') {
-                throw ValidationException::withMessages([$details['message']]);
-            }
-
-            // set card data
-            $responseData['data']['id'] = $details['data']['id'];
-            $responseData['data']['account_id'] = Str::uuid();
-            $responseData['data']['currency'] = $details['data']['currency'];
-            $responseData['data']['card_hash'] = Str::uuid();
-            $responseData['data']['card_pan'] = $details['data']['card_number'];
-            $responseData['data']['masked_pan'] = $details['data']['card_pan'];
-            $responseData['data']['name_on_card'] = $details['data']['name_on_card'];
-            $responseData['data']['expiration'] = "{$details['data']['expiry_month']}/{$details['data']['expiry_year']}";
-            $responseData['data']['cvv'] = $details['data']['cvv'];
-            $responseData['data']['address_1'] = "{$details['data']['billing_address']['street']} {$details['data']['billing_address']['state']}";
-            $responseData['data']['address_2'] = null;
-            $responseData['data']['city'] = $details['data']['billing_address']['street'];
-            $responseData['data']['state'] = $details['data']['billing_address']['state'];
-            $responseData['data']['zip_code'] = $details['data']['billing_address']['postal_code'];
-            $responseData['data']['callback_url'] = route('payment');
-            $responseData['data']['is_active'] = true;
-            $responseData['data']['provider'] = $this->provider;
-
-            return $responseData;
-        } catch (\Throwable $th) {
-            throw ValidationException::withMessages([$th->getMessage()]);
-        }
-    }
-
-    public function fundVirtualCard($data)
-    {
-        try {
-            $responseData = Http::withHeaders([
-                'Content-Type' => 'application/json',
-                'mono-sec-key' => $this->monoSecKey,
-            ])->post("{$this->monoUrl}/cards/{$data['card']}/fund", [
-                'fund_source' => 'NGN',
-                'amount' => $data['amount'],
-                'meta' => $data['meta']
-            ]);
-
-            // set response
-            $responseData = $responseData->json();
-
-            // catch failed
-            if ($responseData['status'] === 'failed') {
-                throw ValidationException::withMessages([$responseData['message']]);
-            }
-
-            // set response data
-            $responseData['data']['provider'] = $this->provider;
-
-            return $responseData;
-        } catch (\Throwable $th) {
-            throw ValidationException::withMessages([$th->getMessage()]);
-        }
-    }
-
-    public function virtualCardTransactions($data)
-    {
-        try {
-            unset($data['index']);
-            unset($data['size']);
-            $responseData = Http::withHeaders([
-                'Content-Type' => 'application/json',
-                'mono-sec-key' => $this->monoSecKey,
-            ])->get("{$this->monoUrl}/cards/{$data['card']}/transactions", $data);
-
-            // set response
-            $responseData = $responseData->json();
-
-            // catch failed
-            if ($responseData['status'] === 'failed') {
-                throw ValidationException::withMessages([$responseData['message']]);
-            }
-
-            // set response data
-            $responseData['data']['provider'] = $this->provider;
-
-            return $responseData;
-        } catch (\Throwable $th) {
-            throw ValidationException::withMessages([$th->getMessage()]);
-        }
-    }
-
-    public function toggleVirtualCard($data)
-    {
-        try {
-            $responseData = Http::withHeaders([
-                'Content-Type' => 'application/json',
-                'mono-sec-key' => $this->monoSecKey,
-            ])->patch("{$this->monoUrl}/cards/{$data['card']}/{$data['action']}");
-
-            // set response
-            $responseData = $responseData->json();
+            ])->post("{$this->monoUrl}/issuing/v1/cards/virtual", [
+                'account_holder' => $data,
+                'currency' => 'USD',
+                'amount' => 5,
+                'fund_source' => 'USD'
+            ])->json();
 
             // catch error
-            if ($responseData['status'] === 'error') {
-                throw ValidationException::withMessages([$responseData['message']]);
+            if (!array_key_exists('status', $response) || $response['status'] === 'failed') {
+                throw ValidationException::withMessages([$response['message']]);
             }
 
-            // set response data
-            $responseData['data']['provider'] = $this->provider;
+            // set data provider
+            $response['data']['provider'] = $this->provider;
 
-            return $responseData;
+            return $response;
         } catch (\Throwable $th) {
             throw ValidationException::withMessages([$th->getMessage()]);
         }

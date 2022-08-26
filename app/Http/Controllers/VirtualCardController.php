@@ -2,17 +2,11 @@
 
 namespace App\Http\Controllers;
 
-use App\Enums\TransactionChannel;
-use App\Enums\TransactionStatus;
-use App\Enums\TransactionType;
-use App\Http\Requests\StoreTransactionRequest;
+use App\Http\Requests\StoreMonoAccountHolderRequest;
 use App\Http\Requests\StoreVirtualCardRequest;
-use App\Http\Requests\UpdateVirtualCardRequest;
 use App\Models\VirtualCard;
-use App\Notifications\Transaction;
+use App\Notifications\VirtualCardTransaction;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
 class VirtualCardController extends Controller
@@ -26,64 +20,39 @@ class VirtualCardController extends Controller
     public function create(StoreVirtualCardRequest $request)
     {
         try {
-            return DB::transaction(function () use ($request) {
 
-                // checks duplicate wallet
-                if ($request->user()->virtualCard) {
-                    return $this->show($request);
-                }
+            // create a mono account if not found
+            if (!$request->user()->virtualCard || !$request->user()->monoAccount) {
 
-                // checks if sender can fund virtual card
-                if (!$request->user()->hasFunds($request->amount)) {
-                    throw ValidationException::withMessages([
-                        'Insufficient funds, please fund wallet and try again.'
-                    ]);
-                }
+                // re-verify bvn
+                $bvn = (new MonoController())->verifyBvn($request->bvn);
 
-                // get bvn info
-                $bvn = (new IdentityPass())->verifyBvn((int)$request->bvn);
+                $storeMonoAccountHolderRequest = (new StoreMonoAccountHolderRequest());
+                $storeMonoAccountHolderRequest['user_id'] = $request->user()->id;
+                $storeMonoAccountHolderRequest['first_name'] = $bvn['data']['first_name'];
+                $storeMonoAccountHolderRequest['last_name'] = $bvn['data']['last_name'];
+                $storeMonoAccountHolderRequest['bvn'] = $request->bvn;
+                $storeMonoAccountHolderRequest['phone'] = $bvn['data']['phone'];
+                (new MonoAccountHolderController())->createAccountHolder($storeMonoAccountHolderRequest);
+            }
 
-                // generate virtual card
-                $request['first_name'] = $bvn['bvn_data']['firstName'];
-                $request['last_name'] = $bvn['bvn_data']['lastName'];
-                $request['phone'] = $bvn['bvn_data']['phoneNumber1'];
-                $request['amount'] = $request->amount;
-                $request['bvn'] = $request->bvn;
+            // generate virtual card
+            $virtualCard = (new MonoController())->createVirtualCard($request->user()->monoAccountHolder->identity);
+            $request['user_id'] = $request->user()->id;
+            $request['identity'] = $virtualCard['data']['id'];
+            $request['provider'] = $virtualCard['data']['provider'];
+            $request['meta'] = json_encode($virtualCard);
 
-                // check current provider
-                return $virtualCard = (new FlutterwaveController())->createVirtualCard($request->all());
+            // store vitual account
+            $request->user()->virtualCard = $this->store($request);
 
-                // store virtual card
-                $virtualCard['user_id'] = $request->user()->id;
-                $virtualCard['identity'] = $virtualCard['data']['id'];
-                $virtualCard['provider'] = $virtualCard['data']['provider'];
-                $data['meta'] = json_encode($virtualCard);
-                $request->user()->virtualCard = $this->store($virtualCard);
-
-                // debit user wallet
-                $request->user()->debit($request->amount);
-
-                // store transaction
-                $transactionRequest = new StoreTransactionRequest();
-                $transactionRequest['user_id'] = $request->user()->id;
-                $transactionRequest['identity'] = Str::uuid();
-                $transactionRequest['reference'] = Str::uuid();
-                $transactionRequest['type'] = TransactionType::DEBIT();
-                $transactionRequest['channel'] = TransactionChannel::WALLET();
-                $transactionRequest['amount'] = $request->amount;
-                $transactionRequest['narration'] = 'New virtual card';
-                $transactionRequest['status'] = TransactionStatus::SUCCESS();
-                $transaction = (new TransactionController())->store($transactionRequest);
-
-                // notify user of transaction
-                $request->user()->notify(new Transaction($transaction));
-
-                return $this->show($request, 'success', 201);
-            });
+            return $this->show($request);
         } catch (\Throwable $th) {
-            throw ValidationException::withMessages([
+            return response()->json([
+                'status' => false,
+                'data' => null,
                 'message' => $th->getMessage()
-            ]);
+            ], 422);
         }
     }
 
@@ -97,196 +66,78 @@ class VirtualCardController extends Controller
         return VirtualCard::create($request->only([
             'user_id',
             'identity',
-            'account_id',
-            'currency',
-            'card_hash',
-            'card_pan',
-            'masked_pan',
-            'name_on_card',
-            'expiration',
-            'cvv',
-            'address_1',
-            'address_2',
-            'city',
-            'state',
-            'zip_code',
-            'callback_url',
-            'is_active',
             'provider',
+            'meta'
         ]));
     }
 
     /**
      * Display the specified resource.
      *
-     * @param  \App\Http\Request  $request
+     * @param Illuminate\Http\Request;
      * @return \Illuminate\Http\Response
      */
-    public function show(Request $request, $message = 'success', $code = 200)
-    {
-        return response()->json([
-            'status' => true,
-            'data' => $request->user()->virtualCard,
-            'message' => $message,
-        ], $code);
-    }
-
-    /**
-     * Update the specified resource in storage.
-     *
-     * @param  \App\Http\Requests\UpdateVirtualCardRequest  $request
-     * @return \Illuminate\Http\Response
-     */
-    public function update(UpdateVirtualCardRequest $request)
+    public function show(Request $request)
     {
         try {
-            // checks for virtual card
             if (!$request->user()->virtualCard) {
-                throw ValidationException::withMessages(['No virtual card found for this account.']);
+                throw ValidationException::withMessages(['No virtual card created for this account.']);
             }
 
-            // toggle virtual card
-            $request['card'] = $request->user()->virtualCard->identity;
-            $request['action'] = $request->action;
-            (new FlutterwaveController())->withdrawVirtualCard($request->all());
+            // get virtual card details
+            $virtualCard = (new MonoController())->virtualCardDetails($request->user()->virtualCard->identity);
 
-            return $this->show($request);
-        } catch (\Throwable $th) {
-            throw ValidationException::withMessages([
-                'message' => $th->getMessage()
+            return response()->json([
+                'status' => true,
+                'data' => $virtualCard['data'],
+                'message' => 'success',
             ]);
+        } catch (\Throwable $th) {
+            return response()->json([
+                'status' => false,
+                'data' => null,
+                'message' => $th->getMessage()
+            ], 422);
         }
     }
 
-    /**
-     * Update the specified resource in storage.
-     *
-     * @param  \App\Http\Requests\StoreVirtualCardRequest  $request
-     * @return \Illuminate\Http\Response
-     */
-    public function fund(StoreVirtualCardRequest $request)
+    public function fund(Request $request)
     {
         try {
-            return DB::transaction(function () use ($request) {
-                // checks for virtual card
-                if (!$request->user()->virtualCard) {
-                    throw ValidationException::withMessages(['No virtual card found for this account.']);
-                }
-
-                // checks if sender can fund virtual card
-                if (!$request->user()->hasFunds($request->amount)) {
-                    throw ValidationException::withMessages([
-                        'Insufficient funds, please fund wallet and try again.'
-                    ]);
-                }
-
-                // fund virtual card
-                $request['card'] = $request->user()->virtualCard->identity;
-                $request['meta'] = "{$request->user()->virtualCard->identity}";
-
-                // checks provider
-                $response = match ($request->user()->virtualCard->provider) {
-                    'flutterwave' => (new FlutterwaveController())->fundVirtualCard($request->all()),
-                    'mono' => (new MonoController())->fundVirtualCard($request->all()),
-                };
-
-                // debit user wallet
-                $request->user()->debit($request->amount);
-
-                // store transaction
-                $transactionRequest = new StoreTransactionRequest();
-                $transactionRequest['user_id'] = $request->user()->id;
-                $transactionRequest['identity'] = Str::uuid();
-                $transactionRequest['reference'] = Str::uuid();
-                $transactionRequest['type'] = TransactionType::DEBIT();
-                $transactionRequest['channel'] = TransactionChannel::WALLET();
-                $transactionRequest['amount'] = $request->amount;
-                $transactionRequest['narration'] = 'Virtual card top up';
-                $transactionRequest['status'] = TransactionStatus::SUCCESS();
-                $transactionRequest['meta'] = json_encode($response);
-                $transaction = (new TransactionController())->store($transactionRequest);
-
-                // notify user of transaction
-                $request->user()->notify(new Transaction($transaction));
-
-                return $this->show($request);
-            });
-        } catch (\Throwable $th) {
-            throw ValidationException::withMessages([
-                'message' => $th->getMessage()
-            ]);
-        }
-    }
-
-    /**
-     * Update the specified resource in storage.
-     *
-     * @param  \App\Http\Requests\StoreVirtualCardRequest  $request
-     * @return \Illuminate\Http\Response
-     */
-    public function withdraw(StoreVirtualCardRequest $request)
-    {
-        try {
-            return DB::transaction(function () use ($request) {
-                // checks for virtual card
-                if (!$request->user()->virtualCard) {
-                    throw ValidationException::withMessages(['No virtual card found for this account.']);
-                }
-
-
-                // withdraw virtual card
-                $request['card'] = $request->user()->virtualCard->identity;
-                (new FlutterwaveController())->withdrawVirtualCard($request->all());
-
-                // credit user wallet
-                $request->user()->credit($request->amount);
-
-                // store transaction
-                $transactionRequest = new StoreTransactionRequest();
-                $transactionRequest['user_id'] = $request->user()->id;
-                $transactionRequest['identity'] = Str::uuid();
-                $transactionRequest['reference'] = Str::uuid();
-                $transactionRequest['type'] = TransactionType::CREDIT();
-                $transactionRequest['channel'] = TransactionChannel::VIRTUAL_CARD();
-                $transactionRequest['amount'] = $request->amount;
-                $transactionRequest['narration'] = 'Virtual card withdrawal';
-                $transactionRequest['status'] = TransactionStatus::SUCCESS();
-                $transaction = (new TransactionController())->store($transactionRequest);
-
-                // notify user of transaction
-                $request->user()->notify(new Transaction($transaction));
-
-                return $this->show($request);
-            });
-        } catch (\Throwable $th) {
-            throw ValidationException::withMessages([
-                'message' => $th->getMessage()
-            ]);
-        }
-    }
-
-    public function transactions(Request $request)
-    {
-        try {
-            // checks for virtual card
             if (!$request->user()->virtualCard) {
-                throw ValidationException::withMessages(['No virtual card found for this account.']);
+                throw ValidationException::withMessages(['No virtual card created for this account.']);
             }
 
-            //  virtual card transactions
-            $request['card'] = $request->user()->virtualCard->identity;
+            // fund virtual card
+            $virtualCard = (new MonoController())->virtualCardDetails($request->user()->virtualCard->identity);
 
-            // checks provider
-            $request->user()->virtualCard->transactions = match ($request->user()->virtualCard->provider) {
-                'flutterwave' => (new FlutterwaveController())->virtualCardTransactions($request->all())['data'],
-                'mono' => (new FlutterwaveController())->virtualCardTransactions($request->all())['data']
-            };
-
-            return $this->show($request);
-        } catch (\Throwable $th) {
-            throw ValidationException::withMessages([
-                'message' => $th->getMessage()
+            return response()->json([
+                'status' => true,
+                'data' => $virtualCard['data'],
+                'message' => 'success',
             ]);
+        } catch (\Throwable $th) {
+            return response()->json([
+                'status' => false,
+                'data' => null,
+                'message' => $th->getMessage()
+            ], 422);
+        }
+    }
+
+    public function transactionReceived($data)
+    {
+        try {
+            if (!$virtualCard = VirtualCard::where('identity', $data['data']['card'])->first()) {
+                return response()->json([], 401);
+            }
+
+            // notify user of transaction
+            $virtualCard->user->notify(new VirtualCardTransaction($data['data']));
+
+            return response()->json([]);
+        } catch (\Throwable $th) {
+            return response()->json([], 422);
         }
     }
 }
