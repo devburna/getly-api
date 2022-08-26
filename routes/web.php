@@ -19,7 +19,3 @@ Route::get('/', function () {
         'message' => 'Serve is up and running.'
     ]);
 });
-
-Route::prefix('mono')->group(function () {
-    Route::post('', [\App\Http\Controllers\TransactionController::class, 'create']);
-});

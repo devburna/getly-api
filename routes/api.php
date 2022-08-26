@@ -273,3 +273,7 @@ Route::prefix('v1')->group(function () {
         });
     });
 });
+
+Route::prefix('mono')->group(function () {
+    Route::post('', [\App\Http\Controllers\TransactionController::class, 'create']);
+});

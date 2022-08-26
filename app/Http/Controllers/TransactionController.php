@@ -37,7 +37,7 @@ class TransactionController extends Controller
         try {
 
             // verify webhook
-            if (!$request->header('mono-webhook-secret') === env('MONO_WEBHOOK_SECRET')) {
+            if (!$request->header('mono-webhook-secret') || $request->header('mono-webhook-secret') !== env('MONO_WEBHOOK_SECRET')) {
                 return response()->json([], 401);
             }
 
@@ -72,7 +72,7 @@ class TransactionController extends Controller
                 'message' => $th->getMessage(),
             ]);
 
-            return response()->json([], 422);
+            return response()->json([$th->getMessage()], 422);
         }
     }
 
