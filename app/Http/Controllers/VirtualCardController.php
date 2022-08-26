@@ -133,6 +133,9 @@ class VirtualCardController extends Controller
             unset($virtualCard['data']['account_holder']);
             unset($virtualCard['data']['meta']);
 
+            // convert balance to kobo
+            $virtualCard['data']['balance'] = $virtualCard['data']['balance'] / 100;
+
             return response()->json([
                 'status' => true,
                 'data' => $virtualCard['data'],
@@ -183,7 +186,7 @@ class VirtualCardController extends Controller
             $transaction = (new TransactionController())->store($storeTransactionRequest);
 
             // notify user of transaction
-            $transaction->user->notify(new VirtualCardTransaction($transaction));
+            $request->user()->notify(new VirtualCardTransaction($transaction));
 
             return response()->json([
                 'status' => true,

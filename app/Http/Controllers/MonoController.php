@@ -178,7 +178,7 @@ class MonoController extends Controller
                 'Content-Type' => 'application/json',
                 'mono-sec-key' => $this->monoSecKey,
             ])->post("{$this->monoUrl}/issuing/v1/cards/{$data['card']}/fund", [
-                'amount' => $data['amount'],
+                'amount' => $data['amount'] * 100,
                 'fund_source' => 'ngn'
             ])->json();
 
