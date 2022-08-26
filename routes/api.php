@@ -210,7 +210,7 @@ Route::prefix('v1')->group(function () {
             Route::get('transactions', [\App\Http\Controllers\VirtualCardController::class, 'transactions']);
 
             # toggle
-            Route::delete('', [\App\Http\Controllers\VirtualCardController::class, 'withdraw']);
+            Route::delete('', [\App\Http\Controllers\VirtualCardController::class, 'toggle']);
         });
 
         # virtual account
