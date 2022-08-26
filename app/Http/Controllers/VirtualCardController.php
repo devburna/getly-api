@@ -276,7 +276,7 @@ class VirtualCardController extends Controller
             }
 
             // notify user of transaction
-            $virtualCard->user->notify(new VirtualCardTransaction($data['data']));
+            // $virtualCard->owner->notify(new VirtualCardTransaction($data['data']));
 
             return response()->json([]);
         } catch (\Throwable $th) {

@@ -139,13 +139,13 @@ class VirtualAccountController extends Controller
 
                 // debit or credit
                 match ($type) {
-                    'debit' => $virtualAccount->user->debit($data['data']['amount']),
-                    'credit' => $virtualAccount->user->credit($data['data']['amount'])
+                    'debit' => $virtualAccount->owner->debit($data['data']['amount']),
+                    'credit' => $virtualAccount->owner->credit($data['data']['amount'])
                 };
 
                 // create transaction
                 $storeTransactionRequest = (new StoreTransactionRequest());
-                $storeTransactionRequest['user_id'] = $virtualAccount->user->id;
+                $storeTransactionRequest['user_id'] = $virtualAccount->owner->id;
                 $storeTransactionRequest['identity'] = Str::uuid();
                 $storeTransactionRequest['reference'] = Str::uuid();
                 $storeTransactionRequest['type'] = $type;
