@@ -228,6 +228,9 @@ Route::prefix('v1')->group(function () {
 
             # bvn
             Route::get('bvn', [\App\Http\Controllers\KYCController::class, 'bvn']);
+
+            # bank details
+            Route::get('bank', [\App\Http\Controllers\KYCController::class, 'bank']);
         });
 
         # transactions
@@ -252,6 +255,9 @@ Route::prefix('v1')->group(function () {
 
         # webhooks
         Route::get('webhooks', [\App\Http\Controllers\WebhookController::class, 'index']);
+
+        # banks
+        Route::get('banks', [\App\Http\Controllers\KYCController::class, 'banks'])->middleware(['ability:authenticate']);
     });
 
     # gifts
@@ -266,17 +272,4 @@ Route::prefix('v1')->group(function () {
             });
         });
     });
-
-    # banks
-    Route::prefix('banks')->group(function () {
-
-        # all
-        Route::get('', [\App\Http\Controllers\FlutterwaveController::class, 'banks']);
-
-        # branches
-        Route::get('branches', [\App\Http\Controllers\FlutterwaveController::class, 'bankBranches']);
-    });
-
-    # bank details
-    Route::get('bank-details', [\App\Http\Controllers\FlutterwaveController::class, 'bankDetails']);
 });

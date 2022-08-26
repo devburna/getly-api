@@ -239,4 +239,47 @@ class MonoController extends Controller
             throw ValidationException::withMessages([$th->getMessage()]);
         }
     }
+
+    public function banks()
+    {
+        try {
+            $response = Http::withHeaders([
+                'Accept' => 'application/json',
+                'Content-Type' => 'application/json',
+                'mono-sec-key' => $this->monoSecKey,
+            ])->get("{$this->monoUrl}/v1/misc/banks")->json();
+
+            // catch error
+            if (!array_key_exists('status', $response) || $response['status'] === 'failed') {
+                throw ValidationException::withMessages([$response['message']]);
+            }
+
+            return $response;
+        } catch (\Throwable $th) {
+            throw ValidationException::withMessages([$th->getMessage()]);
+        }
+    }
+
+    public function verifyBank($data)
+    {
+        try {
+            $response = Http::withHeaders([
+                'Accept' => 'application/json',
+                'Content-Type' => 'application/json',
+                'mono-sec-key' => $this->monoSecKey,
+            ])->get("{$this->monoUrl}/v1/lookup/accountnumber", [
+                'bank_code' => $data['bank'],
+                'account_number' => $data['account_number']
+            ])->json();
+
+            // catch error
+            if (!array_key_exists('status', $response) || $response['status'] === 'failed') {
+                throw ValidationException::withMessages([$response['message']]);
+            }
+
+            return $response;
+        } catch (\Throwable $th) {
+            throw ValidationException::withMessages([$th->getMessage()]);
+        }
+    }
 }
