@@ -36,6 +36,11 @@ class TransactionController extends Controller
     {
         try {
 
+            // verify webhook
+            if (!$request->header('mono-webhook-secret') === env('MONO_WEBHOOK_SECRET')) {
+                return response()->json([], 401);
+            }
+
             // Mono transfer received
             $virtual_account_events = ['issuing.transfer_received', 'issuing.transfer_failed', 'issuing.transfer_successful'];
             if (array_key_exists('event', $request['data']) && in_array($request['data']['event'], $virtual_account_events)) {
