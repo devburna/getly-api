@@ -152,7 +152,7 @@ class VirtualAccountController extends Controller
                 $storeTransactionRequest['type'] = $type;
                 $storeTransactionRequest['channel'] = TransactionChannel::VIRTUAL_ACCOUNT();
                 $storeTransactionRequest['amount'] = $data['data']['amount'] / 100;
-                $storeTransactionRequest['narration'] = $data['data']['narration'];
+                $storeTransactionRequest['narration'] = 'Wallet deposit';
                 $storeTransactionRequest['status'] = $status;
                 $storeTransactionRequest['meta'] = json_encode($data);
                 $transaction = (new TransactionController())->store($storeTransactionRequest);
