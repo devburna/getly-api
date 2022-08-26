@@ -2,21 +2,17 @@
 
 namespace App\Http\Controllers;
 
-use App\Enums\TransactionStatus;
 use App\Http\Requests\StoreTransactionRequest;
-use App\Models\GetlistItem;
 use App\Models\Transaction;
-use App\Models\VirtualAccount;
 use App\Models\Webhook;
 use Illuminate\Http\Request;
-use Illuminate\Validation\ValidationException;
 
 class TransactionController extends Controller
 {
     /**
      * Display a listing of the resource.
      *
-     * @param  \App\Http\Requests  $request
+     * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
     public function index(Request $request)
@@ -33,7 +29,7 @@ class TransactionController extends Controller
     /**
      * Show the form for creating a new resource.
      *
-     * @param  \App\Http\Requests  $request
+     * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
     public function create(Request $request)
