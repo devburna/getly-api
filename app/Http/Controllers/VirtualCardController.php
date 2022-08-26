@@ -136,9 +136,51 @@ class VirtualCardController extends Controller
             // convert balance to kobo
             $virtualCard['data']['balance'] = $virtualCard['data']['balance'] / 100;
 
+            // decrypt data
+            $virtualCard['data']['card_number'] = $this->decryptString($virtualCard['data']['card_number']);
+            $virtualCard['data']['cvv'] = $this->decryptString($virtualCard['data']['cvv']);
+            $virtualCard['data']['expiry_month'] = $this->decryptString($virtualCard['data']['expiry_month']);
+            $virtualCard['data']['expiry_year'] = $this->decryptString($virtualCard['data']['expiry_year']);
+            $virtualCard['data']['last_four'] = $this->decryptString($virtualCard['data']['last_four']);
+            $virtualCard['data']['pin'] = $this->decryptString($virtualCard['data']['pin']);
+
             return response()->json([
                 'status' => true,
                 'data' => $virtualCard['data'],
+                'message' => 'success',
+            ]);
+        } catch (\Throwable $th) {
+            return response()->json([
+                'status' => false,
+                'data' => null,
+                'message' => $th->getMessage()
+            ], 422);
+        }
+    }
+
+    public function revealCard(Request $request)
+    {
+        try {
+            // validate request
+            $request->validate([
+                'card_number' => 'required',
+                'cvv' => 'required',
+                'expiry_month' => 'required',
+                'expiry_year' => 'required',
+                'last_four' => 'required',
+                'pin' => 'required',
+            ]);
+
+            return response()->json([
+                'status' => true,
+                'data' => [
+                    'card_number' => $this->decryptString($request->card_number),
+                    'cvv' => $this->decryptString($request->cvv),
+                    'expiry_month' => $this->decryptString($request->expiry_month),
+                    'expiry_year' => $this->decryptString($request->expiry_year),
+                    'last_four' => $this->decryptString($request->last_four),
+                    'pin' => $this->decryptString($request->pin),
+                ],
                 'message' => 'success',
             ]);
         } catch (\Throwable $th) {
@@ -277,5 +319,24 @@ class VirtualCardController extends Controller
         } catch (\Throwable $th) {
             return response()->json([], 422);
         }
+    }
+
+    function decryptString($encryptedData)
+    {
+
+        $encryptedBin = hex2bin($encryptedData);
+
+        $iv = substr($encryptedBin, 0, 16);
+
+        $encryptedText = substr($encryptedBin, 16);
+
+        $key = substr(base64_encode(hash('sha256', env('MONO_SEC_KEY'), true)), 0, 32);
+
+        $algorithm = "aes-256-cbc";
+
+        $decryptedData = openssl_decrypt($encryptedText, $algorithm, $key, OPENSSL_RAW_DATA, $iv);
+
+
+        return $decryptedData;
     }
 }
