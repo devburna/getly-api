@@ -21,5 +21,5 @@ Route::get('/', function () {
 });
 
 Route::prefix('mono')->group(function () {
-    Route::get('', [\App\Http\Controllers\TransactionController::class, 'create']);
+    Route::post('', [\App\Http\Controllers\TransactionController::class, 'create']);
 });
