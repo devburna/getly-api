@@ -2,8 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\TransactionChannel;
+use App\Enums\TransactionStatus;
+use App\Enums\TransactionType;
+use App\Http\Requests\FundVirtualCardRequest;
 use App\Http\Requests\StoreMonoAccountHolderRequest;
+use App\Http\Requests\StoreTransactionRequest;
 use App\Http\Requests\StoreVirtualCardRequest;
+use App\Http\Requests\ToggleVirtualCardRequest;
 use App\Models\VirtualCard;
 use App\Notifications\VirtualCardTransaction;
 use Illuminate\Http\Request;
@@ -101,19 +107,105 @@ class VirtualCardController extends Controller
         }
     }
 
-    public function fund(Request $request)
+    public function fund(FundVirtualCardRequest $request)
     {
         try {
+            // if user has virtual card
             if (!$request->user()->virtualCard) {
                 throw ValidationException::withMessages(['No virtual card created for this account.']);
             }
 
+            // if user has fund
+            if ($request->user()->hasFunds($request->amount)) {
+                throw ValidationException::withMessages([
+                    'Insufficient funds, please fund wallet and try again.'
+                ]);
+            }
+
             // fund virtual card
-            $virtualCard = (new MonoController())->virtualCardDetails($request->user()->virtualCard->identity);
+            $request['card'] = $request->user()->virtualCard->identity;
+            $request['amount'] = $request->amount;
+            $virtualCard = (new MonoController())->virtualCardDetails($request->all());
+
+            // create transaction
+            $storeTransactionRequest = (new StoreTransactionRequest());
+            $storeTransactionRequest['user_id'] = $request->user()->id;
+            $storeTransactionRequest['identity'] = str_shuffle($request->user()->virtualCard->identity . time());
+            $storeTransactionRequest['reference'] = str_shuffle($request->user()->virtualCard->identity);
+            $storeTransactionRequest['type'] = TransactionType::DEBIT();
+            $storeTransactionRequest['channel'] = TransactionChannel::WALLET();
+            $storeTransactionRequest['amount'] = $request->amount;
+            $storeTransactionRequest['narration'] = 'Virtual card funding';
+            $storeTransactionRequest['status'] = TransactionStatus::SUCCESS();
+            $storeTransactionRequest['meta'] = json_encode($virtualCard);
+            $transaction = (new TransactionController())->store($storeTransactionRequest);
+
+            // notify user of transaction
+            $transaction->user->notify(new VirtualCardTransaction($transaction));
+
+            return response()->json([
+                'status' => true,
+                'data' => [
+                    'amount' => $request->amount,
+                ],
+                'message' => 'success',
+            ]);
+        } catch (\Throwable $th) {
+            return response()->json([
+                'status' => false,
+                'data' => null,
+                'message' => $th->getMessage()
+            ], 422);
+        }
+    }
+
+    public function transactions(Request $request)
+    {
+        try {
+            // if user has virtual card
+            if (!$request->user()->virtualCard) {
+                throw ValidationException::withMessages(['No virtual card created for this account.']);
+            }
+
+            // get virtual card transactions
+            $request['card'] = $request->user()->virtualCard->identity;
+            $request['page'] = $request->page;
+            $request['from'] = $request->from;
+            $request['to'] = $request->to;
+            $virtualCard = (new MonoController())->virtualCardTransactions($request->all());
 
             return response()->json([
                 'status' => true,
                 'data' => $virtualCard['data'],
+                'message' => 'success',
+            ]);
+        } catch (\Throwable $th) {
+            return response()->json([
+                'status' => false,
+                'data' => null,
+                'message' => $th->getMessage()
+            ], 422);
+        }
+    }
+
+    public function toggle(ToggleVirtualCardRequest $request)
+    {
+        try {
+            // if user has virtual card
+            if (!$request->user()->virtualCard) {
+                throw ValidationException::withMessages(['No virtual card created for this account.']);
+            }
+
+            // get virtual card transactions
+            $request['card'] = $request->user()->virtualCard->identity;
+            $request['action'] = $request->action;
+            (new MonoController())->virtualCardTransactions($request->all());
+
+            return response()->json([
+                'status' => true,
+                'data' => [
+                    'action' =>  $request->action
+                ],
                 'message' => 'success',
             ]);
         } catch (\Throwable $th) {
