@@ -131,19 +131,35 @@ class VirtualAccountController extends Controller
                     return response()->json([], 401);
                 }
 
-                // credit user wallet
-                $virtualAccount->user->credit($data['data']['amount']);
+                // set transaction status
+                $status = match ($data['event']) {
+                    'issuing.transfer_successful' => TransactionStatus::SUCCESS(),
+                    'issuing.transfer_failed' => TransactionStatus::FAILED(),
+                    'issuing.transfer_received' => TransactionStatus::SUCCESS()
+                };
+
+                // set transaction type
+                $type = match ($data['data']['type']) {
+                    'debit' => TransactionType::DEBIT(),
+                    'credit' => TransactionType::CREDIT()
+                };
+
+                // debit or credit
+                match ($data['data']['type']) {
+                    'debit' => $virtualAccount->user->debit($data['data']['amount']),
+                    'credit' => $virtualAccount->user->credit($data['data']['amount'])
+                };
 
                 // create transaction
                 $storeTransactionRequest = (new StoreTransactionRequest());
                 $storeTransactionRequest['user_id'] = $virtualAccount->user->id;
                 $storeTransactionRequest['identity'] = $data['data']['id'];
                 $storeTransactionRequest['reference'] = str_shuffle($data['data']['account']);
-                $storeTransactionRequest['type'] = TransactionType::CREDIT();
+                $storeTransactionRequest['type'] = $type;
                 $storeTransactionRequest['channel'] = TransactionChannel::VIRTUAL_ACCOUNT();
                 $storeTransactionRequest['amount'] = $data['data']['amount'];
                 $storeTransactionRequest['narration'] = $data['data']['narration'];
-                $storeTransactionRequest['status'] = TransactionStatus::SUCCESS();
+                $storeTransactionRequest['status'] = $status;
                 $storeTransactionRequest['meta'] = json_encode($data);
                 $transaction = (new TransactionController())->store($storeTransactionRequest);
 
