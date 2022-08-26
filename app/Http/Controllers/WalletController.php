@@ -70,26 +70,10 @@ class WalletController extends Controller
 
                 // transfer with mono
                 $request['cust'] = $request->user()->virtualAccount->id;
-                $transfer = (new MonoController())->virtualAccountTransfer($request->all());
+                (new MonoController())->virtualAccountTransfer($request->all());
 
                 // debit user wallet
                 $request->user()->debit($request->amount);
-
-                // create transaction
-                $storeTransactionRequest = (new StoreTransactionRequest());
-                $storeTransactionRequest['user_id'] = $request->user()->id;
-                $storeTransactionRequest['identity'] = str_shuffle($transfer['data']['id'] . time());
-                $storeTransactionRequest['reference'] = $transfer['data']['id'];
-                $storeTransactionRequest['type'] = TransactionType::DEBIT();
-                $storeTransactionRequest['channel'] = TransactionChannel::WALLET();
-                $storeTransactionRequest['amount'] = $request->amount;
-                $storeTransactionRequest['narration'] = $request->narration;
-                $storeTransactionRequest['status'] = TransactionStatus::PENDING();
-                $storeTransactionRequest['meta'] = json_encode($transfer);
-                $transaction = (new TransactionController())->store($storeTransactionRequest);
-
-                // notify user of transaction
-                $transaction->user->notify(new Transaction($transaction));
 
                 return response()->json([
                     'status' => true,

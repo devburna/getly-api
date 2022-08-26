@@ -42,12 +42,12 @@ class TransactionController extends Controller
 
             // Mono transfer received
             if (array_key_exists('event', $request['data']) && $request['data']['event'] === 'issuing.transfer_received') {
-                (new VirtualAccountController())->transferReceived($request);
+                (new VirtualAccountController())->webHook($request);
             }
 
             // Mono card transaction received
             if (array_key_exists('event', $request['data']) && $request['data']['event'] === 'issuing.card_transaction') {
-                (new VirtualCardController())->transactionReceived($request);
+                (new VirtualCardController())->webHook($request);
             }
 
             // store webhook info

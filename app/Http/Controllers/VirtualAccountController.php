@@ -122,7 +122,7 @@ class VirtualAccountController extends Controller
         }
     }
 
-    public function transferReceived($data)
+    public function webHook($data)
     {
         try {
             return DB::transaction(function () use ($data) {

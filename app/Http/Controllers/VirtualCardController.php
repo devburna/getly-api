@@ -257,7 +257,7 @@ class VirtualCardController extends Controller
         }
     }
 
-    public function transactionReceived($data)
+    public function webHook($data)
     {
         try {
             // if user has virtual card
