@@ -9,6 +9,7 @@ use App\Http\Requests\StoreMonoAccountHolderRequest;
 use App\Http\Requests\StoreTransactionRequest;
 use App\Http\Requests\StoreVirtualAccountRequest;
 use App\Models\VirtualAccount;
+use App\Models\Webhook;
 use App\Notifications\Transaction;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -158,6 +159,14 @@ class VirtualAccountController extends Controller
 
                 // notify user of transaction
                 // $transaction->owner->notify(new Transaction($transaction));
+
+                // store webhook info
+                Webhook::create([
+                    'origin' => 'mono',
+                    'status' => true,
+                    'data' => json_encode($data),
+                    'message' => 'success',
+                ]);
 
                 return response()->json([]);
             });

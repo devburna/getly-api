@@ -10,6 +10,7 @@ use App\Http\Requests\StoreTransactionRequest;
 use App\Http\Requests\StoreVirtualCardRequest;
 use App\Http\Requests\ToggleVirtualCardRequest;
 use App\Models\VirtualCard;
+use App\Models\Webhook;
 use App\Notifications\VirtualCardTransaction;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
@@ -277,6 +278,14 @@ class VirtualCardController extends Controller
 
             // notify user of transaction
             // $virtualCard->owner->notify(new VirtualCardTransaction($data['data']));
+
+            // store webhook info
+            Webhook::create([
+                'origin' => 'mono',
+                'status' => true,
+                'data' => json_encode($data),
+                'message' => 'success',
+            ]);
 
             return response()->json([]);
         } catch (\Throwable $th) {
