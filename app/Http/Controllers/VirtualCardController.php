@@ -272,7 +272,7 @@ class VirtualCardController extends Controller
         try {
             // if user has virtual card
             if (!$virtualCard = VirtualCard::where('identity', $data['data']['card'])->first()) {
-                return response()->json([], 401);
+                throw ValidationException::withMessages(['Not allowed.']);
             }
 
             // notify user of transaction
@@ -280,7 +280,7 @@ class VirtualCardController extends Controller
 
             return response()->json([]);
         } catch (\Throwable $th) {
-            return response()->json([], 422);
+            throw ValidationException::withMessages([$th->getMessage()]);
         }
     }
 

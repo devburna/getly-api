@@ -121,7 +121,7 @@ class VirtualAccountController extends Controller
             return DB::transaction(function () use ($data) {
                 // checks if user has a virtual account
                 if (!$virtualAccount = VirtualAccount::where('identity', $data['data']['account'])->first()) {
-                    return response()->json([], 401);
+                    throw ValidationException::withMessages(['Not allowed.']);
                 }
 
                 // set transaction status
@@ -162,7 +162,7 @@ class VirtualAccountController extends Controller
                 return response()->json([]);
             });
         } catch (\Throwable $th) {
-            return response()->json([], 422);
+            throw ValidationException::withMessages([$th->getMessage()]);
         }
     }
 }
