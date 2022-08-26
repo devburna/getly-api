@@ -2,14 +2,9 @@
 
 namespace App\Http\Controllers;
 
-use App\Enums\TransactionChannel;
-use App\Enums\TransactionStatus;
-use App\Enums\TransactionType;
-use App\Http\Requests\StoreTransactionRequest;
 use App\Http\Requests\StoreWalletRequest;
 use App\Http\Requests\WithdrawWalletRequest;
 use App\Models\Wallet;
-use App\Notifications\Transaction;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -69,7 +64,7 @@ class WalletController extends Controller
                 }
 
                 // transfer with mono
-                $request['cust'] = $request->user()->virtualAccount->id;
+                $request['cust'] = $request->user()->virtualAccount->identity;
                 (new MonoController())->virtualAccountTransfer($request->all());
 
                 // debit user wallet
