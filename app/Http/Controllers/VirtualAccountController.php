@@ -145,7 +145,7 @@ class VirtualAccountController extends Controller
                 };
 
                 // debit or credit
-                match ($data['data']['type']) {
+                match ($type) {
                     'debit' => $virtualAccount->user->debit($data['data']['amount']),
                     'credit' => $virtualAccount->user->credit($data['data']['amount'])
                 };
