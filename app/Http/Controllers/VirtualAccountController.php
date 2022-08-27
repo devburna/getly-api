@@ -134,7 +134,7 @@ class VirtualAccountController extends Controller
                 switch ($data['data']['type']) {
                     case 'credit':
                         // set type to credit
-                        $type = TransactionType::DEBIT();
+                        $type = TransactionType::CREDIT();
 
                         // credit user
                         $virtualAccount->owner->credit($data['data']['amount'] / 100);
