@@ -151,7 +151,7 @@ class VirtualAccountController extends Controller
                         $virtualAccount->owner->debit($data['data']['amount'] / 100);
 
                         // set narration
-                        $narration = "Transfer to {$data['data']['beneficiary']['name']}";
+                        $narration = "Transfer to {$data['data']['beneficiary']['account_name']}";
                         break;
                 }
 
