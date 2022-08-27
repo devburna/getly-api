@@ -147,9 +147,6 @@ class VirtualAccountController extends Controller
                         // set type to debit
                         $type = TransactionType::DEBIT();
 
-                        // debit user
-                        $virtualAccount->owner->debit($data['data']['amount'] / 100);
-
                         // set narration
                         $narration = "Transfer to {$data['data']['beneficiary']['account_name']}";
                         break;
