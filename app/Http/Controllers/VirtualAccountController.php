@@ -5,11 +5,9 @@ namespace App\Http\Controllers;
 use App\Enums\TransactionChannel;
 use App\Enums\TransactionStatus;
 use App\Enums\TransactionType;
-use App\Http\Requests\StoreMonoAccountHolderRequest;
 use App\Http\Requests\StoreTransactionRequest;
 use App\Http\Requests\StoreVirtualAccountRequest;
 use App\Models\VirtualAccount;
-use App\Models\Webhook;
 use App\Notifications\Transaction;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -132,17 +130,23 @@ class VirtualAccountController extends Controller
                     'issuing.transfer_received' => TransactionStatus::SUCCESS()
                 };
 
-                // set transaction type
-                $type = match ($data['data']['type']) {
-                    'debit' => TransactionType::DEBIT(),
-                    'credit' => TransactionType::CREDIT()
-                };
+                switch ($data['data']['type']) {
+                    case 'credit':
+                        // set type to credit
+                        $type = TransactionType::DEBIT();
 
-                // debit or credit
-                match ($type) {
-                    'debit' => $virtualAccount->owner->debit($data['data']['amount'] / 100),
-                    'credit' => $virtualAccount->owner->credit($data['data']['amount'] / 100)
-                };
+                        // credit user
+                        $virtualAccount->owner->credit($data['data']['amount'] / 100);
+                        break;
+
+                    default:
+                        // set type to debit
+                        $type = TransactionType::DEBIT();
+
+                        // debit user
+                        $virtualAccount->owner->debit($data['data']['amount'] / 100);
+                        break;
+                }
 
                 // create transaction
                 $storeTransactionRequest = (new StoreTransactionRequest());
@@ -158,7 +162,7 @@ class VirtualAccountController extends Controller
                 $transaction = (new TransactionController())->store($storeTransactionRequest);
 
                 // notify user of transaction
-                // $virtualAccount->owner->notify(new Transaction($transaction));
+                $virtualAccount->owner->notify(new Transaction($transaction));
             });
         } catch (\Throwable $th) {
             throw ValidationException::withMessages([$th->getMessage()]);
