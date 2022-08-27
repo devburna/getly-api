@@ -80,7 +80,7 @@ class MonoController extends Controller
             ])->post("{$this->monoUrl}/issuing/v1/virtualaccounts/{$data['cust']}/transfer", [
                 'amount' => $data['amount'] * 100,
                 'narration' => $data['narration'],
-                'reference' => Str::uuid(),
+                'reference' => Str::random(24),
                 'account_number' => $data['account_number'],
                 'bank_code' => $data['bank'],
                 'meta' => [
