@@ -138,6 +138,9 @@ class VirtualAccountController extends Controller
 
                         // credit user
                         $virtualAccount->owner->credit($data['data']['amount'] / 100);
+
+                        // set narration
+                        $narration = "Transfer from {$data['data']['source']['name']}";
                         break;
 
                     default:
@@ -146,6 +149,9 @@ class VirtualAccountController extends Controller
 
                         // debit user
                         $virtualAccount->owner->debit($data['data']['amount'] / 100);
+
+                        // set narration
+                        $narration = "Transfer to {$data['data']['beneficiary']['name']}";
                         break;
                 }
 
@@ -157,7 +163,7 @@ class VirtualAccountController extends Controller
                 $storeTransactionRequest['type'] = $type;
                 $storeTransactionRequest['channel'] = TransactionChannel::VIRTUAL_ACCOUNT();
                 $storeTransactionRequest['amount'] = $data['data']['amount'] / 100;
-                $storeTransactionRequest['narration'] = 'Wallet deposit';
+                $storeTransactionRequest['narration'] = $narration;
                 $storeTransactionRequest['status'] = $status;
                 $storeTransactionRequest['meta'] = json_encode($data);
                 $transaction = (new TransactionController())->store($storeTransactionRequest);
