@@ -162,7 +162,7 @@ class VirtualAccountController extends Controller
                 $transaction = (new TransactionController())->store($storeTransactionRequest);
 
                 // notify user of transaction
-                $virtualAccount->owner->notify(new Transaction($transaction));
+                // $virtualAccount->owner->notify(new Transaction($transaction));
             });
         } catch (\Throwable $th) {
             throw ValidationException::withMessages([$th->getMessage()]);
