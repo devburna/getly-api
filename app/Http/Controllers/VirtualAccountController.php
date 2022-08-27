@@ -140,7 +140,7 @@ class VirtualAccountController extends Controller
                         $virtualAccount->owner->credit($data['data']['amount'] / 100);
 
                         // set narration
-                        $narration = "Transfer from {$data['data']['source']['name']}";
+                        $narration = "Wallet deposit";
                         break;
 
                     default:
