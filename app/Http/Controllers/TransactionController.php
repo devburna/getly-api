@@ -39,28 +39,29 @@ class TransactionController extends Controller
             return response()->json([], 401);
         }
 
-        Webhook::create([
-            'origin' => 'mono',
-            'status' => true,
-            'data' => json_encode($request->all()),
-            'message' => 'success',
-        ]);
-
         try {
 
             // Mono transfer received
             $virtual_account_events = ['issuing.transfer_received', 'issuing.transfer_failed', 'issuing.transfer_successful'];
-            if (array_key_exists('event', $request['data']) && in_array($request['data']['event'], $virtual_account_events)) {
-                return (new VirtualAccountController())->webHook($request->all());
+            if (array_key_exists('event', $request->all()) && in_array($request['data']['event'], $virtual_account_events)) {
+                (new VirtualAccountController())->webHook($request->all());
             }
 
             // Mono card transaction received
             $virtual_card_events = ['issuing.card_transaction'];
-            if (array_key_exists('event', $request['data']) && in_array($request['data']['event'], $virtual_card_events)) {
-                return (new VirtualCardController())->webHook($request->all());
+            if (array_key_exists('event', $request->all()) && in_array($request['data']['event'], $virtual_card_events)) {
+                (new VirtualCardController())->webHook($request->all());
             }
 
-            return response()->json([], 422);
+            // store webhook info
+            Webhook::create([
+                'origin' => $request->server('SERVER_NAME'),
+                'status' => true,
+                'data' => json_encode($request->all()),
+                'message' => 'success',
+            ]);
+
+            return response()->json([]);
         } catch (\Throwable $th) {
 
             // store webhook info

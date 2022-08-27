@@ -158,17 +158,7 @@ class VirtualAccountController extends Controller
                 $transaction = (new TransactionController())->store($storeTransactionRequest);
 
                 // notify user of transaction
-                // $transaction->owner->notify(new Transaction($transaction));
-
-                // store webhook info
-                Webhook::create([
-                    'origin' => 'mono',
-                    'status' => true,
-                    'data' => json_encode($data),
-                    'message' => 'success',
-                ]);
-
-                return response()->json([]);
+                // $virtualAccount->owner->notify(new Transaction($transaction));
             });
         } catch (\Throwable $th) {
             throw ValidationException::withMessages([$th->getMessage()]);
