@@ -170,6 +170,29 @@ class VirtualAccountController extends Controller
 
                 // notify user of transaction
                 // $virtualAccount->owner->notify(new Transaction($transaction));
+
+                // reverse if failed
+                if ($data['event'] === 'issuing.transfer_failed') {
+
+                    // refund user
+                    $virtualAccount->owner->credit($data['data']['amount'] / 100);
+
+                    // create transaction
+                    $storeTransactionRequest = (new StoreTransactionRequest());
+                    $storeTransactionRequest['user_id'] = $virtualAccount->owner->id;
+                    $storeTransactionRequest['identity'] = Str::uuid();
+                    $storeTransactionRequest['reference'] = Str::uuid();
+                    $storeTransactionRequest['type'] = TransactionType::CREDIT();
+                    $storeTransactionRequest['channel'] = TransactionChannel::VIRTUAL_ACCOUNT();
+                    $storeTransactionRequest['amount'] = $data['data']['amount'] / 100;
+                    $storeTransactionRequest['narration'] = 'Reversal';
+                    $storeTransactionRequest['status'] = TransactionStatus::SUCCESS();
+                    $storeTransactionRequest['meta'] = json_encode($data);
+                    $transaction = (new TransactionController())->store($storeTransactionRequest);
+
+                    // notify user of transaction
+                    // $virtualAccount->owner->notify(new Transaction($transaction));
+                }
             });
         } catch (\Throwable $th) {
             throw ValidationException::withMessages([$th->getMessage()]);
