@@ -51,8 +51,7 @@ class MonoController extends Controller
                 'mono-sec-key' => $this->monoSecKey,
             ])->post("{$this->monoUrl}/issuing/v1/virtualaccounts", [
                 'account_holder' => $data,
-                'account_type' => 'collection',
-                'disposable' => false,
+                'account_type' => 'deposit',
                 'provider' => 'gtb'
             ])->json();
 
