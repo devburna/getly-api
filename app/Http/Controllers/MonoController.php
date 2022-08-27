@@ -78,7 +78,7 @@ class MonoController extends Controller
                 'Content-Type' => 'application/json',
                 'mono-sec-key' => $this->monoSecKey,
             ])->post("{$this->monoUrl}/issuing/v1/virtualaccounts/{$data['cust']}/transfer", [
-                'amount' => $data['amount'],
+                'amount' => $data['amount'] * 100,
                 'narration' => $data['narration'],
                 'reference' => Str::uuid(),
                 'account_number' => $data['account_number'],
