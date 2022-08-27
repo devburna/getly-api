@@ -99,6 +99,7 @@ class VirtualAccountController extends Controller
             unset($virtualAccount['data']['created_at']);
             unset($virtualAccount['data']['updated_at']);
             unset($virtualAccount['data']['account_holder']);
+            unset($virtualAccount['data']['kyc_level']);
 
             return response()->json([
                 'status' => true,
