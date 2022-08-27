@@ -2,18 +2,11 @@
 
 namespace App\Http\Controllers;
 
-use App\Enums\TransactionChannel;
-use App\Enums\TransactionStatus;
-use App\Enums\TransactionType;
-use App\Http\Requests\FundWalletRequest;
-use App\Http\Requests\StoreTransactionRequest;
 use App\Http\Requests\StoreWalletRequest;
 use App\Http\Requests\WithdrawWalletRequest;
-use App\Models\Transaction as ModelsTransaction;
 use App\Models\Wallet;
-use App\Notifications\Transaction;
 use Illuminate\Http\Request;
-use Illuminate\Support\Str;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
 class WalletController extends Controller
@@ -54,155 +47,43 @@ class WalletController extends Controller
         ], $code);
     }
 
-    /**
-     * Update the specified resource in storage.
-     *
-     * @param  \App\Http\Requests\WithdrawWalletRequest  $request
-     * @return \Illuminate\Http\Response
-     */
-    public function withdraw(WithdrawWalletRequest $request)
+    public function transfer(WithdrawWalletRequest $request)
     {
         try {
 
-            $transfer = match ($request->currency) {
-                'usd' => (new FlutterwaveController())->bankTransfer($request->ngn),
-                'ngn' => (new FlutterwaveController())->bankTransfer($request->ngn),
-            };
+            return DB::transaction(function () use ($request) {
+                if (!$request->user()->virtualAccount) {
+                    throw ValidationException::withMessages(['Transfer not available at the moment.']);
+                }
 
-            // debit user wallet
-            $request->user()->debit($request->amount);
+                // if user has funds
+                if (!$request->user()->hasFunds($request->amount)) {
+                    throw ValidationException::withMessages([
+                        'Insufficient funds, please fund wallet and try again.'
+                    ]);
+                }
 
-            // store transaction
-            $transactionRequest = new StoreTransactionRequest();
-            $transactionRequest['user_id'] = $request->user()->id;
-            $transactionRequest['identity'] = $transfer['id'];
-            $transactionRequest['reference'] = $transfer['reference'];
-            $transactionRequest['type'] = TransactionType::DEBIT();
-            $transactionRequest['channel'] = TransactionChannel::WALLET();
-            $transactionRequest['amount'] = $transfer['amount'];
-            $transactionRequest['narration'] = "Transfer to {$transfer['full_name']}";
-            $transactionRequest['status'] = TransactionStatus::NEW();
-            $transactionRequest['meta'] = json_encode($transfer);
-            $transaction = (new TransactionController())->store($transactionRequest);
+                // transfer with mono
+                $request['cust'] = $request->user()->virtualAccount->identity;
+                (new MonoController())->virtualAccountTransfer($request->all());
 
-            // notify user of transaction
-            $request->user()->notify(new Transaction($transaction));
+                // debit user wallet
+                $request->user()->debit($request->amount);
 
-            return $this->show($request);
+                return response()->json([
+                    'status' => true,
+                    'data' => [
+                        'amount' => $request->amount
+                    ],
+                    'message' => 'success',
+                ]);
+            });
         } catch (\Throwable $th) {
-            throw ValidationException::withMessages([
+            return response()->json([
+                'status' => false,
+                'data' => null,
                 'message' => $th->getMessage()
-            ]);
+            ], 422);
         }
-    }
-
-    /**
-     * Update the specified resource in storage.
-     *
-     * @param  \App\Http\Requests\FundWalletRequest  $request
-     * @return \Illuminate\Http\Response
-     */
-    public function fund(FundWalletRequest $request)
-    {
-        try {
-            // generate payment link
-            $data = [];
-            $data['tx_ref'] = Str::uuid();
-            $data['name'] = $request->user()->first_name . ' ' . $request->user()->last_name;
-            $data['email'] = $request->user()->email_address;
-            $data['phone_number'] = $request->user()->phone_number;
-            $data['amount'] = $request->amount;
-            $data['meta'] = [
-                "consumer_id" => $request->user()->wallet->id,
-                "consumer_mac" => TransactionChannel::CARD_TOP_UP(),
-            ];
-            $data['redirect_url'] = route('flw-webhook');
-
-            $request->user()->wallet->payment_link = (new FlutterwaveController())->generatePaymentLink($data)['link'];
-
-            return $this->show($request);
-        } catch (\Throwable $th) {
-            throw ValidationException::withMessages([
-                'message' => $th->getMessage()
-            ]);
-        }
-    }
-
-    public function chargeCompleted($data)
-    {
-        // find virtual account
-        if (!$wallet = Wallet::where('id', $data['meta']['consumer_id'])->first()) {
-            return response()->json([], 422);
-        }
-
-        // credit user wallet
-        $wallet->user->credit($data['amount']);
-
-        // store transaction
-        $transactionRequest = new StoreTransactionRequest();
-        $transactionRequest['user_id'] = $wallet->user->id;
-        $transactionRequest['identity'] = $data['id'];
-        $transactionRequest['reference'] = $data['flw_ref'];
-        $transactionRequest['type'] = TransactionType::CREDIT();
-        $transactionRequest['channel'] = TransactionChannel::CARD_TOP_UP();
-        $transactionRequest['amount'] = $data['amount'];
-        $transactionRequest['narration'] = $data['narration'];
-        $transactionRequest['status'] = TransactionStatus::SUCCESS();
-        $transactionRequest['meta'] = json_encode($data);
-        $transaction = (new TransactionController())->store($transactionRequest);
-
-        // notify user of transaction
-        $wallet->user->notify(new Transaction($transaction));
-
-        return response()->json([]);
-    }
-
-    public function transferCompleted($data)
-    {
-        // find transaction
-        if (!$transaction = ModelsTransaction::where('reference', $data['reference'])->first()) {
-            return response()->json([], 422);
-        }
-
-        // verify transaction status
-        if ($transaction->status->is(TransactionStatus::SUCCESS()) || $transaction->status->is(TransactionStatus::FAILED())) {
-            return response()->json([], 422);
-        }
-
-        if (TransactionStatus::FAILED() === strtolower($data['status'])) {
-
-            // update transaction status to failed
-            $transaction->update([
-                'status' => strtolower($data['status'])
-            ]);
-
-            // store transaction
-            $transactionRequest = new StoreTransactionRequest();
-            $transactionRequest['user_id'] = $transaction->user->id;
-            $transactionRequest['identity'] = $data['id'];
-            $transactionRequest['reference'] = $data['reference'];
-            $transactionRequest['type'] = TransactionType::CREDIT();
-            $transactionRequest['channel'] = TransactionChannel::WALLET();
-            $transactionRequest['amount'] = $data['amount'];
-            $transactionRequest['narration'] = 'Transfer reversal';
-            $transactionRequest['status'] = TransactionStatus::SUCCESS();
-            $transactionRequest['meta'] = json_encode($data);
-            $transaction = (new TransactionController())->store($transactionRequest);
-
-            // credit user wallet
-            $transaction->user->credit($data['amount']);
-
-            return response()->json([]);
-        }
-
-        // update transaction status
-        $transaction->update([
-            'status' => strtolower($data['status'])
-        ]);
-
-        // notify user of transaction
-        $transaction->user->notify(new Transaction($transaction));
-
-        return response()->json([]);
     }
 }

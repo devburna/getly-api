@@ -2,12 +2,12 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class Wallet extends Model
+class MonoAccountHolder extends Model
 {
     use HasFactory, SoftDeletes;
 
@@ -18,11 +18,8 @@ class Wallet extends Model
      */
     protected $fillable = [
         'user_id',
-        'current_balance',
-        'previous_balance',
-        'currency',
-        'short',
-        'symbol',
+        'identity',
+        'meta'
     ];
 
     /**
@@ -31,11 +28,7 @@ class Wallet extends Model
      * @var array
      */
     protected $hidden = [
-        'id',
         'user_id',
-        'deleted_at',
-        'created_at',
-        'updated_at'
     ];
 
     /**
@@ -47,8 +40,10 @@ class Wallet extends Model
         //
     ];
 
-    public function user(): BelongsTo
+    protected function data(): Attribute
     {
-        return $this->belongsTo(User::class);
+        return Attribute::make(
+            get: fn ($value, $attributes) => json_decode($value),
+        );
     }
 }

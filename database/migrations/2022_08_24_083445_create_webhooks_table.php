@@ -13,12 +13,12 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('virtual_accounts', function (Blueprint $table) {
+        Schema::create('webhooks', function (Blueprint $table) {
             $table->id()->from(time());
-            $table->unsignedBigInteger('user_id')->unique();
-            $table->string('identity')->unique();
-            $table->string('provider');
-            $table->longText('meta');
+            $table->string('origin')->nullable();
+            $table->boolean('status')->nullable();
+            $table->longText('data')->nullable();
+            $table->longText('message')->nullable();
             $table->softDeletes();
             $table->timestamps();
         });
@@ -31,6 +31,6 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('virtual_accounts');
+        Schema::dropIfExists('webhooks');
     }
 };

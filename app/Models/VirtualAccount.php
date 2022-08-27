@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -19,10 +20,8 @@ class VirtualAccount extends Model
     protected $fillable = [
         'user_id',
         'identity',
-        'bank_name',
-        'account_number',
-        'account_name',
-        'provider'
+        'provider',
+        'meta'
     ];
 
     /**
@@ -33,7 +32,11 @@ class VirtualAccount extends Model
     protected $hidden = [
         'user_id',
         'identity',
-        'provider'
+        'provider',
+        'meta',
+        'deleted_at',
+        'created_at',
+        'updated_at'
     ];
 
     /**
@@ -45,8 +48,15 @@ class VirtualAccount extends Model
         //
     ];
 
-    public function user(): BelongsTo
+    public function owner(): BelongsTo
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(User::class, 'user_id');
+    }
+
+    protected function meta(): Attribute
+    {
+        return Attribute::make(
+            get: fn ($value, $attributes) => json_decode($value),
+        );
     }
 }

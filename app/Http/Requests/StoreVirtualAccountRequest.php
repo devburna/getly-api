@@ -24,8 +24,7 @@ class StoreVirtualAccountRequest extends FormRequest
     public function rules()
     {
         return [
-            'type' => 'required|string|in:bvn',
-            'identity' => 'required',
+            'bvn' => 'required|digits:11',
             'approved' => 'required|boolean'
         ];
     }

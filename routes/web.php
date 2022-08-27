@@ -19,7 +19,3 @@ Route::get('/', function () {
         'message' => 'Serve is up and running.'
     ]);
 });
-
-Route::prefix('payment')->group(function () {
-    Route::get('', [\App\Http\Controllers\TransactionController::class, 'create'])->name('flw-webhook');
-});

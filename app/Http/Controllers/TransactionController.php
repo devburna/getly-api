@@ -3,9 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreTransactionRequest;
-use App\Models\GetlistItem;
 use App\Models\Transaction;
-use App\Models\VirtualAccount;
+use App\Models\Webhook;
 use Illuminate\Http\Request;
 
 class TransactionController extends Controller
@@ -13,7 +12,7 @@ class TransactionController extends Controller
     /**
      * Display a listing of the resource.
      *
-     * @param  \App\Http\Requests  $request
+     * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
     public function index(Request $request)
@@ -30,53 +29,50 @@ class TransactionController extends Controller
     /**
      * Show the form for creating a new resource.
      *
-     * @param  \App\Http\Requests  $request
+     * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
     public function create(Request $request)
     {
+        // verify webhook origin
+        if (!$request->header('mono-webhook-secret') || $request->header('mono-webhook-secret') !== env('MONO_WEBHOOK_SECRET')) {
+            return response()->json([], 401);
+        }
+
         try {
-            // verify request is from flutterwave
-            if ($request->header('verify-hash') && !$request->header('verify-hash') === env('FLUTTERWAVE_SECRET_HASH')) {
-                return response()->json([], 401);
+
+            // Mono transfer received
+            $virtual_account_events = ['issuing.transfer_received', 'issuing.transfer_failed', 'issuing.transfer_successful'];
+            if (array_key_exists('event', $request->all()) && in_array($request['event'], $virtual_account_events)) {
+                (new VirtualAccountController())->webHook($request->all());
             }
 
-            // verify transaction
-            $response = (new FlutterwaveController())->verifyTransaction($request->transaction_id);
-
-            // check for duplicate transaction
-            if (Transaction::where('identity', $response['id'])->first()) {
-                return response()->json([], 422);
+            // Mono card transaction received
+            $virtual_card_events = ['issuing.card_transaction'];
+            if (array_key_exists('event', $request->all()) && in_array($request['event'], $virtual_card_events)) {
+                (new VirtualCardController())->webHook($request->all());
             }
 
-            // verify status
-            if (!$response['status'] === 'successful') {
-                return response()->json([], 422);
-            }
+            // store webhook info
+            Webhook::create([
+                'origin' => $request->server('SERVER_NAME'),
+                'status' => true,
+                'data' => json_encode($request->all()),
+                'message' => 'success',
+            ]);
 
-            // check for virtual account transaction
-            if (array_key_exists('event', $response) && $response['event'] === 'charge.completed') {
-                return (new VirtualAccount())->chargeCompleted($response);
-            }
-
-            // check for transfer transaction
-            if (array_key_exists('event', $response) && $response['event'] === 'transfer.completed') {
-                return (new WalletController())->transferCompleted($response);
-            }
-
-            // check for card-top-up  transaction
-            if (array_key_exists('meta', $response) && $response['meta']['consumer_mac'] === 'card-top-up') {
-                return (new WalletController())->chargeCompleted($response);
-            }
-
-            // check for contribution or buy  transaction
-            if (array_key_exists('meta', $response) && $response['meta']['consumer_mac'] === 'contribute' || $response['meta']['consumer_mac'] === 'buy') {
-                return (new GetlistItem())->chargeCompleted($response);
-            }
-
-            return response()->json([], 422);
+            return response()->json([]);
         } catch (\Throwable $th) {
-            return response()->json([], 422);
+
+            // store webhook info
+            Webhook::create([
+                'origin' => $request->server('SERVER_NAME'),
+                'status' => false,
+                'data' => json_encode($request->all()),
+                'message' => $th->getMessage(),
+            ]);
+
+            return response()->json([$th->getMessage()], 422);
         }
     }
 

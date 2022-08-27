@@ -191,7 +191,7 @@ Route::prefix('v1')->group(function () {
             Route::put('', [\App\Http\Controllers\WalletController::class, 'fund']);
 
             # withdraw
-            Route::post('', [\App\Http\Controllers\WalletController::class, 'withdraw']);
+            Route::post('', [\App\Http\Controllers\WalletController::class, 'transfer']);
         });
 
         # virtual card
@@ -204,25 +204,13 @@ Route::prefix('v1')->group(function () {
             Route::get('', [\App\Http\Controllers\VirtualCardController::class, 'show']);
 
             # fund
-            Route::put('', [\App\Http\Controllers\VirtualCardController::class, 'fund'])->can('update', 'virtualCard')->missing(function () {
-                throw ValidationException::withMessages([
-                    'message' => "Resource has been removed."
-                ]);
-            });
-
-            # withdraw
-            Route::patch('', [\App\Http\Controllers\VirtualCardController::class, 'withdraw'])->can('update', 'virtualCard')->missing(function () {
-                throw ValidationException::withMessages([
-                    'message' => "Resource has been removed."
-                ]);
-            });
+            Route::put('', [\App\Http\Controllers\VirtualCardController::class, 'fund']);
 
             # transactions
-            Route::get('transactions', [\App\Http\Controllers\VirtualCardController::class, 'transactions'])->can('view', 'virtualCard')->missing(function () {
-                throw ValidationException::withMessages([
-                    'message' => "Resource has been removed."
-                ]);
-            });
+            Route::get('transactions', [\App\Http\Controllers\VirtualCardController::class, 'transactions']);
+
+            # toggle
+            Route::delete('', [\App\Http\Controllers\VirtualCardController::class, 'toggle']);
         });
 
         # virtual account
@@ -240,6 +228,9 @@ Route::prefix('v1')->group(function () {
 
             # bvn
             Route::get('bvn', [\App\Http\Controllers\KYCController::class, 'bvn']);
+
+            # bank details
+            Route::get('bank', [\App\Http\Controllers\KYCController::class, 'bank']);
         });
 
         # transactions
@@ -261,6 +252,12 @@ Route::prefix('v1')->group(function () {
 
         # notifications
         Route::get('notifications', [\App\Http\Controllers\NotificationController::class, 'index']);
+
+        # webhooks
+        Route::get('webhooks', [\App\Http\Controllers\WebhookController::class, 'index']);
+
+        # banks
+        Route::get('banks', [\App\Http\Controllers\KYCController::class, 'banks'])->middleware(['ability:authenticate']);
     });
 
     # gifts
@@ -275,17 +272,8 @@ Route::prefix('v1')->group(function () {
             });
         });
     });
+});
 
-    # banks
-    Route::prefix('banks')->group(function () {
-
-        # all
-        Route::get('', [\App\Http\Controllers\FlutterwaveController::class, 'banks']);
-
-        # branches
-        Route::get('branches', [\App\Http\Controllers\FlutterwaveController::class, 'bankBranches']);
-    });
-
-    # bank details
-    Route::get('bank-details', [\App\Http\Controllers\FlutterwaveController::class, 'bankDetails']);
+Route::prefix('mono')->group(function () {
+    Route::post('', [\App\Http\Controllers\TransactionController::class, 'create']);
 });
