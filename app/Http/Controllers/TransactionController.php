@@ -39,6 +39,13 @@ class TransactionController extends Controller
             return response()->json([], 401);
         }
 
+        Webhook::create([
+            'origin' => 'mono',
+            'status' => true,
+            'data' => json_encode($request->all()),
+            'message' => 'success',
+        ]);
+
         try {
 
             // Mono transfer received
