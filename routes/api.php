@@ -242,7 +242,7 @@ Route::prefix('v1')->group(function () {
             Route::prefix('{transaction}')->group(function () {
 
                 # details
-                Route::post('', [\App\Http\Controllers\TransactionController::class, 'show'])->can('view', 'transaction')->missing(function () {
+                Route::get('', [\App\Http\Controllers\TransactionController::class, 'show'])->can('view', 'transaction')->missing(function () {
                     throw ValidationException::withMessages([
                         'message' => "Resource has been removed."
                     ]);
