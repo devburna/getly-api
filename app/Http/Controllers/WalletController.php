@@ -8,7 +8,9 @@ use App\Enums\TransactionType;
 use App\Http\Requests\FundVirtualCardRequest;
 use App\Http\Requests\StoreTransactionRequest;
 use App\Http\Requests\StoreWalletRequest;
+use App\Http\Requests\VerifyFlutterwaveTransactionRequest;
 use App\Http\Requests\WithdrawWalletRequest;
+use App\Models\Transaction as ModelsTransaction;
 use App\Models\Wallet;
 use App\Notifications\Transaction;
 use Illuminate\Http\Request;
@@ -59,7 +61,7 @@ class WalletController extends Controller
                 "consumer_id" => $request->user()->wallet->id,
                 "consumer_mac" => TransactionChannel::CARD_TOP_UP(),
             ];
-            $request['redirect_url'] = url('/dashboard');
+            $request['redirect_url'] = url('/dashboard/wallet');
 
             $link = (new FlutterwaveController())->generatePaymentLink($request->all());
 
@@ -123,50 +125,62 @@ class WalletController extends Controller
         }
     }
 
-    public function webHook($data)
+    public function webHook(VerifyFlutterwaveTransactionRequest $request)
     {
         try {
-            // if user has virtual card
-            if (!$wallet = Wallet::where('identity', $data['data']['meta']['consumer_id'])->first()) {
-                throw ValidationException::withMessages(['Not allowed.']);
-            }
+            return DB::transaction(function () use ($request) {
+                // verify transaction
+                $transaction = (new FlutterwaveController())->verifyTransaction($request->transaction_id);
 
-            // get transaction status
-            $status = match ($data['data']['transaction'] ? $data['data']['transaction']['status'] : $data['data']['status']) {
-                'success' => TransactionStatus::SUCCESS(),
-                'successful' => TransactionStatus::SUCCESS(),
-                'new' => TransactionStatus::SUCCESS(),
-                'pending' => TransactionStatus::SUCCESS(),
-                default => TransactionStatus::FAILED()
-            };
+                // checks duplicate entry
+                if (ModelsTransaction::where('identity', $transaction['data']['tx_ref'])->first()) {
+                    throw ValidationException::withMessages(['Duplicate transaction found.']);
+                }
 
-            // update transaction if exists
-            if ($data['data']['transaction']) {
-                $data['data']['transaction']->update([
-                    'status' => $status
-                ]);
-            } else {
-                $transaction = (new StoreTransactionRequest());
-                $transaction['user_id'] = $wallet->user->id;
-                $transaction['identity'] = $data['data']['tx_ref'];
-                $transaction['reference'] = $data['data']['flw_ref'];
-                $transaction['type'] = TransactionType::CREDIT();
-                $transaction['channel'] = TransactionChannel::CARD_TOP_UP();
-                $transaction['amount'] = $data['data']['amount'];
-                $transaction['narration'] = $data['data']['narration'];
-                $transaction['status'] = $status;
-                $transaction['meta'] = json_encode($data);
-            }
+                // get transaction status
+                $status = match ($transaction['data']['status']) {
+                    'success' => TransactionStatus::SUCCESS(),
+                    'successful' => TransactionStatus::SUCCESS(),
+                    'new' => TransactionStatus::SUCCESS(),
+                    'pending' => TransactionStatus::SUCCESS(),
+                    default => TransactionStatus::FAILED()
+                };
 
-            // credit wallet if success
-            if ($status === TransactionStatus::SUCCESS()) {
-                $wallet->credit($data['data']['amount']);
-            }
+                // set channel
+                $channel = match ($transaction['data']['meta']['consumer_mac']) {
+                    'card-top-up' => TransactionChannel::CARD_TOP_UP(),
+                    default => throw ValidationException::withMessages(['Error occured, kindly reach out to support ASAP!'])
+                };
 
-            // notify user of transaction
-            $wallet->user->notify(new Transaction($data));
+                // store transaction
+                $storeTransactionRequest = (new StoreTransactionRequest($transaction));
+                $storeTransactionRequest['user_id'] = $request->user()->id;
+                $storeTransactionRequest['identity'] = $transaction['data']['tx_ref'];
+                $storeTransactionRequest['reference'] = $transaction['data']['flw_ref'];
+                $storeTransactionRequest['type'] = TransactionType::CREDIT();
+                $storeTransactionRequest['channel'] = $channel;
+                $storeTransactionRequest['amount'] = $transaction['data']['amount'];
+                $storeTransactionRequest['narration'] = $transaction['data']['narration'];
+                $storeTransactionRequest['status'] = $status;
+                $storeTransactionRequest['meta'] = json_encode($transaction);
+                $storedTransaction = (new TransactionController())->store($storeTransactionRequest);
+
+                // credit wallet if success
+                if ($storedTransaction->status->is(TransactionStatus::SUCCESS())) {
+                    $request->user()->credit($storedTransaction->amount);
+                }
+
+                // notify gift owner
+                // $request->user()->notify(new Transaction($storedTransaction));
+
+                return $this->show($request);
+            });
         } catch (\Throwable $th) {
-            throw ValidationException::withMessages([$th->getMessage()]);
+            return response()->json([
+                'status' => false,
+                'data' => null,
+                'message' => $th->getMessage(),
+            ], 422);
         }
     }
 }

@@ -2,11 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Enums\GetlistItemContributionType;
-use App\Enums\TransactionChannel;
-use App\Enums\TransactionStatus;
 use App\Http\Requests\StoreTransactionRequest;
-use App\Models\GetlistItem;
 use App\Models\Transaction;
 use App\Models\Webhook;
 use Illuminate\Http\Request;
@@ -38,26 +34,10 @@ class TransactionController extends Controller
      */
     public function create(Request $request)
     {
-
         try {
             // verify webhook hash
-            if (!$request->header('mono-webhook-secret') || !$request->header('verify-hash')) {
+            if ($request->header('mono-webhook-secret') && ($request->header('mono-webhook-secret') !== env('MONO_WEBHOOK_SECRET'))) {
                 return response()->json([], 401);
-            }
-
-            // re-verify webhook hash
-            if ($request->header('mono-webhook-secret') !== env('MONO_WEBHOOK_SECRET') || ($request->header('verify-hash') !== env('FLUTTERWAVE_SECRET_HASH'))) {
-                return response()->json([], 401);
-            }
-
-            // checks if transaction exists and successful
-            if ($transaction = Transaction::where(['identity' => $request->data['tx_ref'], 'status' => TransactionStatus::PENDING()])->first()) {
-                return response()->json([], 422);
-            }
-
-            // add transaction to request
-            if ($transaction) {
-                $request['transaction'] = $transaction;
             }
 
             // Mono transfer received
@@ -70,16 +50,6 @@ class TransactionController extends Controller
             $virtual_card_events = ['issuing.card_transaction'];
             if (array_key_exists('event', $request->all()) && in_array($request['event'], $virtual_card_events)) {
                 (new VirtualCardController())->webHook($request->all());
-            }
-
-            // Flutterwave charge received - card top up
-            if (array_key_exists('event', $request->all()) && ($request->event === 'charge.completed') && ($request->data['meta']['consumer_mac'] === TransactionChannel::CARD_TOP_UP())) {
-                (new WalletController())->webHook($request->all());
-            }
-
-            // Flutterwave charge received - getlist
-            if (array_key_exists('event', $request->all()) && ($request->event === 'charge.completed') && (($request->data['meta']['consumer_mac'] === GetlistItemContributionType::CONTRIBUTE()) || ($request->data['meta']['consumer_mac'] === GetlistItemContributionType::BUY()))) {
-                (new GetlistItem())->webHook($request->all());
             }
 
             // store webhook info
