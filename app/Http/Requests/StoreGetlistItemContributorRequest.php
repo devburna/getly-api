@@ -30,7 +30,19 @@ class StoreGetlistItemContributorRequest extends FormRequest
             'full_name' => 'required|string',
             'email_address' => 'required|email',
             'phone_number' => 'required|string',
-            'meta.contribute.amount' => 'required_if:type,' . GetlistItemContributionType::CONTRIBUTE() . '|numeric',
+            'amount' => 'required_unless:type,' . GetlistItemContributionType::BUY() . '|numeric',
+        ];
+    }
+
+    /**
+     * Get the error messages for the defined validation rules.
+     *
+     * @return array
+     */
+    public function messages()
+    {
+        return [
+            'amount.required_unless' => 'Please specify the amount you want to contribute.',
         ];
     }
 }
