@@ -54,9 +54,9 @@ class Transaction extends Model
         'status' => TransactionStatus::class
     ];
 
-    public function owner(): BelongsTo
+    public function user(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'user_id');
+        return $this->belongsTo(User::class);
     }
 
     protected function meta(): Attribute
