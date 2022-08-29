@@ -141,6 +141,12 @@ class VirtualCardController extends Controller
                     $virtualCard['expiry_year'] = $this->decryptString($virtualCard['expiry_year']);
                     $virtualCard['last_four'] = $this->decryptString($virtualCard['last_four']);
                     $virtualCard['pin'] = $this->decryptString($virtualCard['pin']);
+                } else {
+                    return response()->json([
+                        'status' => true,
+                        'data' => $virtualCard,
+                        'message' => 'Card is still being processed, please check back',
+                    ]);
                 }
             }
 
