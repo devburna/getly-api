@@ -187,6 +187,9 @@ Route::prefix('v1')->group(function () {
             # fund
             Route::put('', [\App\Http\Controllers\WalletController::class, 'fund']);
 
+            # verify payment
+            Route::patch('', [\App\Http\Controllers\WalletController::class, 'webHook']);
+
             # withdraw
             Route::post('', [\App\Http\Controllers\WalletController::class, 'transfer']);
         });
@@ -258,10 +261,21 @@ Route::prefix('v1')->group(function () {
     });
 
     # contribute
-    Route::post('contribute/{getlistItem}', [\App\Http\Controllers\GetlistItemController::class, 'contribute'])->missing(function () {
-        throw ValidationException::withMessages([
-            'message' => "Resource has been removed."
-        ]);
+    Route::prefix('contribute/{getlistItem}')->group(function () {
+
+        # get link
+        Route::post('', [\App\Http\Controllers\GetlistItemController::class, 'contribute'])->missing(function () {
+            throw ValidationException::withMessages([
+                'message' => "Resource has been removed."
+            ]);
+        });
+
+        # verify payment
+        Route::get('', [\App\Http\Controllers\GetlistItemController::class, 'webHook'])->missing(function () {
+            throw ValidationException::withMessages([
+                'message' => "Resource has been removed."
+            ]);
+        });
     });
 });
 

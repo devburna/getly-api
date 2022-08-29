@@ -137,7 +137,7 @@ class User extends Authenticatable
 
     public function credit($amount)
     {
-        $this->wallet->update([
+        return $this->wallet->update([
             'previous_balance' => $this->wallet->current_balance,
             'current_balance' => $this->wallet->current_balance + $amount,
         ]);
