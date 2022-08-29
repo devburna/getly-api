@@ -66,5 +66,6 @@ class Kernel extends HttpKernel
         'email_verified' => \App\Http\Middleware\EmailVerified::class,
         'abilities' => \Laravel\Sanctum\Http\Middleware\CheckAbilities::class,
         'ability' => \Laravel\Sanctum\Http\Middleware\CheckForAnyAbility::class,
+        'is_email_verified' => \App\Http\Middleware\IsEmailVerified::class,
     ];
 }

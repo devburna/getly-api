@@ -57,7 +57,7 @@ Route::prefix('v1')->group(function () {
         Route::delete('logout', [\App\Http\Controllers\AuthController::class, 'logout'])->middleware(['ability:authenticate']);
 
         # user
-        Route::prefix('user')->middleware(['ability:authenticate'])->group(function () {
+        Route::prefix('user')->middleware(['ability:authenticate', 'is_email_verified'])->group(function () {
 
             # details
             Route::get('', [\App\Http\Controllers\UserController::class, 'index']);
