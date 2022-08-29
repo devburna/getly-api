@@ -38,27 +38,27 @@ class TransactionController extends Controller
      */
     public function create(Request $request)
     {
-        // verify webhook hash
-        if (!$request->header('mono-webhook-secret') || !$request->header('verify-hash')) {
-            return response()->json([], 401);
-        }
-
-        // re-verify webhook hash
-        if ($request->header('mono-webhook-secret') !== env('MONO_WEBHOOK_SECRET') || ($request->header('verify-hash') !== env('FLUTTERWAVE_SECRET_HASH'))) {
-            return response()->json([], 401);
-        }
-
-        // checks if transaction exists and successful
-        if ($transaction = Transaction::where(['identity' => $request->data['tx_ref'], 'status' => TransactionStatus::PENDING()])->first()) {
-            return response()->json([], 422);
-        }
-
-        // add transaction to request
-        if ($transaction) {
-            $request['transaction'] = $transaction;
-        }
 
         try {
+            // verify webhook hash
+            if (!$request->header('mono-webhook-secret') || !$request->header('verify-hash')) {
+                return response()->json([], 401);
+            }
+
+            // re-verify webhook hash
+            if ($request->header('mono-webhook-secret') !== env('MONO_WEBHOOK_SECRET') || ($request->header('verify-hash') !== env('FLUTTERWAVE_SECRET_HASH'))) {
+                return response()->json([], 401);
+            }
+
+            // checks if transaction exists and successful
+            if ($transaction = Transaction::where(['identity' => $request->data['tx_ref'], 'status' => TransactionStatus::PENDING()])->first()) {
+                return response()->json([], 422);
+            }
+
+            // add transaction to request
+            if ($transaction) {
+                $request['transaction'] = $transaction;
+            }
 
             // Mono transfer received
             $virtual_account_events = ['issuing.transfer_received', 'issuing.transfer_failed', 'issuing.transfer_successful'];
