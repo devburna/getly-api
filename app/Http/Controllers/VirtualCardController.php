@@ -73,7 +73,7 @@ class VirtualCardController extends Controller
             $transaction = (new TransactionController())->store($storeTransactionRequest);
 
             // notify user of transaction
-            $request->user()->notify(new VirtualCardTransaction($transaction));
+            // $request->user()->notify(new VirtualCardTransaction($transaction));
 
             return $this->show($request);
         } catch (\Throwable $th) {
@@ -115,17 +115,17 @@ class VirtualCardController extends Controller
             }
 
             // get virtual card details
-            $virtualCard = (new MonoController())->virtualCardDetails($request->user()->virtualCard->identity);
+            $virtualCard = (new MonoController())->virtualCardDetails($request->user()->virtualCard->identity)['data'];
 
             // clean response data
-            unset($virtualCard['data']['id']);
-            unset($virtualCard['data']['disposable']);
-            unset($virtualCard['data']['created_at']);
-            unset($virtualCard['data']['account_holder']);
-            unset($virtualCard['data']['meta']);
+            unset($virtualCard['id']);
+            unset($virtualCard['disposable']);
+            unset($virtualCard['created_at']);
+            unset($virtualCard['account_holder']);
+            unset($virtualCard['meta']);
 
             // convert balance to kobo
-            $virtualCard['data']['balance'] = $virtualCard['data']['balance'] / 100;
+            $virtualCard['balance'] = $virtualCard['balance'] / 100;
 
             // decrypt data
             if ($request->reveal) {
@@ -133,17 +133,20 @@ class VirtualCardController extends Controller
                 $request->validate([
                     'reveal' => 'boolean'
                 ]);
-                $virtualCard['data']['card_number'] = $this->decryptString($virtualCard['data']['card_number']);
-                $virtualCard['data']['cvv'] = $this->decryptString($virtualCard['data']['cvv']);
-                $virtualCard['data']['expiry_month'] = $this->decryptString($virtualCard['data']['expiry_month']);
-                $virtualCard['data']['expiry_year'] = $this->decryptString($virtualCard['data']['expiry_year']);
-                $virtualCard['data']['last_four'] = $this->decryptString($virtualCard['data']['last_four']);
-                $virtualCard['data']['pin'] = $this->decryptString($virtualCard['data']['pin']);
+
+                if ($virtualCard['card_number'] !== 'processing') {
+                    $virtualCard['card_number'] = $this->decryptString($virtualCard['card_number']);
+                    $virtualCard['cvv'] = $this->decryptString($virtualCard['cvv']);
+                    $virtualCard['expiry_month'] = $this->decryptString($virtualCard['expiry_month']);
+                    $virtualCard['expiry_year'] = $this->decryptString($virtualCard['expiry_year']);
+                    $virtualCard['last_four'] = $this->decryptString($virtualCard['last_four']);
+                    $virtualCard['pin'] = $this->decryptString($virtualCard['pin']);
+                }
             }
 
             return response()->json([
                 'status' => true,
-                'data' => $virtualCard['data'],
+                'data' => $virtualCard,
                 'message' => 'success',
             ]);
         } catch (\Throwable $th) {
