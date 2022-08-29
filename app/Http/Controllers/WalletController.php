@@ -140,11 +140,6 @@ class WalletController extends Controller
                 default => TransactionStatus::FAILED()
             };
 
-            // credit wallet if success
-            if ($status === TransactionStatus::SUCCESS()) {
-                $wallet->credit($data['data']['amount']);
-            }
-
             // update transaction if exists
             if ($data['data']['transaction']) {
                 $data['data']['transaction']->update([
@@ -161,6 +156,11 @@ class WalletController extends Controller
                 $transaction['narration'] = $data['data']['narration'];
                 $transaction['status'] = $status;
                 $transaction['meta'] = json_encode($data);
+            }
+
+            // credit wallet if success
+            if ($status === TransactionStatus::SUCCESS()) {
+                $wallet->credit($data['data']['amount']);
             }
 
             // notify user of transaction

@@ -193,11 +193,6 @@ class GetlistItemController extends Controller
                 default => TransactionStatus::FAILED()
             };
 
-            // credit wallet if success
-            if ($status === TransactionStatus::SUCCESS()) {
-                $getlistItem->getlist->user->wallet->credit($data['data']['amount']);
-            }
-
             // update getlist status
             if ($data['type'] === GetlistItemContributionType::BUY()) {
                 $getlistItem->update([
@@ -248,6 +243,11 @@ class GetlistItemController extends Controller
             $storeGetlistItemContributorRequest['amount'] = $data['data']['amount'];
             $storeGetlistItemContributorRequest['meta'] = json_encode($storeGetlistItemContributorRequest);
             $contributor = (new GetlistItemContributorController())->store($storeGetlistItemContributorRequest);
+
+            // credit wallet if success
+            if ($status === TransactionStatus::SUCCESS()) {
+                $getlistItem->getlist->user->wallet->credit($data['data']['amount']);
+            }
 
             // notify gift owner
             $getlistItem->getlist->user->notify(new Contribution($getlistItem, $contributor));
