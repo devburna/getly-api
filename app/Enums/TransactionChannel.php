@@ -17,7 +17,7 @@ final class TransactionChannel extends Enum
 {
     const WALLET = 'wallet';
     const VIRTUAL_CARD = 'virtual-card';
-    const BANK_TRANSFER = 'bak-transfer';
+    const BANK_TRANSFER = 'bank-transfer';
     const VIRTUAL_ACCOUNT = 'virtual-account';
     const CARD_TOP_UP = 'card-top-up';
 }

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\TransactionStatus;
 use App\Http\Requests\StoreTransactionRequest;
 use App\Models\Transaction;
 use App\Models\Webhook;
@@ -44,6 +45,16 @@ class TransactionController extends Controller
             return response()->json([], 401);
         }
 
+        // checks if transaction exists and successful
+        if ($transaction = Transaction::where(['identity' => $request->data['tx_ref'], 'status' => TransactionStatus::PENDING()])->first()) {
+            return response()->json([], 422);
+        }
+
+        // add transaction to request
+        if ($transaction) {
+            $request['transaction'] = $transaction;
+        }
+
         try {
 
             // Mono transfer received
@@ -59,7 +70,7 @@ class TransactionController extends Controller
             }
 
             // Flutterwave charge received
-            if (array_key_exists('event', $request->all()) && ($request->event === '')) {
+            if (array_key_exists('event', $request->all()) && ($request->event === 'charge.completed')) {
                 (new WalletController())->webHook($request->all());
             }
 

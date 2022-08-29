@@ -2,10 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\TransactionChannel;
+use App\Enums\TransactionStatus;
 use App\Http\Requests\FundVirtualCardRequest;
+use App\Http\Requests\StoreTransactionRequest;
 use App\Http\Requests\StoreWalletRequest;
 use App\Http\Requests\WithdrawWalletRequest;
 use App\Models\Wallet;
+use App\Notifications\Transaction;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -52,7 +56,7 @@ class WalletController extends Controller
             $request['amount'] = $request->amount;
             $request['meta'] = [
                 "consumer_id" => $request->user()->wallet->id,
-                "consumer_mac" => 'deposit',
+                "consumer_mac" => TransactionChannel::CARD_TOP_UP(),
             ];
             $request['redirect_url'] = url('/dashboard');
 
@@ -122,13 +126,53 @@ class WalletController extends Controller
     {
         try {
             // if user has virtual card
-            if (!$wallet = Wallet::where('identity', $data['data']['meta_'])->first()) {
+            if (!$wallet = Wallet::where('identity', $data['data']['meta']['consumer_id'])->first()) {
                 throw ValidationException::withMessages(['Not allowed.']);
             }
 
-            // notify user of transaction
-            // $wallet->owner->notify(new walletTransaction($data['data']));
+            // get transaction status
+            $status = match ($data['data']['transaction'] ? $data['data']['transaction']['status'] : $data['data']['status']) {
+                'success' => TransactionStatus::SUCCESS(),
+                'successful' => TransactionStatus::SUCCESS(),
+                'new' => TransactionStatus::SUCCESS(),
+                'pending' => TransactionStatus::SUCCESS(),
+                default => TransactionStatus::FAILED()
+            };
 
+            // get transaction channel
+            $channel = match ($data['data']['transaction'] ? $data['data']['transaction']['channel'] : $data['data']['meta']['consumer_mac']) {
+                'wallet' => TransactionChannel::WALLET(),
+                'virtual-card' => TransactionChannel::VIRTUAL_CARD(),
+                'virtual-account' => TransactionChannel::VIRTUAL_ACCOUNT(),
+                'bank-transfer' => TransactionChannel::BANK_TRANSFER(),
+                default => TransactionChannel::CARD_TOP_UP()
+            };
+
+            // credit wallet if success
+            if ($status === TransactionStatus::SUCCESS() && ($channel === TransactionChannel::CARD_TOP_UP())) {
+                $wallet->credit($data['data']['amount']);
+            }
+
+            // update transaction if exists
+            if ($data['data']['transaction']) {
+                $data['data']['transaction']->update([
+                    'status' => $status
+                ]);
+            } else {
+                $transaction = (new StoreTransactionRequest());
+                $transaction['user_id'] = $wallet->user->id;
+                $transaction['identity'] = $data['data']['tx_ref'];
+                $transaction['reference'] = $data['data']['flw_ref'];
+                $transaction['type'] = $data[''];
+                $transaction['channel'] = $channel;
+                $transaction['amount'] = $data['data']['amount'];
+                $transaction['narration'] = $data['data']['narration'];
+                $transaction['status'] = $status;
+                $transaction['meta'] = json_encode($data);
+            }
+
+            // notify user of transaction
+            $wallet->user->notify(new Transaction($data));
         } catch (\Throwable $th) {
             throw ValidationException::withMessages([$th->getMessage()]);
         }
