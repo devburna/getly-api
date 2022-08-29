@@ -20,9 +20,7 @@ class Wallet extends Model
         'user_id',
         'current_balance',
         'previous_balance',
-        'currency',
-        'short',
-        'symbol',
+        'currency'
     ];
 
     /**

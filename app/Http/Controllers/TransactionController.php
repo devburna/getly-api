@@ -34,8 +34,13 @@ class TransactionController extends Controller
      */
     public function create(Request $request)
     {
-        // verify webhook origin
-        if (!$request->header('mono-webhook-secret') || $request->header('mono-webhook-secret') !== env('MONO_WEBHOOK_SECRET')) {
+        // verify webhook hash
+        if (!$request->header('mono-webhook-secret') || !$request->header('verify-hash')) {
+            return response()->json([], 401);
+        }
+
+        // re-verify webhook hash
+        if ($request->header('mono-webhook-secret') !== env('MONO_WEBHOOK_SECRET') || ($request->header('verify-hash') !== env('FLUTTERWAVE_SECRET_HASH'))) {
             return response()->json([], 401);
         }
 
@@ -51,6 +56,11 @@ class TransactionController extends Controller
             $virtual_card_events = ['issuing.card_transaction'];
             if (array_key_exists('event', $request->all()) && in_array($request['event'], $virtual_card_events)) {
                 (new VirtualCardController())->webHook($request->all());
+            }
+
+            // Flutterwave charge received
+            if (array_key_exists('event', $request->all()) && ($request->event === '')) {
+                (new WalletController())->webHook($request->all());
             }
 
             // store webhook info
