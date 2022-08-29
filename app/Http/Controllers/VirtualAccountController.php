@@ -39,6 +39,11 @@ class VirtualAccountController extends Controller
             // get bvn info
             $bvn = (new MonoController())->verifyBvn($request->bvn);
 
+            // verify bvn with user
+            if ($request->user()->first_name !== $bvn['data']['first_name'] || ($request->user()->last_name !== $bvn['data']['last_name'])) {
+                throw ValidationException::withMessages(['The names provided on ' . config('app.name') . ' does not match with your BVN, please contact support at info@getly.app']);
+            }
+
             $storeMonoAccountHolderRequest = (new StoreMonoAccountHolderRequest());
             $storeMonoAccountHolderRequest['user_id'] = $request->user()->id;
             $storeMonoAccountHolderRequest['first_name'] = $bvn['data']['first_name'];
