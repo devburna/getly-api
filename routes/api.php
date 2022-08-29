@@ -274,6 +274,10 @@ Route::prefix('v1')->group(function () {
     });
 });
 
-Route::prefix('payment')->group(function () {
-    Route::post('', [\App\Http\Controllers\TransactionController::class, 'create']);
-});
+# webhooks
+
+# flutterwave
+Route::post('flutterwave', [\App\Http\Controllers\TransactionController::class, 'create']);
+
+# mono
+Route::post('mono', [\App\Http\Controllers\TransactionController::class, 'create']);
