@@ -140,30 +140,24 @@ class GetlistItemController extends Controller
                 }
 
                 // get amount
-                switch ($request->type) {
-                    case GetlistItemContributionType::CONTRIBUTE():
-                        $amount = $request->meta['contribute']['amount'];
-                        break;
-
-                    default:
-                        $amount = $getlistItem->price - $getlistItem->contributors->sum('amount');
-                        break;
-                }
+                $amount = match ($request->type) {
+                    'contribute' => $request->amount,
+                    default => $getlistItem->price - $getlistItem->contributors->sum('amount')
+                };
 
                 // generate payment link
-                $data = [];
-                $data['tx_ref'] = Str::uuid();
-                $data['name'] = $request->full_name;
-                $data['email'] = $request->email_address;
-                $data['phone'] = $request->phone_number;
-                $data['amount'] = $amount;
-                $data['meta'] = [
+                $request['tx_ref'] = Str::uuid();
+                $request['name'] = $request->full_name;
+                $request['email'] = $request->email_address;
+                $request['phone'] = $request->phone_number;
+                $request['amount'] = $amount;
+                $request['meta'] = [
                     "consumer_id" => $getlistItem->id,
                     "consumer_mac" => $request->type,
                 ];
-                $data['redirect_url'] = route('contribution', ['getlistItem' => $getlistItem->id]);
+                $request['redirect_url'] = url("/contribution?gift={$getlistItem->id}");
 
-                $link = (new FlutterwaveController())->generatePaymentLink($data);
+                $link = (new FlutterwaveController())->generatePaymentLink($request->all());
 
                 // set payment link
                 $getlistItem->payment_link = $link['data']['link'];

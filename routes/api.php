@@ -121,6 +121,13 @@ Route::prefix('v1')->group(function () {
                     ]);
                 });
 
+                # contribute
+                Route::get('contribute', [\App\Http\Controllers\GetlistItemController::class, 'contribute'])->can('view', 'getlistItem')->missing(function () {
+                    throw ValidationException::withMessages([
+                        'message' => "Resource has been removed."
+                    ]);
+                });
+
                 # update details
                 Route::post('', [\App\Http\Controllers\GetlistItemController::class, 'update'])->can('update', 'getlistItem')->missing(function () {
                     throw ValidationException::withMessages([
