@@ -121,13 +121,6 @@ Route::prefix('v1')->group(function () {
                     ]);
                 });
 
-                # contribute
-                Route::get('contribute', [\App\Http\Controllers\GetlistItemController::class, 'contribute'])->can('view', 'getlistItem')->missing(function () {
-                    throw ValidationException::withMessages([
-                        'message' => "Resource has been removed."
-                    ]);
-                });
-
                 # update details
                 Route::post('', [\App\Http\Controllers\GetlistItemController::class, 'update'])->can('update', 'getlistItem')->missing(function () {
                     throw ValidationException::withMessages([
@@ -162,6 +155,13 @@ Route::prefix('v1')->group(function () {
                     ]);
                 });
 
+                # redeem
+                Route::post('redeem', [\App\Http\Controllers\GiftCardController::class, 'redeem'])->missing(function () {
+                    throw ValidationException::withMessages([
+                        'message' => "Resource has been removed."
+                    ]);
+                });
+
                 # update details
                 Route::post('', [\App\Http\Controllers\GiftCardController::class, 'update'])->can('update', 'giftCard')->missing(function () {
                     throw ValidationException::withMessages([
@@ -176,16 +176,6 @@ Route::prefix('v1')->group(function () {
                     ]);
                 });
             });
-        });
-
-        # redeem gift
-        Route::prefix('redeem-gift/{giftCard}')->middleware(['ability:authenticate'])->group(function () {
-
-            # preview
-            Route::get('', [\App\Http\Controllers\GiftCardController::class, 'preview']);
-
-            # redeem
-            Route::post('', [\App\Http\Controllers\GiftCardController::class, 'redeem']);
         });
 
         # wallet
@@ -267,17 +257,11 @@ Route::prefix('v1')->group(function () {
         Route::get('banks', [\App\Http\Controllers\KYCController::class, 'banks'])->middleware(['ability:authenticate']);
     });
 
-    # gifts
-    Route::prefix('gifts/{getlistItem}')->group(function () {
-        # contribute
-        Route::prefix('contribute')->group(function () {
-            # get payment link
-            Route::post('', [\App\Http\Controllers\GetlistItemController::class, 'contribute'])->missing(function () {
-                throw ValidationException::withMessages([
-                    'message' => "Resource has been removed."
-                ]);
-            });
-        });
+    # contribute
+    Route::post('contribute/{getlistItem}', [\App\Http\Controllers\GetlistItemController::class, 'contribute'])->missing(function () {
+        throw ValidationException::withMessages([
+            'message' => "Resource has been removed."
+        ]);
     });
 });
 
