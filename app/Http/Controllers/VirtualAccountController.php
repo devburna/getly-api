@@ -134,24 +134,21 @@ class VirtualAccountController extends Controller
                 switch ($data['data']['type']) {
                     case 'credit':
                         // set type to credit
-                        $type = TransactionType::DEBIT();
+                        $type = TransactionType::CREDIT();
 
                         // credit user
                         $virtualAccount->owner->credit($data['data']['amount'] / 100);
 
                         // set narration
-                        $narration = 'Wallet deposit';
+                        $narration = $data['data']['narration'] ?? 'Wallet deposit';
                         break;
 
                     default:
                         // set type to debit
                         $type = TransactionType::DEBIT();
 
-                        // debit user
-                        $virtualAccount->owner->debit($data['data']['amount'] / 100);
-
                         // set narration
-                        $narration = "Transfer to {$data['data']['beneficiary']['name']}";
+                        $narration = "Transfer to {$data['data']['beneficiary']['account_name']}";
                         break;
                 }
 
@@ -170,6 +167,29 @@ class VirtualAccountController extends Controller
 
                 // notify user of transaction
                 // $virtualAccount->owner->notify(new Transaction($transaction));
+
+                // reverse if failed
+                if ($data['event'] === 'issuing.transfer_failed') {
+
+                    // refund user
+                    $virtualAccount->owner->credit($data['data']['amount'] / 100);
+
+                    // create transaction
+                    $storeTransactionRequest = (new StoreTransactionRequest());
+                    $storeTransactionRequest['user_id'] = $virtualAccount->owner->id;
+                    $storeTransactionRequest['identity'] = Str::uuid();
+                    $storeTransactionRequest['reference'] = Str::uuid();
+                    $storeTransactionRequest['type'] = TransactionType::CREDIT();
+                    $storeTransactionRequest['channel'] = TransactionChannel::VIRTUAL_ACCOUNT();
+                    $storeTransactionRequest['amount'] = $data['data']['amount'] / 100;
+                    $storeTransactionRequest['narration'] = 'Reversal';
+                    $storeTransactionRequest['status'] = TransactionStatus::SUCCESS();
+                    $storeTransactionRequest['meta'] = json_encode($data);
+                    $transaction = (new TransactionController())->store($storeTransactionRequest);
+
+                    // notify user of transaction
+                    // $virtualAccount->owner->notify(new Transaction($transaction));
+                }
             });
         } catch (\Throwable $th) {
             throw ValidationException::withMessages([$th->getMessage()]);
