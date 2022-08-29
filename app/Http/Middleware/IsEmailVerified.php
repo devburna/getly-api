@@ -17,7 +17,7 @@ class IsEmailVerified
     public function handle(Request $request, Closure $next)
     {
         if (!$request->user()->email_address_verified_at) {
-            abort(401, 'Email has not been verified, plesae check your mail for email verification link.');
+            abort(401, 'Email has not been verified, please check your mail for email verification link.');
         }
 
         return $next($request);
