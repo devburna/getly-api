@@ -9,6 +9,7 @@ use App\Http\Requests\StoreTransactionRequest;
 use App\Http\Requests\StoreVirtualAccountRequest;
 use App\Models\VirtualAccount;
 use App\Notifications\Transaction;
+use App\Http\Requests\StoreMonoAccountHolderRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -31,11 +32,20 @@ class VirtualAccountController extends Controller
             }
 
             // create a mono account if not found
-            if (!$request->user()->monoAccountHolder) {
-                throw ValidationException::withMessages([
-                    'Please verify your kyc.'
-                ]);
+            if ($request->user()->monoAccountHolder) {
+                throw ValidationException::withMessages(['Error occured, kindly reach out to support ASAP!']);
             }
+
+            // get bvn info
+            $bvn = (new MonoController())->verifyBvn($request->bvn);
+
+            $storeMonoAccountHolderRequest = (new StoreMonoAccountHolderRequest());
+            $storeMonoAccountHolderRequest['user_id'] = $request->user()->id;
+            $storeMonoAccountHolderRequest['first_name'] = $bvn['data']['first_name'];
+            $storeMonoAccountHolderRequest['last_name'] = $bvn['data']['last_name'];
+            $storeMonoAccountHolderRequest['bvn'] = $request->bvn;
+            $storeMonoAccountHolderRequest['phone'] = $bvn['data']['phone'];
+            $request->user()->monoAccountHolder = (new MonoAccountHolderController())->createAccountHolder($storeMonoAccountHolderRequest);
 
             // generate virtual account
             $virtualAccount = (new MonoController())->createVirtualAccount($request->user()->monoAccountHolder->identity);

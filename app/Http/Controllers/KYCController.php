@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\KYCRequest;
-use App\Http\Requests\StoreMonoAccountHolderRequest;
 use Illuminate\Http\Request;
 
 class KYCController extends Controller
@@ -14,14 +13,6 @@ class KYCController extends Controller
         try {
             // get bvn info
             $bvn = (new MonoController())->verifyBvn($request->bvn);
-
-            $storeMonoAccountHolderRequest = (new StoreMonoAccountHolderRequest());
-            $storeMonoAccountHolderRequest['user_id'] = $request->user()->id;
-            $storeMonoAccountHolderRequest['first_name'] = $bvn['data']['first_name'];
-            $storeMonoAccountHolderRequest['last_name'] = $bvn['data']['last_name'];
-            $storeMonoAccountHolderRequest['bvn'] = $request->bvn;
-            $storeMonoAccountHolderRequest['phone'] = $bvn['data']['phone'];
-            (new MonoAccountHolderController())->createAccountHolder($storeMonoAccountHolderRequest);
 
             return response()->json([
                 'status' => true,
