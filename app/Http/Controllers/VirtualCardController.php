@@ -134,7 +134,7 @@ class VirtualCardController extends Controller
                     'reveal' => 'boolean'
                 ]);
 
-                if ($virtualCard['card_number'] !== 'processing') {
+                if ($virtualCard['status'] !== 'processing') {
                     $virtualCard['card_number'] = $this->decryptString($virtualCard['card_number']);
                     $virtualCard['cvv'] = $this->decryptString($virtualCard['cvv']);
                     $virtualCard['expiry_month'] = $this->decryptString($virtualCard['expiry_month']);
