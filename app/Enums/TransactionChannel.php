@@ -12,6 +12,7 @@ use BenSampo\Enum\Enum;
  * @method static static BANK_TRANSFER()
  * @method static static VIRTUAL_ACCOUNT()
  * @method static static CARD_TOP_UP()
+ * @method static static CONTRIBUTION()
  */
 final class TransactionChannel extends Enum
 {
@@ -20,4 +21,6 @@ final class TransactionChannel extends Enum
     const BANK_TRANSFER = 'bank-transfer';
     const VIRTUAL_ACCOUNT = 'virtual-account';
     const CARD_TOP_UP = 'card-top-up';
+    const GETLIST_CONTRIBUTION = 'getlist-contribution';
+    const GETLIST_PURCHASE = 'getlist-purchase';
 }

@@ -4,8 +4,12 @@ namespace App\Http\Controllers;
 
 use App\Enums\GetlistItemContributionType;
 use App\Enums\GetlistItemStatus;
+use App\Enums\TransactionChannel;
+use App\Enums\TransactionStatus;
+use App\Enums\TransactionType;
 use App\Http\Requests\StoreGetlistItemContributorRequest;
 use App\Http\Requests\StoreGetlistItemRequest;
+use App\Http\Requests\StoreTransactionRequest;
 use App\Http\Requests\UpdateGetlistItemRequest;
 use App\Models\GetlistItem;
 use App\Models\GetlistItemContributor;
@@ -151,7 +155,7 @@ class GetlistItemController extends Controller
                 $data['tx_ref'] = Str::uuid();
                 $data['name'] = $request->full_name;
                 $data['email'] = $request->email_address;
-                $data['phone_number'] = $request->phone_number;
+                $data['phone'] = $request->phone_number;
                 $data['amount'] = $amount;
                 $data['meta'] = [
                     "consumer_id" => $getlistItem->id,
@@ -173,45 +177,88 @@ class GetlistItemController extends Controller
         }
     }
 
-    public function chargeCompleted($data)
+    public function webHook($data)
     {
-        // find getlist
-        if (!$getlistItem = GetlistItem::find($data['data']['meta']['consumer_id'])) {
-            return response()->json([], 422);
+        try {
+            // find getlist item
+            if (!$getlistItem = GetlistItem::find($data['data']['meta']['consumer_id'])) {
+                return response()->json([], 422);
+            }
+
+            // checks duplicate entry
+            if (GetlistItemContributor::where('reference', $data['data']['tx_ref'])->first()) {
+                return response()->json([], 422);
+            }
+
+            // get transaction status
+            $status = match ($data['data']['transaction'] ? $data['data']['transaction']['status'] : $data['data']['status']) {
+                'success' => TransactionStatus::SUCCESS(),
+                'successful' => TransactionStatus::SUCCESS(),
+                'new' => TransactionStatus::SUCCESS(),
+                'pending' => TransactionStatus::SUCCESS(),
+                default => TransactionStatus::FAILED()
+            };
+
+            // credit wallet if success
+            if ($status === TransactionStatus::SUCCESS()) {
+                $getlistItem->getlist->user->wallet->credit($data['data']['amount']);
+            }
+
+            // update getlist status
+            if ($data['type'] === GetlistItemContributionType::BUY()) {
+                $getlistItem->update([
+                    'status' => GetlistItemStatus::REDEEMABLE()
+                ]);
+            }
+
+            // set channel
+            $channel = match ($data['data']['meta']['consumer_mac']) {
+                'buy' => TransactionChannel::GETLIST_PURCHASE(),
+                default => TransactionChannel::GETLIST_CONTRIBUTION()
+            };
+
+            // update getlist status
+            if ($channel === TransactionChannel::GETLIST_PURCHASE()) {
+                $getlistItem->update([
+                    'status' => GetlistItemStatus::REDEEMABLE()
+                ]);
+            }
+
+            // update transaction if exists
+            if ($data['data']['transaction']) {
+                $data['data']['transaction']->update([
+                    'status' => $status
+                ]);
+            } else {
+                $transaction = (new StoreTransactionRequest());
+                $transaction['user_id'] = $getlistItem->getlist->user->id;
+                $transaction['identity'] = $data['data']['tx_ref'];
+                $transaction['reference'] = $data['data']['flw_ref'];
+                $transaction['type'] = TransactionType::CREDIT();
+                $transaction['channel'] = $channel;
+                $transaction['amount'] = $data['data']['amount'];
+                $transaction['narration'] = $data['data']['narration'];
+                $transaction['status'] = $status;
+                $transaction['meta'] = json_encode($data);
+            }
+
+
+            // store contributor details
+            $storeGetlistItemContributorRequest = (new StoreGetlistItemContributorRequest($data));
+            $storeGetlistItemContributorRequest['getlist_item_id'] = $getlistItem->id;
+            $storeGetlistItemContributorRequest['reference'] = $data['data']['tx_ref'];
+            $storeGetlistItemContributorRequest['full_name'] = $data['data']['customer']['name'];
+            $storeGetlistItemContributorRequest['email_address'] = $data['data']['customer']['email'];
+            $storeGetlistItemContributorRequest['phone_number'] = $data['data']['customer']['phone_number'];
+            $storeGetlistItemContributorRequest['type'] =  $data['data']['meta']['consumer_mac'];
+            $storeGetlistItemContributorRequest['amount'] = $data['data']['amount'];
+            $storeGetlistItemContributorRequest['meta'] = json_encode($storeGetlistItemContributorRequest);
+            $contributor = (new GetlistItemContributorController())->store($storeGetlistItemContributorRequest);
+
+            // notify gift owner
+            $getlistItem->getlist->user->notify(new Contribution($getlistItem, $contributor));
+        } catch (\Throwable $th) {
+            throw ValidationException::withMessages([$th->getMessage()]);
         }
-
-        // checks duplicate entry
-        if (GetlistItemContributor::where('reference', $data['data']['id'])->first()) {
-            return response()->json([], 422);
-        }
-
-        // set contributor details
-        $data['getlist_item_id'] = $data['data']['meta']['consumer_id'];
-        $data['reference'] = $data['data']['id'];
-        $data['full_name'] = $data['data']['customer']['name'];
-        $data['email_address'] = $data['data']['customer']['email'];
-        $data['phone_number'] = $data['data']['customer']['phone_number'];
-        $data['type'] =  $data['data']['meta']['consumer_mac'];
-        $data['amount'] = $data['data']['amount'];
-        $data['meta'] = json_encode($data);
-
-        // store contributor details
-        $storeGetlistItemContributorRequest = (new StoreGetlistItemContributorRequest($data));
-        $contributor = (new GetlistItemContributorController())->store($storeGetlistItemContributorRequest);
-
-        // update getlist status
-        if ($data['type'] === GetlistItemContributionType::BUY()) {
-            $getlistItem->update([
-                'status' => GetlistItemStatus::REDEEMABLE()
-            ]);
-        }
-
-        // credit gift owner
-        $getlistItem->getlist->user->credit($data['amount']);
-
-        // notify gift owner
-        $getlistItem->getlist->user->notify(new Contribution($getlistItem, $contributor));
-
-        return response()->json([]);
     }
 }

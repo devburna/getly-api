@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Enums\TransactionChannel;
 use App\Enums\TransactionStatus;
+use App\Enums\TransactionType;
 use App\Http\Requests\FundVirtualCardRequest;
 use App\Http\Requests\StoreTransactionRequest;
 use App\Http\Requests\StoreWalletRequest;
@@ -139,17 +140,8 @@ class WalletController extends Controller
                 default => TransactionStatus::FAILED()
             };
 
-            // get transaction channel
-            $channel = match ($data['data']['transaction'] ? $data['data']['transaction']['channel'] : $data['data']['meta']['consumer_mac']) {
-                'wallet' => TransactionChannel::WALLET(),
-                'virtual-card' => TransactionChannel::VIRTUAL_CARD(),
-                'virtual-account' => TransactionChannel::VIRTUAL_ACCOUNT(),
-                'bank-transfer' => TransactionChannel::BANK_TRANSFER(),
-                default => TransactionChannel::CARD_TOP_UP()
-            };
-
             // credit wallet if success
-            if ($status === TransactionStatus::SUCCESS() && ($channel === TransactionChannel::CARD_TOP_UP())) {
+            if ($status === TransactionStatus::SUCCESS()) {
                 $wallet->credit($data['data']['amount']);
             }
 
@@ -163,8 +155,8 @@ class WalletController extends Controller
                 $transaction['user_id'] = $wallet->user->id;
                 $transaction['identity'] = $data['data']['tx_ref'];
                 $transaction['reference'] = $data['data']['flw_ref'];
-                $transaction['type'] = $data[''];
-                $transaction['channel'] = $channel;
+                $transaction['type'] = TransactionType::CREDIT();
+                $transaction['channel'] = TransactionChannel::CARD_TOP_UP();
                 $transaction['amount'] = $data['data']['amount'];
                 $transaction['narration'] = $data['data']['narration'];
                 $transaction['status'] = $status;

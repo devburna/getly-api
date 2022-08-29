@@ -2,8 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\GetlistItemContributionType;
+use App\Enums\TransactionChannel;
 use App\Enums\TransactionStatus;
 use App\Http\Requests\StoreTransactionRequest;
+use App\Models\GetlistItem;
 use App\Models\Transaction;
 use App\Models\Webhook;
 use Illuminate\Http\Request;
@@ -69,9 +72,14 @@ class TransactionController extends Controller
                 (new VirtualCardController())->webHook($request->all());
             }
 
-            // Flutterwave charge received
-            if (array_key_exists('event', $request->all()) && ($request->event === 'charge.completed')) {
+            // Flutterwave charge received - card top up
+            if (array_key_exists('event', $request->all()) && ($request->event === 'charge.completed') && ($request->data['meta']['consumer_mac'] === TransactionChannel::CARD_TOP_UP())) {
                 (new WalletController())->webHook($request->all());
+            }
+
+            // Flutterwave charge received - getlist
+            if (array_key_exists('event', $request->all()) && ($request->event === 'charge.completed') && (($request->data['meta']['consumer_mac'] === GetlistItemContributionType::CONTRIBUTE()) || ($request->data['meta']['consumer_mac'] === GetlistItemContributionType::BUY()))) {
+                (new GetlistItem())->webHook($request->all());
             }
 
             // store webhook info
