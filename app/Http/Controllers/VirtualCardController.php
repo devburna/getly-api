@@ -145,7 +145,7 @@ class VirtualCardController extends Controller
                     return response()->json([
                         'status' => true,
                         'data' => $virtualCard,
-                        'message' => 'Card is still being processed, please check back',
+                        'message' => 'Card is still being processed, please check back for card details',
                     ]);
                 }
             }
