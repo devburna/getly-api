@@ -86,6 +86,21 @@ class MonoAccountHolderController extends Controller
      */
     public function destroy(MonoAccountHolder $monoAccountHolder)
     {
-        //
+        try {
+            $response = Http::withHeaders([
+                'Accept' => 'application/json',
+                'Content-Type' => 'application/json',
+                'mono-sec-key' => $this->monoSecKey,
+            ])->delete("{$this->monoUrl}/issuing/v1/accountholders/{$monoAccountHolder->identity}")->json();
+
+            // catch error
+            if (!array_key_exists('status', $response) || $response['status'] === 'failed') {
+                throw ValidationException::withMessages([$response['message']]);
+            }
+
+            $monoAccountHolder->forceDelete();
+        } catch (\Throwable $th) {
+            throw ValidationException::withMessages([$th->getMessage()]);
+        }
     }
 }
