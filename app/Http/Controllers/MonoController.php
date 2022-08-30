@@ -60,7 +60,7 @@ class MonoController extends Controller
                 throw ValidationException::withMessages([$response['message']]);
             }
 
-            if ($response['data']['status'] === 'failed') {
+            if (array_key_exists('status', $response['data']) && $response['data']['status'] === 'failed') {
                 throw ValidationException::withMessages(["We could'nt create an account at the moment."]);
             }
 
