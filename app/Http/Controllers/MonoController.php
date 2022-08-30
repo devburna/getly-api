@@ -91,7 +91,7 @@ class MonoController extends Controller
             ])->json();
 
             // catch error
-            if (!array_key_exists('status', $response) || $response['status'] === 'failed') {
+            if (array_key_exists('status', $response) || $response['status'] === 'failed') {
                 throw ValidationException::withMessages([$response['message']]);
             }
 
@@ -114,7 +114,7 @@ class MonoController extends Controller
             ])->get("{$this->monoUrl}/issuing/v1/virtualaccounts/{$data}")->json();
 
             // catch error
-            if (!array_key_exists('status', $response) || $response['status'] === 'failed') {
+            if (array_key_exists('status', $response) || $response['status'] === 'failed') {
                 throw ValidationException::withMessages([$response['message']]);
             }
 
@@ -139,7 +139,7 @@ class MonoController extends Controller
             ])->json();
 
             // catch error
-            if (!array_key_exists('status', $response) || $response['status'] === 'failed') {
+            if (array_key_exists('status', $response) || $response['status'] === 'failed') {
                 throw ValidationException::withMessages([$response['message']]);
             }
 
@@ -162,7 +162,7 @@ class MonoController extends Controller
             ])->get("{$this->monoUrl}/issuing/v1/cards/{$data}")->json();
 
             // catch error
-            if (!array_key_exists('status', $response) || $response['status'] === 'failed') {
+            if (array_key_exists('status', $response) || $response['status'] === 'failed') {
                 throw ValidationException::withMessages([$response['message']]);
             }
 
@@ -185,7 +185,7 @@ class MonoController extends Controller
             ])->json();
 
             // catch error
-            if (!array_key_exists('status', $response) || $response['status'] === 'failed') {
+            if (array_key_exists('status', $response) || $response['status'] === 'failed') {
                 throw ValidationException::withMessages([$response['message']]);
             }
 
@@ -212,7 +212,7 @@ class MonoController extends Controller
             ])->json();
 
             // catch error
-            if (!array_key_exists('status', $response) || $response['status'] === 'failed') {
+            if (array_key_exists('status', $response) || $response['status'] === 'failed') {
                 throw ValidationException::withMessages([$response['message']]);
             }
 
@@ -232,7 +232,7 @@ class MonoController extends Controller
             ])->patch("{$this->monoUrl}/issuing/v1/cards/{$data['card']}/{$data['action']}")->json();
 
             // catch error
-            if (!array_key_exists('status', $response) || $response['status'] === 'failed') {
+            if (array_key_exists('status', $response) || $response['status'] === 'failed') {
                 throw ValidationException::withMessages([$response['message']]);
             }
 
@@ -252,7 +252,7 @@ class MonoController extends Controller
             ])->get("{$this->monoUrl}/v1/misc/banks")->json();
 
             // catch error
-            if (!array_key_exists('status', $response) || $response['status'] === 'failed') {
+            if (array_key_exists('status', $response) || $response['status'] === 'failed') {
                 throw ValidationException::withMessages([$response['message']]);
             }
 
@@ -275,7 +275,7 @@ class MonoController extends Controller
             ])->json();
 
             // catch error
-            if (!array_key_exists('status', $response) || $response['status'] === 'failed') {
+            if (array_key_exists('status', $response) || $response['status'] === 'failed') {
                 throw ValidationException::withMessages([$response['message']]);
             }
 
