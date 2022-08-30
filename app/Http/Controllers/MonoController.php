@@ -52,7 +52,7 @@ class MonoController extends Controller
             ])->post("{$this->monoUrl}/issuing/v1/virtualaccounts", [
                 'account_holder' => $data['identity'],
                 'account_type' => 'deposit',
-                'provider' => 'gtb'
+                'provider' => 'providus'
             ])->json();
 
             // catch error
