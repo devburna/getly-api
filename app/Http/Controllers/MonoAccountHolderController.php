@@ -70,7 +70,7 @@ class MonoAccountHolderController extends Controller
      */
     public function store(StoreMonoAccountHolderRequest $request)
     {
-        return MonoAccountHolder::create($request->omly([
+        return MonoAccountHolder::create($request->only([
             'user_id' => $request->user_id,
             'identity' => $request->identity,
             'meta' => $request->meta
