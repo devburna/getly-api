@@ -32,25 +32,23 @@ class VirtualAccountController extends Controller
             }
 
             // create a mono account if not found
-            if ($request->user()->monoAccountHolder) {
-                throw ValidationException::withMessages(['Error occured, kindly reach out to support ASAP!']);
+            if (!$request->user()->monoAccountHolder) {
+                // get bvn info
+                $bvn = (new MonoController())->verifyBvn($request->bvn);
+
+                // verify bvn with user
+                if (strtolower($request->user()->first_name) !== strtolower($bvn['data']['first_name']) || (strtolower($request->user()->last_name) !== strtolower($bvn['data']['last_name']))) {
+                    throw ValidationException::withMessages(['The names provided on ' . config('app.name') . ' does not match with your BVN, please contact support at info@getly.app']);
+                }
+
+                $storeMonoAccountHolderRequest = (new StoreMonoAccountHolderRequest());
+                $storeMonoAccountHolderRequest['user_id'] = $request->user()->id;
+                $storeMonoAccountHolderRequest['first_name'] = $bvn['data']['first_name'];
+                $storeMonoAccountHolderRequest['last_name'] = $bvn['data']['last_name'];
+                $storeMonoAccountHolderRequest['bvn'] = $request->bvn;
+                $storeMonoAccountHolderRequest['phone'] = $bvn['data']['phone'];
+                $request->user()->monoAccountHolder = (new MonoAccountHolderController())->createAccountHolder($storeMonoAccountHolderRequest);
             }
-
-            // get bvn info
-            $bvn = (new MonoController())->verifyBvn($request->bvn);
-
-            // verify bvn with user
-            if (strtolower($request->user()->first_name) !== strtolower($bvn['data']['first_name']) || (strtolower($request->user()->last_name) !== strtolower($bvn['data']['last_name']))) {
-                throw ValidationException::withMessages(['The names provided on ' . config('app.name') . ' does not match with your BVN, please contact support at info@getly.app']);
-            }
-
-            $storeMonoAccountHolderRequest = (new StoreMonoAccountHolderRequest());
-            $storeMonoAccountHolderRequest['user_id'] = $request->user()->id;
-            $storeMonoAccountHolderRequest['first_name'] = $bvn['data']['first_name'];
-            $storeMonoAccountHolderRequest['last_name'] = $bvn['data']['last_name'];
-            $storeMonoAccountHolderRequest['bvn'] = $request->bvn;
-            $storeMonoAccountHolderRequest['phone'] = $bvn['data']['phone'];
-            $request->user()->monoAccountHolder = (new MonoAccountHolderController())->createAccountHolder($storeMonoAccountHolderRequest);
 
             // generate virtual account
             $virtualAccount = (new MonoController())->createVirtualAccount($request->user()->monoAccountHolder->identity);
