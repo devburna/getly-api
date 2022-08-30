@@ -51,7 +51,7 @@ class VirtualAccountController extends Controller
             }
 
             // generate virtual account
-            $virtualAccount = (new MonoController())->createVirtualAccount($request->user()->monoAccountHolder->identity);
+            $virtualAccount = (new MonoController())->createVirtualAccount($request->user()->monoAccountHolder);
             $request['user_id'] = $request->user()->id;
             $request['identity'] = $virtualAccount['data']['id'];
             $request['provider'] = $virtualAccount['data']['provider'];

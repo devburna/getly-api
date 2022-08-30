@@ -50,13 +50,16 @@ class MonoController extends Controller
                 'Content-Type' => 'application/json',
                 'mono-sec-key' => $this->monoSecKey,
             ])->post("{$this->monoUrl}/issuing/v1/virtualaccounts", [
-                'account_holder' => $data,
+                'account_holder' => $data['identity'],
                 'account_type' => 'deposit',
                 'provider' => 'gtb'
             ])->json();
 
             // catch error
             if (array_key_exists('status', $response) || $response['status'] === 'failed') {
+
+                (new MonoAccountHolderController())->destroy($data);
+
                 throw ValidationException::withMessages([$response['message']]);
             }
 
