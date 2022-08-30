@@ -60,6 +60,10 @@ class MonoController extends Controller
                 throw ValidationException::withMessages([$response['message']]);
             }
 
+            if ($response['data']['status'] === 'failed') {
+                throw ValidationException::withMessages(["We could'nt create an account at the moment."]);
+            }
+
             // set data provider
             $response['data']['provider'] = $this->provider;
 
