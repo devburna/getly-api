@@ -29,7 +29,7 @@ class MonoController extends Controller
             ])->json();
 
             // catch error
-            if (!array_key_exists('status', $response) || $response['status'] === 'failed') {
+            if (array_key_exists('status', $response) || $response['status'] === 'failed') {
                 throw ValidationException::withMessages([$response['message']]);
             }
 
