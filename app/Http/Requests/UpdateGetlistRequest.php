@@ -25,7 +25,7 @@ class UpdateGetlistRequest extends FormRequest
     {
         return [
             'title' => 'string',
-            'event_date' => 'date|before:30 minutes',
+            'event_date' => 'date|after:30 minutes',
             'message' => 'string',
             'privacy' => 'boolean',
             'image' => 'mimes:jpeg,jpeg,png,webp|max:3000'
