@@ -25,7 +25,7 @@ class StoreGetlistRequest extends FormRequest
     {
         return [
             'title' => 'required|string',
-            'event_date' => 'required|date|before:30 minutes',
+            'event_date' => 'required|date|after:30 minutes',
             'message' => 'string',
             'privacy' => 'required|boolean',
             'image' => 'required|mimes:jpeg,jpeg,png,webp|max:3000'
