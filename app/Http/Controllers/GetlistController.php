@@ -34,7 +34,7 @@ class GetlistController extends Controller
 
             // add item contributors to data
             foreach ($getlist->items as $item) {
-                $item->contributors;
+                $item->contributors = $item->contributors;
             }
 
             // add item count to data as wishes
