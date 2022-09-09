@@ -19,10 +19,10 @@ class GetlistController extends Controller
     {
         if (!$request->privacy) {
             // public getlists
-            $getlists = Getlist::where('privacy', false)->orderByDesc('created_at')->paginate(20);
+            $getlists = Getlist::where('privacy', false)->orderByDesc('created_at')->with('items.contributors')->paginate(20);
         } else {
             // user's getlists
-            $getlists = $request->user()->getlists()->orderByDesc('created_at')->paginate(20);
+            $getlists = $request->user()->getlists()->orderByDesc('created_at')->with('items.contributors')->paginate(20);
         }
 
         // filter result
@@ -31,11 +31,6 @@ class GetlistController extends Controller
         }
 
         foreach ($getlists as $getlist) {
-
-            // add item contributors to data
-            foreach ($getlist->items as $item) {
-                $item->contributors = $item->contributors;
-            }
 
             // add item count to data as wishes
             $getlist->wishes = $getlist->items->count();
