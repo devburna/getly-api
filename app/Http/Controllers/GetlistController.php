@@ -39,7 +39,6 @@ class GetlistController extends Controller
 
             // add item count to data as wishes
             $getlist->wishes = $getlist->items->count();
-            unset($getlist->items);
         }
 
         return response()->json([
