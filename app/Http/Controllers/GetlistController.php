@@ -86,6 +86,9 @@ class GetlistController extends Controller
         // add item count to data as wishes
         $getlist->wishes = $getlist->items->count();
 
+        // add contributors to data
+        $getlist->contributors;
+
         return response()->json([
             'status' => true,
             'data' => $getlist,
