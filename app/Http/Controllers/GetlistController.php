@@ -31,6 +31,12 @@ class GetlistController extends Controller
         }
 
         foreach ($getlists as $getlist) {
+
+            // add item contributors to data
+            foreach ($getlist->items as $item) {
+                $item->contributors;
+            }
+
             // add item count to data as wishes
             $getlist->wishes = $getlist->items->count();
             unset($getlist->items);
