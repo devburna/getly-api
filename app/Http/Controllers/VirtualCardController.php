@@ -200,7 +200,7 @@ class VirtualCardController extends Controller
             $transaction = (new TransactionController())->store($storeTransactionRequest);
 
             // notify user of transaction
-            $request->user()->notify(new VirtualCardTransaction($transaction));
+            // $request->user()->notify(new VirtualCardTransaction($transaction));
 
             return response()->json([
                 'status' => true,
