@@ -104,18 +104,18 @@ Route::prefix('v1')->group(function () {
         });
 
         # gifts
-        Route::prefix('gifts')->group(function () {
+        Route::prefix('gifts')->middleware(['ability:authenticate'])->group(function () {
 
             # create
-            Route::post('', [\App\Http\Controllers\GetlistItemController::class, 'store'])->middleware(['ability:authenticate']);
+            Route::post('', [\App\Http\Controllers\GetlistItemController::class, 'store']);
 
             # all
-            Route::get('', [\App\Http\Controllers\GetlistItemController::class, 'index'])->middleware(['ability:authenticate']);
+            Route::get('', [\App\Http\Controllers\GetlistItemController::class, 'index']);
 
             Route::prefix('{getlistItem}')->group(function () {
 
                 # details
-                Route::get('', [\App\Http\Controllers\GetlistItemController::class, 'show'])->can('view', 'getlistItem')->missing(function () {
+                Route::get('', [\App\Http\Controllers\GetlistItemController::class, 'show'])->missing(function () {
                     throw ValidationException::withMessages([
                         'message' => "Resource has been removed."
                     ]);
@@ -126,14 +126,14 @@ Route::prefix('v1')->group(function () {
                     throw ValidationException::withMessages([
                         'message' => "Resource has been removed."
                     ]);
-                })->middleware(['ability:authenticate']);
+                });
 
                 # toggle
                 Route::delete('', [\App\Http\Controllers\GetlistItemController::class, 'destroy'])->withTrashed()->can('delete', 'getlistItem')->can('restore', 'getlistItem')->can('forceDelete', 'getlistItem')->missing(function () {
                     throw ValidationException::withMessages([
                         'message' => "Resource has been removed."
                     ]);
-                })->middleware(['ability:authenticate']);
+                });
             });
         });
 
