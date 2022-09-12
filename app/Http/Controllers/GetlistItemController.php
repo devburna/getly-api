@@ -158,7 +158,7 @@ class GetlistItemController extends Controller
                     "consumer_id" => $getlistItem->id,
                     "consumer_mac" => $request->type,
                 ];
-                $request['redirect_url'] = url("/contribute/{$getlistItem->id}");
+                $request['redirect_url'] = config('app.url') . "/contribute/{$getlistItem->id}";
 
                 $link = (new FlutterwaveController())->generatePaymentLink($request->all());
 

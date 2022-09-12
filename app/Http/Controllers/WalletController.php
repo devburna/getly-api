@@ -61,7 +61,7 @@ class WalletController extends Controller
                 "consumer_id" => $request->user()->wallet->id,
                 "consumer_mac" => TransactionChannel::CARD_TOP_UP(),
             ];
-            $request['redirect_url'] = url('/dashboard/wallet');
+            $request['redirect_url'] = config('app.url') . '/dashboard/wallet';
 
             $link = (new FlutterwaveController())->generatePaymentLink($request->all());
 
