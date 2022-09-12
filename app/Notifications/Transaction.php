@@ -47,7 +47,11 @@ class Transaction extends Notification implements ShouldQueue
         return (new MailMessage)
             ->greeting("{$notifiable->first_name}")
             ->line('Below are details of a transaction made to your account today.')
-            ->line(json_encode($this->transaction))
+            ->line("ID: {$this->transaction->id}")
+            ->line("Type: {$this->transaction->type}")
+            ->line("Channel: {ucfirst(str_replace('-', ' ',$this->transaction->channel))}")
+            ->line("Amount: {$this->transaction->meta->data->currency} {$this->transaction->amount}")
+            ->line("Status: {ucfirst($this->transaction->meta->status)}")
             ->line('Thank you for using ' . config('app.name') . '!');
     }
 
