@@ -70,70 +70,56 @@ Route::prefix('v1')->group(function () {
         });
 
         # getlists
-        Route::prefix('getlists')->group(function () {
+        Route::prefix('getlists')->middleware(['ability:authenticate'])->group(function () {
 
             # create
-            Route::post('', [\App\Http\Controllers\GetlistController::class, 'store'])->middleware(['ability:authenticate']);
+            Route::post('', [\App\Http\Controllers\GetlistController::class, 'store']);
 
             # all
-            Route::get('', [\App\Http\Controllers\GetlistController::class, 'index'])->middleware(['ability:authenticate']);
+            Route::get('', [\App\Http\Controllers\GetlistController::class, 'index']);
 
             Route::prefix('{getlist}')->group(function () {
-
-                # details
-                Route::get('', [\App\Http\Controllers\GetlistController::class, 'show'])->missing(function () {
-                    throw ValidationException::withMessages([
-                        'message' => "Resource has been removed."
-                    ]);
-                });
 
                 # update details
                 Route::post('', [\App\Http\Controllers\GetlistController::class, 'update'])->can('update', 'getlist')->missing(function () {
                     throw ValidationException::withMessages([
                         'message' => "Resource has been removed."
                     ]);
-                })->middleware(['ability:authenticate']);
+                });
 
                 # toggle
                 Route::delete('', [\App\Http\Controllers\GetlistController::class, 'destroy'])->withTrashed()->can('delete', 'getlist')->can('restore', 'getlist')->can('forceDelete', 'getlist')->missing(function () {
                     throw ValidationException::withMessages([
                         'message' => "Resource has been removed."
                     ]);
-                })->middleware(['ability:authenticate']);
+                });
             });
         });
 
         # gifts
-        Route::prefix('gifts')->group(function () {
+        Route::prefix('gifts')->middleware(['ability:authenticate'])->group(function () {
 
             # create
-            Route::post('', [\App\Http\Controllers\GetlistItemController::class, 'store'])->middleware(['ability:authenticate']);
+            Route::post('', [\App\Http\Controllers\GetlistItemController::class, 'store']);
 
             # all
-            Route::get('', [\App\Http\Controllers\GetlistItemController::class, 'index'])->middleware(['ability:authenticate']);
+            Route::get('', [\App\Http\Controllers\GetlistItemController::class, 'index']);
 
             Route::prefix('{getlistItem}')->group(function () {
-
-                # details
-                Route::get('', [\App\Http\Controllers\GetlistItemController::class, 'show'])->missing(function () {
-                    throw ValidationException::withMessages([
-                        'message' => "Resource has been removed."
-                    ]);
-                });
 
                 # update details
                 Route::post('', [\App\Http\Controllers\GetlistItemController::class, 'update'])->can('update', 'getlistItem')->missing(function () {
                     throw ValidationException::withMessages([
                         'message' => "Resource has been removed."
                     ]);
-                })->middleware(['ability:authenticate']);
+                });
 
                 # toggle
                 Route::delete('', [\App\Http\Controllers\GetlistItemController::class, 'destroy'])->withTrashed()->can('delete', 'getlistItem')->can('restore', 'getlistItem')->can('forceDelete', 'getlistItem')->missing(function () {
                     throw ValidationException::withMessages([
                         'message' => "Resource has been removed."
                     ]);
-                })->middleware(['ability:authenticate']);
+                });
             });
         });
 
@@ -258,6 +244,20 @@ Route::prefix('v1')->group(function () {
 
         # banks
         Route::get('banks', [\App\Http\Controllers\KYCController::class, 'banks'])->middleware(['ability:authenticate']);
+    });
+
+    # getlists details
+    Route::get('getlists/{getlist}', [\App\Http\Controllers\GetlistController::class, 'show'])->missing(function () {
+        throw ValidationException::withMessages([
+            'message' => "Resource has been removed."
+        ]);
+    });
+
+    # details
+    Route::get('gifts/{getlistItem}', [\App\Http\Controllers\GetlistItemController::class, 'show'])->missing(function () {
+        throw ValidationException::withMessages([
+            'message' => "Resource has been removed."
+        ]);
     });
 
     # contribute
