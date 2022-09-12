@@ -53,7 +53,7 @@ class GetlistPolicy
      */
     public function update(User $user, Getlist $getlist)
     {
-        return $this->view($user, $getlist->user);
+        return $this->view($user, $getlist);
     }
 
     /**
