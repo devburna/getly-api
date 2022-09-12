@@ -81,7 +81,7 @@ Route::prefix('v1')->group(function () {
             Route::prefix('{getlist}')->group(function () {
 
                 # details
-                Route::get('', [\App\Http\Controllers\GetlistController::class, 'show'])->can('view', 'getlist')->missing(function () {
+                Route::get('', [\App\Http\Controllers\GetlistController::class, 'show'])->missing(function () {
                     throw ValidationException::withMessages([
                         'message' => "Resource has been removed."
                     ]);
