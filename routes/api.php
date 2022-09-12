@@ -104,13 +104,13 @@ Route::prefix('v1')->group(function () {
         });
 
         # gifts
-        Route::prefix('gifts')->middleware(['ability:authenticate'])->group(function () {
+        Route::prefix('gifts')->group(function () {
 
             # create
-            Route::post('', [\App\Http\Controllers\GetlistItemController::class, 'store']);
+            Route::post('', [\App\Http\Controllers\GetlistItemController::class, 'store'])->middleware(['ability:authenticate']);
 
             # all
-            Route::get('', [\App\Http\Controllers\GetlistItemController::class, 'index']);
+            Route::get('', [\App\Http\Controllers\GetlistItemController::class, 'index'])->middleware(['ability:authenticate']);
 
             Route::prefix('{getlistItem}')->group(function () {
 
@@ -126,14 +126,14 @@ Route::prefix('v1')->group(function () {
                     throw ValidationException::withMessages([
                         'message' => "Resource has been removed."
                     ]);
-                });
+                })->middleware(['ability:authenticate']);
 
                 # toggle
                 Route::delete('', [\App\Http\Controllers\GetlistItemController::class, 'destroy'])->withTrashed()->can('delete', 'getlistItem')->can('restore', 'getlistItem')->can('forceDelete', 'getlistItem')->missing(function () {
                     throw ValidationException::withMessages([
                         'message' => "Resource has been removed."
                     ]);
-                });
+                })->middleware(['ability:authenticate']);
             });
         });
 
